@@ -89,4 +89,5 @@ Return nil if `post--heading-has-content-p' returns nil."
   "TODO: Docs"
   )
 
+(provide 'post)
 ;;; post.el ends here
