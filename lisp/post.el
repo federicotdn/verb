@@ -78,9 +78,9 @@ Level zero indicates that no headings exist."
 Return nil if `post--heading-has-content-p' returns nil."
   (when (post--heading-has-content-p)
     (let ((start (save-excursion
-		   (post--back-to-heading)
-		   (end-of-line)
-		   (forward-char)
+		   (when (post--back-to-heading)
+		     (end-of-line)
+		     (forward-char))
 		   (point)))
 	  (end (save-excursion (post--section-end) (point))))
       (buffer-substring-no-properties start end))))
