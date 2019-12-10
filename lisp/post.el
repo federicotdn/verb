@@ -85,9 +85,34 @@ Return nil if `post--heading-has-content-p' returns nil."
 	  (end (save-excursion (post--section-end) (point))))
       (buffer-substring-no-properties start end))))
 
+(defconst post--http-methods '("GET" "POST")
+  "List of valid HTTP methods.")
+
+(defun post--http-method-p (m)
+  "Return non-nil if M is a valid HTTP method."
+  (member m post--http-methods))
+
+(defclass post--request-spec ()
+  ((method :initarg :method
+	   :initform "GET"
+	   :type post--http-method
+	   :documentation "HTTP method.")
+   (url :initarg :url
+	:type string
+	:documentation "Request URL.")
+   (headers :initarg :headers
+	    :initform ()
+	    :type (or null cons)
+	    :documentation "HTTP headers.")
+   (body :initarg :body
+	 :initform ""
+	 :type string
+	 :documentation "Request body."))
+  "Represents an HTTP request to be made.")
+
 (define-derived-mode post-mode outline-mode "Post"
-  "TODO: Docs"
-  )
+  "Enable or disable post mode."
+  (setq-local outline-regexp "[-\^L]+"))
 
 (provide 'post)
 ;;; post.el ends here
