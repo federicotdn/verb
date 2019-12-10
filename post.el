@@ -23,6 +23,7 @@
 ;; Main module for post.
 
 ;;; Code:
+(require 'eieio)
 
 (defun post--back-to-heading ()
   "Move to the previous heading.

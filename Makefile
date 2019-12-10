@@ -4,8 +4,8 @@ LISP_DIR = lisp
 test:
 	$(EMACS) -Q \
 		--batch \
-		-L $(LISP_DIR) \
-		-l t/post-test.el \
+		-L . \
+		-l post-test.el \
 		-f ert-run-tests-batch-and-exit
 
 # TODO:
