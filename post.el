@@ -25,6 +25,19 @@
 ;;; Code:
 (require 'eieio)
 
+(defconst post--comment-character "#"
+  "Character to use to mark commented lines.")
+
+(defconst post--outline-character "-"
+  "Character to use to create headings.")
+
+(defconst post--http-methods '("GET" "POST")
+  "List of valid HTTP methods.")
+
+(defconst post--template-keyword "TEMPLATE"
+  "Keyword to use when defining request templates without defined HTTP
+methods.")
+
 (defun post--back-to-heading ()
   "Move to the previous heading.
 Or, move to beggining of this line if it's a heading.  If there are no
@@ -86,8 +99,9 @@ Return nil if `post--heading-has-content-p' returns nil."
 	  (end (save-excursion (post--section-end) (point))))
       (buffer-substring-no-properties start end))))
 
-(defconst post--http-methods '("GET" "POST")
-  "List of valid HTTP methods.")
+(define-derived-mode post-mode outline-mode "Post"
+  "Enable or disable post mode."
+  (setq-local outline-regexp (concat "[" post--outline-character "\^L]+")))
 
 (defun post--http-method-p (m)
   "Return non-nil if M is a valid HTTP method."
@@ -95,8 +109,8 @@ Return nil if `post--heading-has-content-p' returns nil."
 
 (defclass post--request-spec ()
   ((method :initarg :method
-	   :initform "GET"
-	   :type post--http-method
+	   :initform nil
+	   :type (or null post--http-method)
 	   :documentation "HTTP method.")
    (url :initarg :url
 	:type string
@@ -111,9 +125,86 @@ Return nil if `post--heading-has-content-p' returns nil."
 	 :documentation "Request body."))
   "Represents an HTTP request to be made.")
 
-(define-derived-mode post-mode outline-mode "Post"
-  "Enable or disable post mode."
-  (setq-local outline-regexp "[-\^L]+"))
+(defun post--line-contents ()
+  "Return current line as a string."
+  (buffer-substring-no-properties (line-beginning-position)
+				  (line-end-position)))
+
+(defun post--delete-line ()
+  "Delete the current line, including the newline."
+  (let ((beginning (line-beginning-position))
+	(end (line-end-position)))
+    (unless (save-excursion (goto-char end) (eobp))
+      (setq end (1+ end)))
+    (delete-region beginning end)))
+
+(defun post--http-methods-regexp ()
+  "Return a regexp that matches a HTTP method.
+HTTP methods are defined in `post--http-methods'.
+Additionally, allow matching `post--template-keyword'."
+  (mapconcat #'identity
+	     (append post--http-methods
+		     (list post--template-keyword)
+		     (mapcar #'downcase post--http-methods)
+		     (list (downcase post--template-keyword)))
+	     "\\|"))
+
+(defun post--request-spec-from-text (text)
+  "Create a `post--request-spec' from a text specification.
+
+The text format for defining requests is:
+
+METHOD [URL]
+[HEADER-NAME1: HEADER-VALUE1]
+[HEADER-NAME2: HEADER-VALUE2]...
+
+[BODY]
+
+METHOD must be a method matched by `post--http-methods-regexp'.
+URL can be an empty string.
+Headers and BODY can be separated by a blank line, which will be
+ignored."
+  (let (method url headers)
+    (with-temp-buffer
+      (insert text)
+      (goto-char (point-min))
+      ;; Skip initial blank lines and commments.
+      (while (let ((line (post--line-contents)))
+	       (and (or (= (length line) 0)
+			(string-match-p (concat "^\\s-*"
+						post--comment-character
+						".*$")
+					line))
+		    (< 0 (buffer-size))))
+	(post--delete-line))
+      ;; Read HTTP method and URL
+      (let ((line (post--line-contents)))
+	(when (string-match (concat "^\\s-*\\("
+				    (post--http-methods-regexp)
+				    "\\)\\s-+\\(.*\\)$")
+			    line)
+	  (setq method (upcase (match-string 1 line))
+		url (match-string 2 line))))
+      (if method
+	  (when (string= method post--template-keyword)
+	    (setq method nil))
+	(user-error (concat "Could not read a valid HTTP method\n"
+			    "Valid HTTP methods are: %s\n"
+			    "Additionally, you can also specify %s\n"
+			    "(Matching is case-insensitive)")
+		    post--http-methods post--template-keyword))
+      (post--delete-line)
+      ;; Search for HTTP headers
+      ;; Stop as soon as we find a blank line or a non-matching line
+      (catch 'end
+	(if (re-search-forward "^\\s-*\\(\\w+\\)\\s-*:\\s-?\\(.*\\)$" nil t)
+	    (progn
+	      (push (cons (match-string 1) (match-string 2)) headers)
+	      (post--delete-line))
+	  (throw 'end nil)))
+      (post--request-spec :method method
+			  :url url
+			  :headers headers))))
 
 (provide 'post)
 ;;; post.el ends here

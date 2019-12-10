@@ -8,6 +8,9 @@ test:
 		-l post-test.el \
 		-f ert-run-tests-batch-and-exit
 
+ielm:
+	$(EMACS) -l post.el --eval "(ielm)"
+
 # TODO:
 # package-lint (https://github.com/purcell/package-lint)
 # checkdoc
