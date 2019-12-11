@@ -59,6 +59,9 @@
   (should (string= (oref aux :url) "example.com"))
   (should (string= (oref aux :method) "GET"))
 
+  (setq aux (text-as-spec "GET example.com\n"))
+  (should (string= (oref aux :url) "example.com"))
+
   (setq aux (text-as-spec "# Comment\n"
 			  "\n"
 			  "GET example.com"))
@@ -73,9 +76,12 @@
   (should (string= (oref aux :method) "GET")))
 
 (ert-deftest test-request-spec-from-text-headers ()
-  (setq aux (text-as-spec "# Comment\n"
-			  "\n"
-			  "GET example.com\n"
+  (setq aux (text-as-spec "GET example.com\n"
+			  "Accept: text"))
+  (should (equal (oref aux :headers)
+		 (list (cons "Accept" "text"))))
+
+  (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"))
   (should (equal (oref aux :headers)
 		 (list (cons "Accept" "text"))))
@@ -88,23 +94,22 @@
 		       (cons "Referer" "host.com")))))
 
 (ert-deftest test-request-spec-from-text-body ()
-  (setq aux (text-as-spec "# Comment\n"
-			  "\n"
-			  "GET example.com\n"
+  (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"))
   (should (string= (oref aux :body) ""))
 
-  (setq aux (text-as-spec "# Comment\n"
-			  "\n"
-			  "GET example.com\n"
+  (setq aux (text-as-spec "GET example.com\n"
+			  "Accept: text\n"
+			  "\n"))
+  (should (string= (oref aux :body) ""))
+
+  (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"
 			  "\n" ;; This line is ignored
 			  "hello world"))
   (should (string= (oref aux :body) "hello world"))
 
-  (setq aux (text-as-spec "# Comment\n"
-			  "\n"
-			  "GET example.com\n"
+  (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"
 			  "hello world"))
   (should (string= (oref aux :body) "hello world")))

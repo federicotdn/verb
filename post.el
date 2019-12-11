@@ -66,15 +66,6 @@ Level zero indicates that no headings exist."
 	  (funcall outline-level)
 	0))))
 
-(defun post--heading-has-children-p ()
-  "Return non-nil if the heading has any children (sub-headings)."
-  (save-match-data
-    (save-excursion
-      (let ((level (post--outline-level)))
-	(post--back-to-heading)
-	(when (post--next-heading)
-	  (> (post--outline-level) level))))))
-
 (defun post--heading-has-content-p ()
   "Return non-nil if the heading is followed by text contents."
   (save-match-data
@@ -98,6 +89,14 @@ Return nil if `post--heading-has-content-p' returns nil."
 		   (point)))
 	  (end (save-excursion (post--section-end) (point))))
       (buffer-substring-no-properties start end))))
+
+(defun post--request-spec-from-heading ()
+  "Return a `post--request-spec' generated from the heading's text contents."
+  (let ((text (post--heading-contents)))
+    (when (or (null text)
+	      (= (length (string-trim text)) 0))
+      (user-error "Current heading is empty (no text contents)"))
+    (post--request-spec-from-text text)))
 
 (define-derived-mode post-mode outline-mode "Post"
   "Enable or disable post mode."
@@ -172,11 +171,12 @@ ignored."
       (if method
 	  (when (string= method post--template-keyword)
 	    (setq method nil))
-	(user-error (concat "Could not read a valid HTTP method\n"
-			    "Valid HTTP methods are: %s\n"
-			    "Additionally, you can also specify %s\n"
-			    "(Matching is case-insensitive)")
-		    post--http-methods post--template-keyword))
+	(user-error (concat "Could not read a valid HTTP method, "
+			    "valid HTTP methods are: %s\n"
+			    "Additionally, you can also specify %s "
+			    "(matching is case insensitive)")
+		    (mapconcat #'identity post--http-methods ", ")
+		    post--template-keyword))
       ;; Skip newline after URL line
       (when (not (eobp)) (forward-char))
       ;; Search for HTTP headers
