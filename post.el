@@ -4,6 +4,9 @@
 
 ;; Author: Federico Tedin <federicotedin@gmail.com>
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
+;; Homepage: https://github.com/federicotdn/post
+;; Keywords: http
+;; Package-Requires: ((emacs "26"))
 
 ;; post is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -108,6 +111,12 @@ Return nil if `post--heading-has-content-p' returns nil."
   "Send the request specified by the selected heading's text contents."
   (interactive)
   (post--request-spec-execute (post--request-spec-from-heading)))
+
+(defvar post-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-o") 'post-execute-request-on-point)
+    map)
+  "Keymap for post mode.")
 
 (define-derived-mode post-mode outline-mode "Post"
   "Enable or disable post mode."
