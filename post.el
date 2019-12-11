@@ -25,6 +25,7 @@
 ;;; Code:
 (require 'eieio)
 (require 'subr-x)
+(require 'url)
 
 (defconst post--comment-character "#"
   "Character to use to mark commented lines.")
@@ -38,6 +39,10 @@
 (defconst post--template-keyword "TEMPLATE"
   "Keyword to use when defining request templates without defined HTTP
 methods.")
+
+(defconst post--default-https t
+  "If non-nil, use HTTPS to send requests that do not specify a
+  protocol, otherwise use HTTP.")
 
 (defun post--back-to-heading ()
   "Move to the previous heading.
@@ -96,8 +101,13 @@ Return nil if `post--heading-has-content-p' returns nil."
   (let ((text (post--heading-contents)))
     (when (or (null text)
 	      (= (length (string-trim text)) 0))
-      (user-error "Current heading is empty (no text contents)"))
+      (user-error "%s" "Current heading is empty (no text contents)"))
     (post--request-spec-from-text text)))
+
+(defun post-execute-request-on-point ()
+  "Send the request specified by the selected heading's text contents."
+  (interactive)
+  (post--request-spec-execute (post--request-spec-from-heading)))
 
 (define-derived-mode post-mode outline-mode "Post"
   "Enable or disable post mode."
@@ -139,6 +149,47 @@ HEADER and VALUE must be nonempty strings."
 	 :documentation "Request body."))
   "Represents an HTTP request to be made.")
 
+(defun post--request-spec-callback (status rs)
+  "Callback for `post--request-spec-execute' for request RS.
+More response information can be read from STATUS."
+  (switch-to-buffer-other-window (current-buffer)))
+
+(defun post--prepare-url (url)
+  "Return a correctly encoded URL ready to be used with `url-retrieve'.
+
+Additionally, given a URL like 'http://foo.com?a=b', return
+'http://foo.com/?a=b'. This is what curl does when the path is empty
+and there are query string arguments.
+
+If a schema is not present, set it to 'https' or 'http' (see
+`post--default-https')."
+  (let* ((url-obj (url-generic-parse-url (url-encode-url url)))
+	 (path (url-filename url-obj))
+	 (schema (url-type url-obj)))
+    (if (not schema)
+	;; It's easier to prepend string with http/https and try again
+	;; because the entire URL has been intepreted as a path
+	(post--prepare-url (concat (if post--default-https
+				       "https"
+				     "http")
+				   "://" url))
+      (unless (member schema '("http" "https"))
+	(user-error "The URL must specify http or https (got: %s)"
+		    schema))
+      ;; If path is "" but there are query string arguments, set path
+      ;; to "/" (taken from curl)
+      (when (string-prefix-p "?" path)
+	(setf (url-filename url-obj) (concat "/" path)))
+      (url-recreate-url url-obj))))
+
+(cl-defmethod post--request-spec-execute ((rs post--request-spec))
+  "Execute the HTTP request described by RS."
+  (let ((url (post--prepare-url (oref rs :url)))
+	(inhibit-message t))
+    (url-retrieve url #'post--request-spec-callback (list rs) t)
+    (message "Encoded URL: %s" url))
+  (message "Request sent to %s..." (oref rs :url)))
+
 (defun post--http-methods-regexp ()
   "Return a regexp that matches a HTTP method.
 HTTP methods are defined in `post--http-methods'.
@@ -167,7 +218,7 @@ ignored."
     (with-temp-buffer
       (insert text)
       (goto-char (point-min))
-      ;; Skip initial blank lines and commments.
+      ;; Skip initial blank lines and commments
       (while (and (re-search-forward (concat "^\\(\\s-*"
 					     post--comment-character
 					     ".*\\)?$")

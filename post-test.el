@@ -179,5 +179,35 @@
   (should-not (post--http-headers-p (list (cons "Hello" ""))))
   (should-not (post--http-headers-p (list (cons "" "Hello")))))
 
+(ert-deftest test-prepare-url ()
+  (should-error (post--prepare-url "foo://hello.com"))
+
+  (should (string= (post--prepare-url "http://foo.com")
+		   "http://foo.com"))
+
+  (should (string= (post--prepare-url "http://foo.com/a/path")
+		   "http://foo.com/a/path"))
+
+  (should (string= (post--prepare-url "http://foo.com/a/path?a=b&b=c")
+		   "http://foo.com/a/path?a=b&b=c"))
+
+  ;; URL encoding
+  (should (string= (post--prepare-url "http://foo.com/test?q=hello world")
+		   "http://foo.com/test?q=hello%20world"))
+
+  (should (string= (post--prepare-url "https://foo.com")
+		   "https://foo.com"))
+
+  (should (string= (post--prepare-url "foo.com")
+		   "https://foo.com"))
+
+  ;; Empty path + query string
+  (should (string= (post--prepare-url "http://foo.com?test")
+		   "http://foo.com/?test"))
+
+  ;; Empty path + query string, no schema, URL encoding
+  (should (string= (post--prepare-url "foo.com?test=hello world")
+		   "https://foo.com/?test=hello%20world")))
+
 (provide 'post-test)
 ;;; post.el ends here
