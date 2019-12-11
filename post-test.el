@@ -65,23 +65,23 @@
 
 (ert-deftest test-request-spec-from-text-simple ()
   (setq aux (text-as-spec "GET example.com"))
-  (should (string= (oref aux :url) "example.com"))
+  (should (string= (oref aux :url) "https://example.com"))
   (should (string= (oref aux :method) "GET"))
 
   (setq aux (text-as-spec "GET example.com\n"))
-  (should (string= (oref aux :url) "example.com"))
+  (should (string= (oref aux :url) "https://example.com"))
 
   (setq aux (text-as-spec "# Comment\n"
 			  "\n"
 			  "GET example.com"))
-  (should (string= (oref aux :url) "example.com"))
+  (should (string= (oref aux :url) "https://example.com"))
   (should (string= (oref aux :method) "GET"))
 
   (setq aux (text-as-spec "\n"
 			  "  # hello\n"
 			  "\n"
 			  "GET example.com"))
-  (should (string= (oref aux :url) "example.com"))
+  (should (string= (oref aux :url) "https://example.com"))
   (should (string= (oref aux :method) "GET")))
 
 (ert-deftest test-request-spec-from-text-headers ()
@@ -155,7 +155,7 @@
 			  " Referer   :host\n"
 			  "\n"
 			  "Content\n"))
-  (should (string= (oref aux :url) "example.com/foobar"))
+  (should (string= (oref aux :url) "https://example.com/foobar"))
   (should (string= (oref aux :method) "POST"))
   (should (equal (oref aux :headers)
 		 (list (cons "Accept" "text")
@@ -179,34 +179,34 @@
   (should-not (post--http-headers-p (list (cons "Hello" ""))))
   (should-not (post--http-headers-p (list (cons "" "Hello")))))
 
-(ert-deftest test-prepare-url ()
-  (should-error (post--prepare-url "foo://hello.com"))
+(ert-deftest test-clean-url ()
+  (should-error (post--clean-url "foo://hello.com"))
 
-  (should (string= (post--prepare-url "http://foo.com")
+  (should (string= (post--clean-url "http://foo.com")
 		   "http://foo.com"))
 
-  (should (string= (post--prepare-url "http://foo.com/a/path")
+  (should (string= (post--clean-url "http://foo.com/a/path")
 		   "http://foo.com/a/path"))
 
-  (should (string= (post--prepare-url "http://foo.com/a/path?a=b&b=c")
+  (should (string= (post--clean-url "http://foo.com/a/path?a=b&b=c")
 		   "http://foo.com/a/path?a=b&b=c"))
 
   ;; URL encoding
-  (should (string= (post--prepare-url "http://foo.com/test?q=hello world")
+  (should (string= (post--clean-url "http://foo.com/test?q=hello world")
 		   "http://foo.com/test?q=hello%20world"))
 
-  (should (string= (post--prepare-url "https://foo.com")
+  (should (string= (post--clean-url "https://foo.com")
 		   "https://foo.com"))
 
-  (should (string= (post--prepare-url "foo.com")
+  (should (string= (post--clean-url "foo.com")
 		   "https://foo.com"))
 
   ;; Empty path + query string
-  (should (string= (post--prepare-url "http://foo.com?test")
+  (should (string= (post--clean-url "http://foo.com?test")
 		   "http://foo.com/?test"))
 
   ;; Empty path + query string, no schema, URL encoding
-  (should (string= (post--prepare-url "foo.com?test=hello world")
+  (should (string= (post--clean-url "foo.com?test=hello world")
 		   "https://foo.com/?test=hello%20world")))
 
 (provide 'post-test)

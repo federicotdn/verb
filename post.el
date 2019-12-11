@@ -154,7 +154,27 @@ HEADER and VALUE must be nonempty strings."
 More response information can be read from STATUS."
   (switch-to-buffer-other-window (current-buffer)))
 
-(defun post--prepare-url (url)
+(cl-defmethod post--request-spec-execute ((rs post--request-spec))
+  "Execute the HTTP request described by RS."
+  (unless (oref rs :method)
+    (user-error "%s" (concat "No HTTP method specified\n"
+			     "Make sure you specify a specific HTTP "
+			     "method (i.e. not " post--template-keyword
+			     ") somewhere in the heading hierarchy")))
+  (let ((url (oref rs :url)))
+    (url-retrieve url #'post--request-spec-callback (list rs) t)
+    (message "Request sent to %s..." url)))
+
+(defun post--http-methods-regexp ()
+  "Return a regexp that matches a HTTP method.
+HTTP methods are defined in `post--http-methods'.
+Additionally, allow matching `post--template-keyword'."
+  (mapconcat #'identity
+	     (append post--http-methods
+		     (list post--template-keyword))
+	     "\\|"))
+
+(defun post--clean-url (url)
   "Return a correctly encoded URL ready to be used with `url-retrieve'.
 
 Additionally, given a URL like 'http://foo.com?a=b', return
@@ -169,10 +189,10 @@ If a schema is not present, set it to 'https' or 'http' (see
     (if (not schema)
 	;; It's easier to prepend string with http/https and try again
 	;; because the entire URL has been intepreted as a path
-	(post--prepare-url (concat (if post--default-https
-				       "https"
-				     "http")
-				   "://" url))
+	(post--clean-url (concat (if post--default-https
+				     "https"
+				   "http")
+				 "://" url))
       (unless (member schema '("http" "https"))
 	(user-error "The URL must specify http or https (got: %s)"
 		    schema))
@@ -181,23 +201,6 @@ If a schema is not present, set it to 'https' or 'http' (see
       (when (string-prefix-p "?" path)
 	(setf (url-filename url-obj) (concat "/" path)))
       (url-recreate-url url-obj))))
-
-(cl-defmethod post--request-spec-execute ((rs post--request-spec))
-  "Execute the HTTP request described by RS."
-  (let ((url (post--prepare-url (oref rs :url)))
-	(inhibit-message t))
-    (url-retrieve url #'post--request-spec-callback (list rs) t)
-    (message "Encoded URL: %s" url))
-  (message "Request sent to %s..." (oref rs :url)))
-
-(defun post--http-methods-regexp ()
-  "Return a regexp that matches a HTTP method.
-HTTP methods are defined in `post--http-methods'.
-Additionally, allow matching `post--template-keyword'."
-  (mapconcat #'identity
-	     (append post--http-methods
-		     (list post--template-keyword))
-	     "\\|"))
 
 (defun post--request-spec-from-text (text)
   "Create a `post--request-spec' from a text specification.
@@ -261,7 +264,7 @@ ignored."
 	  (setq body rest)))
       ;; Return a `post--request-spec'
       (post--request-spec :method method
-			  :url url
+			  :url (post--clean-url url)
 			  :headers headers
 			  :body body))))
 
