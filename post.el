@@ -24,6 +24,7 @@
 
 ;;; Code:
 (require 'eieio)
+(require 'subr-x)
 
 (defconst post--comment-character "#"
   "Character to use to mark commented lines.")
@@ -119,8 +120,8 @@ Return nil if `post--heading-has-content-p' returns nil."
 	    :type (or null cons)
 	    :documentation "HTTP headers.")
    (body :initarg :body
-	 :initform ""
-	 :type string
+	 :initform nil
+	 :type (or null string)
 	 :documentation "Request body."))
   "Represents an HTTP request to be made.")
 
@@ -130,9 +131,7 @@ HTTP methods are defined in `post--http-methods'.
 Additionally, allow matching `post--template-keyword'."
   (mapconcat #'identity
 	     (append post--http-methods
-		     (list post--template-keyword)
-		     (mapcar #'downcase post--http-methods)
-		     (list (downcase post--template-keyword)))
+		     (list post--template-keyword))
 	     "\\|"))
 
 (defun post--request-spec-from-text (text)
@@ -162,12 +161,13 @@ ignored."
 		  (not (eobp)))
 	(forward-char))
       ;; Read HTTP method and URL
-      (when (re-search-forward (concat "^\\s-*\\("
-				       (post--http-methods-regexp)
-				       "\\)\\s-+\\(.*\\)$")
-			       (line-end-position) t)
-	(setq method (upcase (match-string 1))
-	      url (match-string 2)))
+      (let ((case-fold-search t))
+	(when (re-search-forward (concat "^\\s-*\\("
+					 (post--http-methods-regexp)
+					 "\\)\\s-+\\(.*\\)$")
+				 (line-end-position) t)
+	  (setq method (upcase (match-string 1))
+		url (match-string 2))))
       (if method
 	  (when (string= method post--template-keyword)
 	    (setq method nil))
@@ -190,7 +190,10 @@ ignored."
       (when (re-search-forward "^$" (line-end-position) t)
 	(when (not (eobp)) (forward-char)))
       ;; The rest of the buffer is the request body
-      (setq body (buffer-substring (point) (point-max)))
+      (let ((rest (buffer-substring (point) (point-max))))
+	(unless (= 0 (length (string-trim rest)))
+	  ;; Only read body if it isn't comprised entirely of whitespace
+	  (setq body rest)))
       ;; Return a `post--request-spec'
       (post--request-spec :method method
 			  :url url

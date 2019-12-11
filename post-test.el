@@ -52,6 +52,15 @@
 
 (ert-deftest test-request-spec-from-text-case ()
   (setq aux (text-as-spec "post example.com"))
+  (should (string= (oref aux :method) "POST"))
+
+  (setq aux (text-as-spec "Post example.com"))
+  (should (string= (oref aux :method) "POST"))
+
+  (setq aux (text-as-spec "PoST example.com"))
+  (should (string= (oref aux :method) "POST"))
+
+  (setq aux (text-as-spec "POST example.com"))
   (should (string= (oref aux :method) "POST")))
 
 (ert-deftest test-request-spec-from-text-simple ()
@@ -96,12 +105,29 @@
 (ert-deftest test-request-spec-from-text-body ()
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"))
-  (should (string= (oref aux :body) ""))
+  (should (null (oref aux :body)))
 
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"
 			  "\n"))
-  (should (string= (oref aux :body) ""))
+  (should (null (oref aux :body)))
+
+  (setq aux (text-as-spec "GET example.com\n"
+			  "Accept: text\n"
+			  "\n\n"))
+  (should (null (oref aux :body)))
+
+  (setq aux (text-as-spec "GET example.com\n"
+			  "Accept: text\n"
+			  "\n\n\n\n  \n\n"))
+  (should (null (oref aux :body)))
+
+  (setq aux (text-as-spec "GET example.com\n"
+			  "Accept: text\n"
+			  "\n"
+			  "\n"
+			  "hello\n"))
+  (should (string= (oref aux :body) "\nhello\n"))
 
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"
