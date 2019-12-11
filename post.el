@@ -107,6 +107,20 @@ Return nil if `post--heading-has-content-p' returns nil."
   "Return non-nil if M is a valid HTTP method."
   (member m post--http-methods))
 
+(defun post--http-headers-p (h)
+  "Return non-nil if H is an alist of (HEADER . VALUE) elements.
+HEADER and VALUE must be nonempty strings."
+  (when (consp h)
+    (catch 'end
+      (dolist (elem h)
+	(unless (and (consp elem)
+		     (stringp (car elem))
+		     (stringp (cdr elem))
+		     (< 0 (length (car elem)))
+		     (< 0 (length (cdr elem))))
+	  (throw 'end nil)))
+      t)))
+
 (defclass post--request-spec ()
   ((method :initarg :method
 	   :initform nil
@@ -117,7 +131,7 @@ Return nil if `post--heading-has-content-p' returns nil."
 	:documentation "Request URL.")
    (headers :initarg :headers
 	    :initform ()
-	    :type (or null cons)
+	    :type (or null post--http-headers)
 	    :documentation "HTTP headers.")
    (body :initarg :body
 	 :initform nil

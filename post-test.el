@@ -164,5 +164,20 @@
 		       (cons "Referer" "host"))))
   (should (string= (oref aux :body) "Content\n")))
 
+(ert-deftest test-http-headers-p ()
+  (should (post--http-headers-p (list (cons "Foo" "Bar"))))
+
+  (should (post--http-headers-p (list (cons "Foo" "Bar")
+				      (cons "Quux" "Quuz"))))
+
+  (should-not (post--http-headers-p 1))
+  (should-not (post--http-headers-p nil))
+  (should-not (post--http-headers-p (list nil)))
+  (should-not (post--http-headers-p (list (cons 1 2))))
+  (should-not (post--http-headers-p (list (cons nil nil))))
+  (should-not (post--http-headers-p (list (cons "" ""))))
+  (should-not (post--http-headers-p (list (cons "Hello" ""))))
+  (should-not (post--http-headers-p (list (cons "" "Hello")))))
+
 (provide 'post-test)
 ;;; post.el ends here
