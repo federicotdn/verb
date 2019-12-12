@@ -50,6 +50,13 @@
   (setq aux (text-as-spec "template example.com"))
   (null (oref aux :method)))
 
+(ert-deftest test-request-spec-from-text-no-url ()
+  (setq aux (text-as-spec "GET"))
+  (null (oref aux :method))
+
+  (setq aux (text-as-spec "GET "))
+  (null (oref aux :method)))
+
 (ert-deftest test-request-spec-from-text-case ()
   (setq aux (text-as-spec "post example.com"))
   (should (string= (oref aux :method) "POST"))

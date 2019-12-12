@@ -123,7 +123,7 @@ Return nil if `post--heading-has-content-p' returns nil."
   (font-lock-add-keywords
    nil
    `(;; GET www.example.com
-     (,(concat "^\\(" (post--http-methods-regexp) "\\) ?\\(.*\\)$")
+     (,(concat "^\\(" (post--http-methods-regexp) "\\) *\\(.*\\)$")
       (1 'font-lock-constant-face)
       (2 'font-lock-function-name-face))
      ;; Content-type: application/json
@@ -163,7 +163,7 @@ HEADER and VALUE must be nonempty strings."
 	   :type (or null post--http-method)
 	   :documentation "HTTP method.")
    (url :initarg :url
-	:type string
+	:type (or null string)
 	:documentation "Request URL.")
    (headers :initarg :headers
 	    :initform ()
@@ -184,12 +184,14 @@ More response information can be read from STATUS."
   "Execute the HTTP request described by RS."
   (unless (oref rs :method)
     (user-error "%s" (concat "No HTTP method specified\n"
-			     "Make sure you specify a specific HTTP "
+			     "Make sure you specify a concrete HTTP "
 			     "method (i.e. not " post--template-keyword
-			     ") somewhere in the heading hierarchy")))
+			     ") in the heading hierarchy")))
+  (unless (oref rs :url)
+    (user-error "%s" "No URL specified"))
   (let ((url (oref rs :url)))
     (url-retrieve url #'post--request-spec-callback (list rs) t)
-    (message "Request sent to %s..." url)))
+    (message "%s request sent to %s" (oref rs :method) url)))
 
 (defun post--http-methods-regexp ()
   "Return a regexp that matches a HTTP method.
@@ -258,7 +260,7 @@ ignored."
       (let ((case-fold-search t))
 	(when (re-search-forward (concat "^\\s-*\\("
 					 (post--http-methods-regexp)
-					 "\\)\\s-+\\(.*\\)$")
+					 "\\)\\s-*\\(.*\\)$")
 				 (line-end-position) t)
 	  (setq method (upcase (match-string 1))
 		url (match-string 2))))
@@ -290,7 +292,8 @@ ignored."
 	  (setq body rest)))
       ;; Return a `post--request-spec'
       (post--request-spec :method method
-			  :url (post--clean-url url)
+			  :url (when (< 0 (length url))
+				 (post--clean-url url))
 			  :headers headers
 			  :body body))))
 

@@ -31,3 +31,11 @@ Content-type: application/json
 # Test comment.
 --- Login
 post /login?source=frontend
+
+- ipify API
+# See: https://www.ipify.org/
+-- v4
+get https://api.ipify.org?format=json
+
+-- v6
+get https://api6.ipify.org?format=json

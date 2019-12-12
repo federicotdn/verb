@@ -8,7 +8,7 @@ test:
 		 -l post-test.el \
 		 -f ert-run-tests-batch-and-exit
 
-test-font-lock:
+load-example:
 	$(EMACS) -l post.el \
 		 --eval "(find-file \"docs/example.post\")" \
 		 --eval "(post-mode)"
