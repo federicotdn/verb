@@ -85,6 +85,8 @@
   (should (string= (oref aux :method) "GET")))
 
 (ert-deftest test-request-spec-from-text-headers ()
+  (should-error (text-as-spec "GET example.com\nTest:\n"))
+
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text"))
   (should (equal (oref aux :headers)
@@ -96,10 +98,10 @@
 		 (list (cons "Accept" "text"))))
 
   (setq aux (text-as-spec "GET example.com\n"
-			  "Accept: text\n"
+			  "Foo-Bar: text\n"
 			  "Referer: host.com\n"))
   (should (equal (oref aux :headers)
-		 (list (cons "Accept" "text")
+		 (list (cons "Foo-Bar" "text")
 		       (cons "Referer" "host.com")))))
 
 (ert-deftest test-request-spec-from-text-body ()

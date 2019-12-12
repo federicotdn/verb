@@ -36,7 +36,7 @@
 (defconst post--outline-character "-"
   "Character to use to create headings.")
 
-(defconst post--http-methods '("GET" "POST")
+(defconst post--http-methods '("GET" "POST" "DELETE")
   "List of valid HTTP methods.")
 
 (defconst post--template-keyword "TEMPLATE"
@@ -118,9 +118,23 @@ Return nil if `post--heading-has-content-p' returns nil."
     map)
   "Keymap for post mode.")
 
+(defun post--setup-font-lock-keywords ()
+  "Configure font lock keywords for `post-mode'."
+  (font-lock-add-keywords
+   nil
+   `((,(concat "^\\(" (post--http-methods-regexp) "\\) ?\\(.*\\)$")
+      (1 'font-lock-constant-face)
+      (2 'font-lock-function-name-face))
+     ("^[[:alpha:]-]+: .+$"
+      (0 'font-lock-doc-face))
+     (,(concat "^\\s-*" post--comment-character ".*$")
+      (0 'font-lock-comment-face))))
+  (setq font-lock-keywords-case-fold-search t))
+
 (define-derived-mode post-mode outline-mode "Post"
   "Enable or disable post mode."
-  (setq-local outline-regexp (concat "[" post--outline-character "\^L]+")))
+  (setq-local outline-regexp (concat "[" post--outline-character "\^L]+"))
+  (post--setup-font-lock-keywords))
 
 (defun post--http-method-p (m)
   "Return non-nil if M is a valid HTTP method."
@@ -258,7 +272,7 @@ ignored."
       (when (not (eobp)) (forward-char))
       ;; Search for HTTP headers
       ;; Stop as soon as we find a blank line or a non-matching line
-      (while (re-search-forward "^\\s-*\\(\\w+\\)\\s-*:\\s-?\\(.*\\)$"
+      (while (re-search-forward "^\\s-*\\([[:alpha:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
 				(line-end-position) t)
 	(push (cons (match-string 1) (match-string 2)) headers)
 	(when (not (eobp)) (forward-char)))
