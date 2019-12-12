@@ -71,24 +71,32 @@
   (should (string= (oref aux :method) "POST")))
 
 (ert-deftest test-request-spec-from-text-simple ()
-  (setq aux (text-as-spec "GET example.com"))
-  (should (string= (oref aux :url) "https://example.com"))
+  (setq aux (text-as-spec "GET https://example.com"))
+  (should (string= (post--request-spec-url-string aux)
+		   "https://example.com"))
   (should (string= (oref aux :method) "GET"))
 
-  (setq aux (text-as-spec "GET example.com\n"))
-  (should (string= (oref aux :url) "https://example.com"))
+  (setq aux (text-as-spec "GET https://example.com\n"))
+  (should (string= (post--request-spec-url-string aux)
+		   "https://example.com"))
+
+  (setq aux (text-as-spec "GET /some/path"))
+  (should (string= (post--request-spec-url-string aux)
+		   "/some/path"))
 
   (setq aux (text-as-spec "# Comment\n"
 			  "\n"
-			  "GET example.com"))
-  (should (string= (oref aux :url) "https://example.com"))
+			  "GET https://example.com"))
+  (should (string= (post--request-spec-url-string aux)
+		   "https://example.com"))
   (should (string= (oref aux :method) "GET"))
 
   (setq aux (text-as-spec "\n"
 			  "  # hello\n"
 			  "\n"
-			  "GET example.com"))
-  (should (string= (oref aux :url) "https://example.com"))
+			  "GET https://example.com"))
+  (should (string= (post--request-spec-url-string aux)
+		   "https://example.com"))
   (should (string= (oref aux :method) "GET")))
 
 (ert-deftest test-request-spec-from-text-headers ()
@@ -157,14 +165,15 @@
 			  "\n"
 			  "#\n"
 			  "\n"
-			  " Post    example.com/foobar\n"
+			  " Post   http://example.com/foobar\n"
 			  "Accept : text\n"
 			  "Foo:bar\n"
 			  "Quux: Quuz\n"
 			  " Referer   :host\n"
 			  "\n"
 			  "Content\n"))
-  (should (string= (oref aux :url) "https://example.com/foobar"))
+  (should (string= (post--request-spec-url-string aux)
+		   "http://example.com/foobar"))
   (should (string= (oref aux :method) "POST"))
   (should (equal (oref aux :headers)
 		 (list (cons "Accept" "text")
@@ -172,6 +181,32 @@
 		       (cons "Quux" "Quuz")
 		       (cons "Referer" "host"))))
   (should (string= (oref aux :body) "Content\n")))
+
+(ert-deftest test-request-spec-override ()
+  (setq aux (post--request-spec :url nil :method nil))
+  (should-error (post--request-spec-override aux "test")))
+
+(ert-deftest test-request-spec-url-string ()
+  (setq aux (post--request-spec-from-text
+	     "GET http://hello.com/test"))
+  (should (string= (post--request-spec-url-string aux)
+		   "http://hello.com/test"))
+
+  (setq aux (post--request-spec-from-text
+	     "GET hello/world"))
+  (should (string= (post--request-spec-url-string aux)
+		   "hello/world")))
+
+(ert-deftest test-override-url ()
+  (should (equal (post--override-url nil nil) nil))
+
+  (setq url1 (url-generic-parse-url "http://test.com"))
+  (setq url2 nil)
+  (should (equal (post--override-url url1 url2) url1))
+
+  (setq url1 nil)
+  (setq url2 (url-generic-parse-url "http://test.com"))
+  (should (equal (post--override-url url1 url2) url2)))
 
 (ert-deftest test-http-headers-p ()
   (should (post--http-headers-p (list (cons "Foo" "Bar"))))
@@ -191,32 +226,51 @@
 (ert-deftest test-clean-url ()
   (should-error (post--clean-url "foo://hello.com"))
 
-  (should (string= (post--clean-url "http://foo.com")
+  (should (string= (url-recreate-url (post--clean-url "http://foo.com"))
 		   "http://foo.com"))
 
-  (should (string= (post--clean-url "http://foo.com/a/path")
+  (should (string= (url-recreate-url (post--clean-url "http://foo.com/"))
+		   "http://foo.com/"))
+
+  (should (string= (url-recreate-url (post--clean-url "http://foo.com/a/path"))
 		   "http://foo.com/a/path"))
 
-  (should (string= (post--clean-url "http://foo.com/a/path?a=b&b=c")
+  (should (string= (url-recreate-url (post--clean-url "http://foo.com/a/path?a=b&b=c"))
 		   "http://foo.com/a/path?a=b&b=c"))
 
   ;; URL encoding
-  (should (string= (post--clean-url "http://foo.com/test?q=hello world")
+  (should (string= (url-recreate-url (post--clean-url "http://foo.com/test?q=hello world"))
 		   "http://foo.com/test?q=hello%20world"))
 
-  (should (string= (post--clean-url "https://foo.com")
-		   "https://foo.com"))
-
-  (should (string= (post--clean-url "foo.com")
-		   "https://foo.com"))
-
   ;; Empty path + query string
-  (should (string= (post--clean-url "http://foo.com?test")
+  (should (string= (url-recreate-url (post--clean-url "http://foo.com?test"))
 		   "http://foo.com/?test"))
 
-  ;; Empty path + query string, no schema, URL encoding
-  (should (string= (post--clean-url "foo.com?test=hello world")
-		   "https://foo.com/?test=hello%20world")))
+  ;; Empty path + query string, URL encoding
+  (should (string= (url-recreate-url (post--clean-url "https://foo.com?test=hello world"))
+		   "https://foo.com/?test=hello%20world"))
+
+  ;; No schema
+  (should (string= (url-recreate-url (post--clean-url "foo/bar"))
+		   "foo/bar"))
+
+  (should (string= (url-recreate-url (post--clean-url "/"))
+		   "/"))
+
+  (should (string= (url-recreate-url (post--clean-url "/foo/bar"))
+		   "/foo/bar"))
+
+  (should (string= (url-recreate-url (post--clean-url "/foo/bar?a"))
+		   "/foo/bar?a"))
+
+  (should (string= (url-recreate-url (post--clean-url "/foo/bar?a#b"))
+		   "/foo/bar?a#b")))
+
+(ert-deftest test-http-method-p ()
+  (should (post--http-method-p "GET"))
+  (should (post--http-method-p "POST"))
+  (should-not (post--http-method-p post--template-keyword))
+  (should-not (post--http-method-p "test")))
 
 (provide 'post-test)
 ;;; post.el ends here

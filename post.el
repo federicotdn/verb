@@ -43,10 +43,6 @@
   "Keyword to use when defining request templates without defined HTTP
 methods.")
 
-(defconst post--default-https t
-  "If non-nil, use HTTPS to send requests that do not specify a
-  protocol, otherwise use HTTP.")
-
 (defun post--back-to-heading ()
   "Move to the previous heading.
 Or, move to beggining of this line if it's a heading.  If there are no
@@ -159,11 +155,10 @@ HEADER and VALUE must be nonempty strings."
 
 (defclass post--request-spec ()
   ((method :initarg :method
-	   :initform nil
 	   :type (or null post--http-method)
 	   :documentation "HTTP method.")
    (url :initarg :url
-	:type (or null string)
+	:type (or null url)
 	:documentation "Request URL.")
    (headers :initarg :headers
 	    :initform ()
@@ -174,6 +169,12 @@ HEADER and VALUE must be nonempty strings."
 	 :type (or null string)
 	 :documentation "Request body."))
   "Represents an HTTP request to be made.")
+
+(cl-defmethod post--request-spec-url-string ((rs post--request-spec))
+  "Return RS's url member as a string if it is non-nil."
+  (let ((url (oref rs :url)))
+    (when url
+      (url-recreate-url url))))
 
 (defun post--request-spec-callback (status rs)
   "Callback for `post--request-spec-execute' for request RS.
@@ -190,8 +191,59 @@ More response information can be read from STATUS."
   (unless (oref rs :url)
     (user-error "%s" "No URL specified"))
   (let ((url (oref rs :url)))
+    (unless (url-host url)
+      (user-error "%s" (concat "URL has no host defined\n"
+			       "Make sure you specify a host "
+			       "(e.g. \"github.com\") in the heading "
+			       "hierarchy")))
     (url-retrieve url #'post--request-spec-callback (list rs) t)
-    (message "%s request sent to %s" (oref rs :method) url)))
+    (message "%s request sent to %s"
+	     (oref rs :method)
+	     (post--request-spec-url-string rs))))
+
+(defun post--override-url (original other)
+  "Override URL struct ORIGINAL with OTHER.
+Do this using the rules described in `post--request-spec-override'."
+  ;; If either url is nil, return the other one
+  (if (not (and original other))
+      (or original other)))
+
+(cl-defmethod post--request-spec-override ((rs post--request-spec) other)
+  "Override request specification RS with OTHER, return the result.
+
+Each member of request RS is overridden with the one from OTHER in the
+following way, to form a new request specification:
+
+method
+
+  Use OTHER's HTTP method if it is non-nil, otherwise use RS's.
+
+url
+
+  A new URL is constructed using a combination of both URLs.  The
+  URL's host is the one defined by OTHER.  The new URL's path is a
+  concatenation of RS's and OTHER's paths. Paths consisting of a
+  single slash are treated as the empty string.  The new URL's schema
+  is the one specified by OTHER.  The new URL's query string is a
+  union of both RS's and OTHER's query strings, using OTHER's value
+  when both contain the same key.  Finally, the new URL's fragment is
+  the one specified by OTHER, or by RS if OTHER's is not present.  If
+  either OTHER's or RS's URL is nil, use the other one's without
+  modifications.
+
+headers
+
+  Create a union of RS's and OTHER's headers, using OTHER's value when
+  both contain the same header.
+
+body
+
+  Use OTHER's body if it is non-nil, otherwise use RS's.
+
+Neither request specification is modified, a new one is returned.
+"
+  (unless (object-of-class-p other post--request-spec)
+    (error "%s" "Argument OTHER must be a `post--request-spec'.")))
 
 (defun post--http-methods-regexp ()
   "Return a regexp that matches a HTTP method.
@@ -203,46 +255,51 @@ Additionally, allow matching `post--template-keyword'."
 	     "\\|"))
 
 (defun post--clean-url (url)
-  "Return a correctly encoded URL ready to be used with `url-retrieve'.
+  "Return a correctly encoded URL struct to be used with `url-retrieve'.
 
-Additionally, given a URL like 'http://foo.com?a=b', return
-'http://foo.com/?a=b'. This is what curl does when the path is empty
-and there are query string arguments.
+Additionally, given a URL like \"http://foo.com?a=b\", return
+\"http://foo.com/?a=b\". This is what curl does when the path is empty
+and there are query string arguments present.
 
-If a schema is not present, set it to 'https' or 'http' (see
-`post--default-https')."
+If a schema is not present, interpret the URL as a path, query string and
+fragment component of a URL with no host or schema defined."
   (let* ((url-obj (url-generic-parse-url (url-encode-url url)))
 	 (path (url-filename url-obj))
 	 (schema (url-type url-obj)))
     (if (not schema)
-	;; It's easier to prepend string with http/https and try again
-	;; because the entire URL has been intepreted as a path
-	(post--clean-url (concat (if post--default-https
-				     "https"
-				   "http")
-				 "://" url))
+	;; If no schema defined, interpret everything as path + query
+	;; string + fragment
+	(progn
+	  (setf (url-filename url-obj)
+		(concat (url-host url-obj)
+			(url-filename url-obj)))
+	  (setf (url-host url-obj) nil))
+      ;; Schema is present:
       (unless (member schema '("http" "https"))
 	(user-error "The URL must specify http or https (got: %s)"
 		    schema))
       ;; If path is "" but there are query string arguments, set path
       ;; to "/" (taken from curl)
       (when (string-prefix-p "?" path)
-	(setf (url-filename url-obj) (concat "/" path)))
-      (url-recreate-url url-obj))))
+	(setf (url-filename url-obj) (concat "/" path))))
+    url-obj))
 
 (defun post--request-spec-from-text (text)
   "Create a `post--request-spec' from a text specification.
 
 The text format for defining requests is:
 
-METHOD [URL]
+METHOD [URL | PARTIAL-URL]
 [HEADER-NAME1: HEADER-VALUE1]
 [HEADER-NAME2: HEADER-VALUE2]...
 
 [BODY]
 
 METHOD must be a method matched by `post--http-methods-regexp'.
-URL can be an empty string.
+URL can be an empty string, or a URL with a \"http\" or \"https\"
+schema.
+PARTIAL-URL can be an empty string, or the path + query string +
+fragment part of a URL.
 Headers and BODY can be separated by a blank line, which will be
 ignored."
   (let (method url headers body)

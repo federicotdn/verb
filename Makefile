@@ -11,10 +11,8 @@ test:
 load-example:
 	$(EMACS) -l post.el \
 		 --eval "(find-file \"docs/example.post\")" \
-		 --eval "(post-mode)"
-
-ielm:
-	$(EMACS) -l post.el --eval "(ielm)"
+		 --eval "(post-mode)" \
+		 --eval "(delete-other-windows)"
 
 # TODO:
 # package-lint (https://github.com/purcell/package-lint)
