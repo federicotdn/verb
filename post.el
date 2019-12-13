@@ -189,7 +189,8 @@ More response information can be read from STATUS."
 			     "method (i.e. not " post--template-keyword
 			     ") in the heading hierarchy")))
   (unless (oref rs :url)
-    (user-error "%s" "No URL specified"))
+    (user-error "%s" (concat "No URL specified\nMake sure you specify "
+			     "a nonempty URL in the heading hierarchy")))
   (let ((url (oref rs :url)))
     (unless (url-host url)
       (user-error "%s" (concat "URL has no host defined\n"
@@ -201,12 +202,46 @@ More response information can be read from STATUS."
 	     (oref rs :method)
 	     (post--request-spec-url-string rs))))
 
+(defun post--override-url-paths (original other)
+  "Override URL path (and query string) ORIGINAL with OTHER.
+ORIGINAL and OTHER have the form (PATH . QUERY).  Work using the rules
+described in `post--request-spec-override'."
+  (let ((original-path (car original))
+	(original-query (cdr original))
+	(other-path (car other))
+	(other-query (cdr other)))
+    (concat original-path other-path)))
+
+(defun post--url-port (url)
+  "Return port used by URL, or nil if it can be inferred from its schema."
+  (let ((port (url-port url))
+	(schema (url-type url)))
+    (if (and (numberp port)
+	     (or (and (= port 80) (string= schema "http"))
+		 (and (= port 443) (string= schema "https"))))
+	nil
+      port)))
+
 (defun post--override-url (original other)
   "Override URL struct ORIGINAL with OTHER.
 Do this using the rules described in `post--request-spec-override'."
   ;; If either url is nil, return the other one
   (if (not (and original other))
-      (or original other)))
+      (or original other)
+    ;; Override ORIGINAL with OTHER
+    (let ((schema (or (url-type other) (url-type original)))
+	  (user (or (url-user other) (url-user original)))
+	  (password (or (url-password other) (url-password original)))
+	  (host (or (url-host other) (url-host original)))
+	  (port (or (post--url-port other) (post--url-port original)))
+	  (path (post--override-url-paths (url-path-and-query original)
+					  (url-path-and-query other)))
+	  (fragment (or (url-target other) (url-target original)))
+	  (attributes (or (url-attributes other) (url-attributes original)))
+	  (fullness (or (url-fullness other) (url-fullness original))))
+      (url-parse-make-urlobj schema user password host
+			     port path fragment
+			     attributes fullness))))
 
 (cl-defmethod post--request-spec-override ((rs post--request-spec) other)
   "Override request specification RS with OTHER, return the result.
@@ -220,15 +255,13 @@ method
 
 url
 
-  A new URL is constructed using a combination of both URLs.  The
-  URL's host is the one defined by OTHER.  The new URL's path is a
-  concatenation of RS's and OTHER's paths. Paths consisting of a
-  single slash are treated as the empty string.  The new URL's schema
-  is the one specified by OTHER.  The new URL's query string is a
-  union of both RS's and OTHER's query strings, using OTHER's value
-  when both contain the same key.  Finally, the new URL's fragment is
-  the one specified by OTHER, or by RS if OTHER's is not present.  If
-  either OTHER's or RS's URL is nil, use the other one's without
+  A new URL is constructed using a combination of both URLs.  The new
+  URL's path is a concatenation of RS's and OTHER's paths.  The new
+  URL's query string is a union of both RS's and OTHER's query
+  strings, using OTHER's value when both contain the same key.  All
+  other components (host, port, user, etc.) of the new URL are taken
+  from OTHER if they are non-nil, or from RS otherwise.  If either
+  OTHER's or RS's URL is nil, use the other one's without
   modifications.
 
 headers
@@ -276,7 +309,8 @@ fragment component of a URL with no host or schema defined."
 	  (setf (url-host url-obj) nil))
       ;; Schema is present:
       (unless (member schema '("http" "https"))
-	(user-error "The URL must specify http or https (got: %s)"
+	(user-error (concat "The URL must specify \"http://\" or "
+			    "\"https://\" (got: \"%s\")")
 		    schema))
       ;; If path is "" but there are query string arguments, set path
       ;; to "/" (taken from curl)

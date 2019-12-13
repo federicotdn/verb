@@ -223,6 +223,18 @@
   (should-not (post--http-headers-p (list (cons "Hello" ""))))
   (should-not (post--http-headers-p (list (cons "" "Hello")))))
 
+(ert-deftest test-url-port ()
+  (should (null (post--url-port (post--clean-url "http://hello.com"))))
+  (should (null (post--url-port (post--clean-url "https://hello.com"))))
+  (should (null (post--url-port (post--clean-url "http://hello.com:80"))))
+  (should (null (post--url-port (post--clean-url "https://hello.com:443"))))
+  (should (= (post--url-port (post--clean-url "http://hello.com:8080"))
+	     8080))
+  (should (= (post--url-port (post--clean-url "https://hello.com:8080"))
+	     8080))
+  (should (= (post--url-port (url-generic-parse-url "test://hello.com:80"))
+	     80)))
+
 (ert-deftest test-clean-url ()
   (should-error (post--clean-url "foo://hello.com"))
 
@@ -265,6 +277,66 @@
 
   (should (string= (url-recreate-url (post--clean-url "/foo/bar?a#b"))
 		   "/foo/bar?a#b")))
+
+(defun assert-url-override (original other expected)
+  (should (equal (post--override-url (post--clean-url original)
+				     (post--clean-url other))
+		 (post--clean-url expected))))
+
+(ert-deftest test-override-url ()
+  ;; Schema
+  (assert-url-override "https://hello.com"
+		       "http://hello.com"
+		       "http://hello.com")
+
+  ;; Port
+  (assert-url-override "http://hello.com"
+		       "http://hello.com:8080"
+		       "http://hello.com:8080")
+
+  (assert-url-override "http://hello.com:8080"
+		       "http://hello.com"
+		       "http://hello.com:8080")
+
+  ;; Host
+  (assert-url-override "http://hello.com"
+		       "http://foo.com"
+		       "http://foo.com")
+
+  (assert-url-override "http://hello.com/test"
+		       "http://foo.com"
+		       "http://foo.com/test")
+
+  ;; Path
+  (assert-url-override "http://hello.com"
+		       "/test"
+		       "http://hello.com/test")
+
+  (assert-url-override "http://hello.com"
+		       "/test/foo"
+		       "http://hello.com/test/foo")
+
+  (assert-url-override "http://hello.com"
+		       "/"
+		       "http://hello.com/")
+
+  (assert-url-override "http://hello.com/"
+		       ""
+		       "http://hello.com/")
+
+  ;; Path + query string
+  ;; (assert-url-override "http://hello.com?a=b"
+  ;; 		       "/hello"
+  ;; 		       "http://hello.com/hello?a=b")
+
+  ;; Fragment
+  (assert-url-override "http://hello.com#a"
+		       "http://hello.com#b"
+		       "http://hello.com#b")
+
+  (assert-url-override "http://hello.com#a"
+		       "http://hello.com"
+		       "http://hello.com#a"))
 
 (ert-deftest test-http-method-p ()
   (should (post--http-method-p "GET"))
