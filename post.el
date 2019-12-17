@@ -202,10 +202,11 @@ More response information can be read from STATUS."
 	     (oref rs :method)
 	     (post--request-spec-url-string rs))))
 
-(defun post--override-url-queries (original other)
-  "Override query string alist ORIGINAL with OTHER.
-Return the results in a new alist.  Work using the rules described in
-`post--request-spec-override'."
+(defun post--override-alist (original other)
+  "Override alist ORIGINAL with OTHER.
+That is; overwrite (KEY . VALUE) pairs present in ORIGINAL with ones
+present in OTHER if KEYs are equal.  Return the results in a new
+alist."
   (let ((result (nreverse (copy-alist original)))
 	(processed))
     (dolist (key-value other)
@@ -222,6 +223,16 @@ Return the results in a new alist.  Work using the rules described in
 	;; multiple values mapped to the same key)
 	(push key processed)))
     (nreverse result)))
+
+(defalias 'post--override-url-queries #'post--override-alist
+  "Override query string alist ORIGINAL with OTHER.
+Return the results in a new alist.  Work using the rules described in
+`post--request-spec-override'.")
+
+(defalias 'post--override-headers #'post--override-alist
+  "Override headers alist ORIGINAL with OTHER.
+Return the results in a new alist.  Work using the rules described in
+`post--request-spec-override'.")
 
 (defun post--url-query-string-to-alist (query)
   "Return an alist of (KEY . VALUE) from query string QUERY.

@@ -278,6 +278,19 @@
   (should (string= (url-recreate-url (post--clean-url "/foo/bar?a#b"))
 		   "/foo/bar?a#b")))
 
+(ert-deftest test-override-headers ()
+  (should (equal (post--override-headers (list) (list))
+		 (list)))
+
+  (should (equal (post--override-headers (list (cons "a" "b"))
+					 (list (cons "a" "c")))
+		 (list (cons "a" "c"))))
+
+  (should (equal (post--override-headers (list (cons "a" "d"))
+					 (list (cons "c" "c")))
+		 (list (cons "a" "d")
+		       (cons "c" "c")))))
+
 (ert-deftest test-override-url-queries ()
   (should (equal (post--override-url-queries
 		  (post--url-query-string-to-alist "")
