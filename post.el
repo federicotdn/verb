@@ -99,7 +99,7 @@ Return nil if `post--heading-has-content-p' returns nil."
   "Return a `post--request-spec' generated from the heading's text contents."
   (let ((text (post--heading-contents)))
     (when (or (null text)
-	      (= (length (string-trim text)) 0))
+	      (string-empty-p (string-trim text)))
       (user-error "%s" "Current heading is empty (no text contents)"))
     (post--request-spec-from-text text)))
 
@@ -202,6 +202,27 @@ More response information can be read from STATUS."
 	     (oref rs :method)
 	     (post--request-spec-url-string rs))))
 
+(defun post--url-query-to-alist (query)
+  "Return an alist of (KEY . VALUE) from query string QUERY.
+
+For example, return:
+  \"foo=bar&quux\"
+as:
+  ((\"foo\" . \"bar\") (\"quux\" . nil))
+"
+  (let ((parts (split-string query "&"))
+	result)
+    (dolist (p parts)
+      (let* ((key-value (split-string p "="))
+	     (key (car key-value))
+	     (value (cdr key-value)))
+	(unless (string-empty-p key)
+	  (push (cons key
+		      (when value
+			(mapconcat #'identity value "=")))
+		result))))
+    (reverse result)))
+
 (defun post--override-url-paths (original other)
   "Override URL path (and query string) ORIGINAL with OTHER.
 ORIGINAL and OTHER have the form (PATH . QUERY).  Work using the rules
@@ -213,7 +234,8 @@ described in `post--request-spec-override'."
     (concat original-path other-path)))
 
 (defun post--url-port (url)
-  "Return port used by URL, or nil if it can be inferred from its schema."
+  "Return port used by an HTTP URL.
+Return nil if the port can be inferred from the URL's schema."
   (let ((port (url-port url))
 	(schema (url-type url)))
     (if (and (numberp port)
@@ -378,12 +400,12 @@ ignored."
 	(when (not (eobp)) (forward-char)))
       ;; The rest of the buffer is the request body
       (let ((rest (buffer-substring (point) (point-max))))
-	(unless (= 0 (length (string-trim rest)))
+	(unless (string-empty-p (string-trim rest))
 	  ;; Only read body if it isn't comprised entirely of whitespace
 	  (setq body rest)))
       ;; Return a `post--request-spec'
       (post--request-spec :method method
-			  :url (when (< 0 (length url))
+			  :url (unless (string-empty-p url)
 				 (post--clean-url url))
 			  :headers headers
 			  :body body))))

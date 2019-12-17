@@ -278,6 +278,52 @@
   (should (string= (url-recreate-url (post--clean-url "/foo/bar?a#b"))
 		   "/foo/bar?a#b")))
 
+(ert-deftest test-url-query-to-alist ()
+  (should-error (post--url-query-to-alist nil))
+
+  (should (equal (post--url-query-to-alist "")
+		 ()))
+
+  (should (equal (post--url-query-to-alist "a=b")
+		 (list (cons "a" "b"))))
+
+  (should (equal (post--url-query-to-alist "=&=&=")
+		 ()))
+
+  (should (equal (post--url-query-to-alist "a=b&&&")
+		 (list (cons "a" "b"))))
+
+  (should (equal (post--url-query-to-alist "foo")
+		 (list (cons "foo" nil))))
+
+  (should (equal (post--url-query-to-alist "foo&bar")
+		 (list (cons "foo" nil)
+		       (cons "bar" nil))))
+
+  (should (equal (post--url-query-to-alist "a=b&c=d")
+		 (list (cons "a" "b")
+		       (cons "c" "d"))))
+
+  (should (equal (post--url-query-to-alist "a=b&c=d&")
+		 (list (cons "a" "b")
+		       (cons "c" "d"))))
+
+  (should (equal (post--url-query-to-alist "&a=b&c=d&")
+		 (list (cons "a" "b")
+		       (cons "c" "d"))))
+
+  (should (equal (post--url-query-to-alist "a=b=x&c=d")
+		 (list (cons "a" "b=x")
+		       (cons "c" "d"))))
+
+  (should (equal (post--url-query-to-alist "foo=1&foo=2")
+		 (list (cons "foo" "1")
+		       (cons "foo" "2"))))
+
+  (should (equal (post--url-query-to-alist "foo[x]=1&foo[y]=2")
+		 (list (cons "foo[x]" "1")
+		       (cons "foo[y]" "2")))))
+
 (defun assert-url-override (original other expected)
   (should (equal (post--override-url (post--clean-url original)
 				     (post--clean-url other))
