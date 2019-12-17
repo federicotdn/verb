@@ -202,6 +202,27 @@ More response information can be read from STATUS."
 	     (oref rs :method)
 	     (post--request-spec-url-string rs))))
 
+(defun post--override-url-queries (original other)
+  "Override query string alist ORIGINAL with OTHER.
+Return the results in a new alist.  Work using the rules described in
+`post--request-spec-override'."
+  (let ((result (nreverse (copy-alist original)))
+	(processed))
+    (dolist (key-value other)
+      (let ((key (car key-value))
+	    (value (cdr key-value)))
+	(when (and (assoc key result)
+		   (not (member key processed)))
+	  ;; key in OTHER is in ORIGINAL, delete all entries using
+	  ;; this key in ORIGINAL
+	  (setq result (assoc-delete-all key result)))
+	(push key-value result)
+	;; Remember we deleted this key from ORIGINAL so that we don't
+	;; do it again accidentally (this can happen if OTHER contains
+	;; multiple values mapped to the same key)
+	(push key processed)))
+    (nreverse result)))
+
 (defun post--url-query-to-alist (query)
   "Return an alist of (KEY . VALUE) from query string QUERY.
 
@@ -221,7 +242,7 @@ as:
 		      (when value
 			(mapconcat #'identity value "=")))
 		result))))
-    (reverse result)))
+    (nreverse result)))
 
 (defun post--override-url-paths (original other)
   "Override URL path (and query string) ORIGINAL with OTHER.
@@ -394,7 +415,7 @@ ignored."
 				(line-end-position) t)
 	(push (cons (match-string 1) (match-string 2)) headers)
 	(when (not (eobp)) (forward-char)))
-      (setq headers (reverse headers))
+      (setq headers (nreverse headers))
       ;; Allow a blank like to separate headers and body (not required)
       (when (re-search-forward "^$" (line-end-position) t)
 	(when (not (eobp)) (forward-char)))

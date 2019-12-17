@@ -278,6 +278,93 @@
   (should (string= (url-recreate-url (post--clean-url "/foo/bar?a#b"))
 		   "/foo/bar?a#b")))
 
+(ert-deftest test-override-url-queries ()
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "")
+		  (post--url-query-to-alist ""))
+		 nil))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "a=b")
+		  (post--url-query-to-alist ""))
+		 (list (cons "a" "b"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "a=b")
+		  (post--url-query-to-alist "dd=bb"))
+		 (list (cons "a" "b")
+		       (cons "dd" "bb"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "a=b")
+		  (post--url-query-to-alist "a=c"))
+		 (list (cons "a" "c"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "a=b&t=y")
+		  (post--url-query-to-alist "a=c"))
+		 (list (cons "t" "y")
+		       (cons "a" "c"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "")
+		  (post--url-query-to-alist "e=r&a=c"))
+		 (list (cons "e" "r")
+		       (cons "a" "c"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "")
+		  (post--url-query-to-alist "g=1&g=2"))
+		 (list (cons "g" "1")
+		       (cons "g" "2"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "a=1&a=2&n=i")
+		  (post--url-query-to-alist "a=n"))
+		 (list (cons "n" "i")
+		       (cons "a" "n"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "a=1&a=2&n=i")
+		  (post--url-query-to-alist "a=n&a=h"))
+		 (list (cons "n" "i")
+		       (cons "a" "n")
+		       (cons "a" "h"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "r=t")
+		  (post--url-query-to-alist "a=n&a=h&a=l"))
+		 (list (cons "r" "t")
+		       (cons "a" "n")
+		       (cons "a" "h")
+		       (cons "a" "l"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "r")
+		  (post--url-query-to-alist "r=1"))
+		 (list (cons "r" "1"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "r&r")
+		  (post--url-query-to-alist "r=1"))
+		 (list (cons "r" "1"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "r&r")
+		  (post--url-query-to-alist "r=1&r=3"))
+		 (list (cons "r" "1")
+		       (cons "r" "3"))))
+
+  (should (equal (post--override-url-queries
+		  (post--url-query-to-alist "a=1&a=2&foo&c=3")
+		  (post--url-query-to-alist "a=n&a=h&foo&bar&g=1"))
+		 (list (cons "c" "3")
+		       (cons "a" "n")
+		       (cons "a" "h")
+		       (cons "foo" nil)
+		       (cons "bar" nil)
+		       (cons "g" "1")))))
+
 (ert-deftest test-url-query-to-alist ()
   (should-error (post--url-query-to-alist nil))
 
@@ -300,6 +387,10 @@
 		 (list (cons "foo" nil)
 		       (cons "bar" nil))))
 
+  (should (equal (post--url-query-to-alist "foo&foo=1")
+		 (list (cons "foo" nil)
+		       (cons "foo" "1"))))
+
   (should (equal (post--url-query-to-alist "a=b&c=d")
 		 (list (cons "a" "b")
 		       (cons "c" "d"))))
@@ -319,6 +410,11 @@
   (should (equal (post--url-query-to-alist "foo=1&foo=2")
 		 (list (cons "foo" "1")
 		       (cons "foo" "2"))))
+
+  (should (equal (post--url-query-to-alist "foo=1&foo=2&foo=3")
+		 (list (cons "foo" "1")
+		       (cons "foo" "2")
+		       (cons "foo" "3"))))
 
   (should (equal (post--url-query-to-alist "foo[x]=1&foo[y]=2")
 		 (list (cons "foo[x]" "1")
