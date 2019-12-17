@@ -223,7 +223,7 @@ Return the results in a new alist.  Work using the rules described in
 	(push key processed)))
     (nreverse result)))
 
-(defun post--url-query-to-alist (query)
+(defun post--url-query-string-to-alist (query)
   "Return an alist of (KEY . VALUE) from query string QUERY.
 
 For example, return:
@@ -231,28 +231,51 @@ For example, return:
 as:
   ((\"foo\" . \"bar\") (\"quux\" . nil))
 "
-  (let ((parts (split-string query "&"))
-	result)
-    (dolist (p parts)
-      (let* ((key-value (split-string p "="))
-	     (key (car key-value))
-	     (value (cdr key-value)))
-	(unless (string-empty-p key)
-	  (push (cons key
-		      (when value
-			(mapconcat #'identity value "=")))
-		result))))
-    (nreverse result)))
+  (when query
+    (let ((parts (split-string query "&"))
+	  result)
+      (dolist (p parts)
+	(let* ((key-value (split-string p "="))
+	       (key (car key-value))
+	       (value (cdr key-value)))
+	  (unless (string-empty-p key)
+	    (push (cons key
+			(when value
+			  (mapconcat #'identity value "=")))
+		  result))))
+      (nreverse result))))
+
+(defun post--url-query-alist-to-string (query)
+  "Return alist query string QUERY as a string."
+  (when query
+    (mapconcat (lambda (kv)
+		 (if (cdr kv)
+		   (concat (car kv) "=" (cdr kv))
+		 (car kv)))
+	       query
+	     "&")))
 
 (defun post--override-url-paths (original other)
   "Override URL path (and query string) ORIGINAL with OTHER.
 ORIGINAL and OTHER have the form (PATH . QUERY).  Work using the rules
 described in `post--request-spec-override'."
-  (let ((original-path (car original))
-	(original-query (cdr original))
-	(other-path (car other))
-	(other-query (cdr other)))
-    (concat original-path other-path)))
+  (let* ((original-path (car original))
+	 (original-query (cdr original))
+	 (other-path (car other))
+	 (other-query (cdr other))
+	 (paths (concat original-path other-path))
+	 (queries (post--url-query-alist-to-string
+		   (post--override-url-queries
+		    (post--url-query-string-to-alist original-query)
+		    (post--url-query-string-to-alist other-query)))))
+    ;; If after joining two both paths the result path starts with //,
+    ;; remove one of the slashes (this may happen often because we
+    ;; sometimes add slashes in `post--clean-url'.)
+    (concat (if (string-prefix-p "//" paths)
+		(substring paths 1 nil)
+	      paths)
+	    (unless (string-empty-p (or queries ""))
+	      (concat "?" queries)))))
 
 (defun post--url-port (url)
   "Return port used by an HTTP URL.
@@ -357,6 +380,7 @@ fragment component of a URL with no host or schema defined."
 		    schema))
       ;; If path is "" but there are query string arguments, set path
       ;; to "/" (taken from curl)
+      ;; Note that `path' here contains path and query string
       (when (string-prefix-p "?" path)
 	(setf (url-filename url-obj) (concat "/" path))))
     url-obj))
