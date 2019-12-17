@@ -119,14 +119,14 @@ Return nil if `post--heading-has-content-p' returns nil."
   (font-lock-add-keywords
    nil
    `(;; GET www.example.com
-     (,(concat "^\\(" (post--http-methods-regexp) "\\) *\\(.*\\)$")
+     (,(concat "^\\(" (post--http-methods-regexp) "\\)\\( .*?\\)?$")
       (1 'font-lock-constant-face)
       (2 'font-lock-function-name-face))
      ;; Content-type: application/json
-     ("^[[:alpha:]-]+: .+$"
+     ("^[[:alpha:]-]+: .+?$"
       (0 'font-lock-doc-face))
      ;; # This is a comment
-     (,(concat "^\\s-*" post--comment-character ".*$")
+     (,(concat "^\\s-*" post--comment-character ".*?$")
       (0 'font-lock-comment-face))))
   (setq font-lock-keywords-case-fold-search t))
 
