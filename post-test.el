@@ -51,9 +51,24 @@
     (should (null aux))
     (should (= (point) 1))))
 
+(ert-deftest test-request-spec-from-text-comments-only ()
+  (should-error (text-as-spec "# Hello\n"
+			      "# world"))
+
+  (should-error (text-as-spec "# Hello\n"
+			      ""))
+
+  (should-error (text-as-spec ""))
+
+  (should (null (catch 'empty
+		   (text-as-spec ""))))
+
+  (should (null (catch 'empty
+		   (text-as-spec "# Hello\n"
+				 "#test")))))
+
 (ert-deftest test-request-spec-from-text-error ()
-  (should-error (text-as-spec "foobar example.com"))
-  (should-error (text-as-spec "")))
+  (should-error (text-as-spec "foobar example.com")))
 
 (ert-deftest test-request-spec-from-text-template ()
   (setq aux (text-as-spec "template example.com"))

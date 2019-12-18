@@ -53,14 +53,17 @@ found."
     (goto-char (point-min))
     nil))
 
-(defun post--next-heading ()
-  "Move to the next heading."
-  (outline-next-heading))
-
 (defun post--section-end ()
   "Skip forward to before the next heading.
 If there is no next heading, skip to the end of the buffer."
   (outline-next-preface))
+
+(defun post--up-heading ()
+  "Move to the parent heading, if there is one.
+Return t if there was a heading to move towards and nil otherwise."
+  (ignore-errors
+    (outline-up-heading 1 t)
+    t))
 
 (defun post--outline-level ()
   "Return the outline level.
@@ -96,17 +99,39 @@ Return nil if `post--heading-has-content-p' returns nil."
       (buffer-substring-no-properties start end))))
 
 (defun post--request-spec-from-heading ()
-  "Return a `post--request-spec' generated from the heading's text contents."
+  "Return a `post--request-spec' generated from the heading's text contents.
+Return nil of the heading has no text contents."
   (let ((text (post--heading-contents)))
-    (when (or (null text)
-	      (string-empty-p (string-trim text)))
-      (user-error "%s" "Current heading is empty (no text contents)"))
-    (post--request-spec-from-text text)))
+    (unless (or (null text)
+		(string-empty-p (string-trim text)))
+      (catch 'empty
+	(post--request-spec-from-text text)))))
 
 (defun post-execute-request-on-point ()
-  "Send the request specified by the selected heading's text contents."
+  "Send the request specified by the selected heading's text contents.
+The contents of all parent headings are used as well; see
+`post--request-spec-override' to see how this is done."
   (interactive)
-  (post--request-spec-execute (post--request-spec-from-heading)))
+  (let (specs done final-spec)
+    (save-excursion
+      ;; Go up through the Outline tree taking a request specification
+      ;; from each level
+      (while (not done)
+	(let ((spec (post--request-spec-from-heading)))
+	  (when spec (push spec specs)))
+	(setq done (not (post--up-heading)))))
+    (if specs
+	(progn
+	  (setq final-spec (car specs))
+	  (when (< 1 (length specs))
+	    (dolist (spec (cdr specs))
+	      ;; Override spec 1 with spec 2, and the result with spec
+	      ;; 3, then with 4, etc.
+	      (setq final-spec (post--request-spec-override final-spec
+							    spec))))
+	  (post--request-spec-execute final-spec))
+      (user-error "%s" (concat "No request specification found\nTry "
+			       "writing: get https://<hostname>/<path>")))))
 
 (defvar post-mode-map
   (let ((map (make-sparse-keymap)))
@@ -133,10 +158,16 @@ Return nil if `post--heading-has-content-p' returns nil."
       (0 'font-lock-comment-face))))
   (setq font-lock-keywords-case-fold-search t))
 
+;;;###autoload
 (define-derived-mode post-mode outline-mode "Post"
   "Enable or disable post mode."
   (setq-local outline-regexp (concat "[" post--outline-character "\^L]+"))
+  (setq-local comment-start post--comment-character)
+  (setq-local fill-prefix (concat post--comment-character " "))
   (post--setup-font-lock-keywords))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.post\\'" . post-mode))
 
 (defun post--http-method-p (m)
   "Return non-nil if M is a valid HTTP method."
@@ -415,19 +446,22 @@ fragment component of a URL with no host or schema defined."
 
 The text format for defining requests is:
 
-METHOD [URL | PARTIAL-URL]
-[HEADER-NAME1: HEADER-VALUE1]
-[HEADER-NAME2: HEADER-VALUE2]...
+[COMMENTS]
+[METHOD] [URL | PARTIAL-URL]
+[HEADERS]
 
 [BODY]
 
+COMMENTS must be lines starting with `post--comment-character'.
 METHOD must be a method matched by `post--http-methods-regexp'.
 URL can be an empty string, or a URL with a \"http\" or \"https\"
 schema.
 PARTIAL-URL can be an empty string, or the path + query string +
 fragment part of a URL.
-Headers and BODY can be separated by a blank line, which will be
-ignored."
+HEADERS and BODY can be separated by a blank line, which will be
+ignored.  Each line of HEADERS must be in the form of KEY: VALUE.
+If the text specification consists exclusively of comments or is the
+empty string, `throw' symbol `empty' with nil as associated value."
   (let (method url headers body)
     (with-temp-buffer
       (insert text)
@@ -439,6 +473,11 @@ ignored."
 				     (line-end-position) t)
 		  (not (eobp)))
 	(forward-char))
+      ;; Check if the entire specification was just comments or empty
+      (when (string-empty-p (string-trim (buffer-substring (point)
+							   (point-max))))
+	;; Throw `empty' if so
+	(throw 'empty nil))
       ;; Read HTTP method and URL
       (let ((case-fold-search t))
 	(when (re-search-forward (concat "^\\s-*\\("
