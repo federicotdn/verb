@@ -1,0 +1,17 @@
+- Level 1
+# Comment.
+get http://example.org
+First-Header: Foo
+Second: Bar
+
+{
+    "content": "hello"
+}
+-- Level 2
+get /some/path
+Another-Header: here
+--- Level 3
+get /other
+---- Level 4
+# Comment.
+post /final

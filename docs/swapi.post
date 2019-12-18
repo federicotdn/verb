@@ -2,6 +2,7 @@
 # The Star Wars API
 
 template https://swapi.co/api?format=json
+User-Agent: emacs-post
 
 -- Root
 # The Root resource provides information on all available resources within the API.
@@ -19,6 +20,8 @@ get /1
 
 ---- Luke Skywalker (Wookie response)
 get ?format=wookiee
+Accept: text/html
+Cache-Control: max-age=0
 
 --- C-3PO
 get /2

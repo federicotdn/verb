@@ -30,6 +30,27 @@
 (require 'subr-x)
 (require 'url)
 
+(defgroup post nil
+  "A new HTTP client for Emacs."
+  :prefix "post-"
+  :group 'tools)
+
+(defface post-http-keyword '((t :inherit font-lock-constant-face))
+  "Face for highlighting HTTP methods."
+  :group 'post)
+
+(defface post-url '((t :inherit font-lock-function-name-face))
+  "Face for highlighting URLs."
+  :group 'post)
+
+(defface post-header '((t :inherit font-lock-doc-face))
+  "Face for highlighting HTTP headers."
+  :group 'post)
+
+(defface post-comment '((t :inherit font-lock-comment-face))
+  "Face for highlighting comments."
+  :group 'post)
+
 (defconst post--comment-character "#"
   "Character to use to mark commented lines.")
 
@@ -145,17 +166,17 @@ The contents of all parent headings are used as well; see
    nil
    `(;; GET www.example.com
      (,(concat "^\\(" (post--http-methods-regexp) "\\)\\( .*\\)$")
-      (1 'font-lock-constant-face)
-      (2 'font-lock-function-name-face))
+      (1 'post-http-keyword)
+      (2 'post-url))
      ;; GET
      (,(concat "^\\(" (post--http-methods-regexp) "\\)$")
-      (0 'font-lock-constant-face))
+      (0 'post-http-keyword))
      ;; Content-type: application/json
      ("^[[:alpha:]-]+: .+$"
-      (0 'font-lock-doc-face))
+      (0 'post-header))
      ;; # This is a comment
      (,(concat "^\\s-*" post--comment-character ".*$")
-      (0 'font-lock-comment-face))))
+      (0 'post-comment))))
   (setq font-lock-keywords-case-fold-search t))
 
 ;;;###autoload
