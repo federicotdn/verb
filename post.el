@@ -261,10 +261,10 @@ as:
   (when query
     (mapconcat (lambda (kv)
 		 (if (cdr kv)
-		   (concat (car kv) "=" (cdr kv))
-		 (car kv)))
+		     (concat (car kv) "=" (cdr kv))
+		   (car kv)))
 	       query
-	     "&")))
+	       "&")))
 
 (defun post--override-url-paths (original other)
   "Override URL path (and query string) ORIGINAL with OTHER.
@@ -286,7 +286,11 @@ described in `post--request-spec-override'."
 		(substring paths 1 nil)
 	      paths)
 	    (unless (string-empty-p (or queries ""))
-	      (concat "?" queries)))))
+	      ;; If query string is present and path is empty,
+	      ;; set / as the path (see `post--clean-url')
+	      (concat (when (string-empty-p paths) "/")
+		      "?"
+		      queries)))))
 
 (defun post--url-port (url)
   "Return port used by an HTTP URL.
@@ -320,40 +324,47 @@ Do this using the rules described in `post--request-spec-override'."
 			     port path fragment
 			     attributes fullness))))
 
-(cl-defmethod post--request-spec-override ((rs post--request-spec) other)
-  "Override request specification RS with OTHER, return the result.
+(cl-defmethod post--request-spec-override ((original post--request-spec) other)
+  "Override request specification ORIGINAL with OTHER, return the result.
 
-Each member of request RS is overridden with the one from OTHER in the
-following way, to form a new request specification:
+Each member of request ORIGINAL is overridden with the one from OTHER
+in the following way, to form a new request specification:
 
 method
 
-  Use OTHER's HTTP method if it is non-nil, otherwise use RS's.
+  Use OTHER's HTTP method if it is non-nil, otherwise use ORIGINAL's.
 
 url
 
   A new URL is constructed using a combination of both URLs.  The new
-  URL's path is a concatenation of RS's and OTHER's paths.  The new
-  URL's query string is a union of both RS's and OTHER's query
-  strings, using OTHER's value when both contain the same key.  All
-  other components (host, port, user, etc.) of the new URL are taken
-  from OTHER if they are non-nil, or from RS otherwise.  If either
-  OTHER's or RS's URL is nil, use the other one's without
-  modifications.
+  URL's path is a concatenation of ORIGINAL's and OTHER's paths.  The
+  new URL's query string is a union of both ORIGINAL's and OTHER's
+  query strings, using OTHER's value when both contain the same key.
+  All other components (host, port, user, etc.) of the new URL are
+  taken from OTHER if they are non-nil, or from ORIGINAL otherwise.
+  If either OTHER's or ORIGINAL's URL is nil, use the other one's
+  without modifications.
 
 headers
 
-  Create a union of RS's and OTHER's headers, using OTHER's value when
-  both contain the same header.
+  Create a union of ORIGINAL's and OTHER's headers, using OTHER's
+  value when both contain the same header.
 
 body
 
-  Use OTHER's body if it is non-nil, otherwise use RS's.
+  Use OTHER's body if it is non-nil, otherwise use ORIGINAL's.
 
 Neither request specification is modified, a new one is returned.
 "
   (unless (object-of-class-p other post--request-spec)
-    (error "%s" "Argument OTHER must be a `post--request-spec'.")))
+    (error "%s" "Argument OTHER must be a `post--request-spec'."))
+  (post--request-spec :method (or (oref other :method)
+				  (oref original :method))
+		      :url (post--override-url (oref original :url)
+					       (oref other :url))
+		      :headers (post--override-headers (oref original :headers)
+						       (oref other :headers))
+		      :body (or (oref other :body) (oref original :body))))
 
 (defun post--http-methods-regexp ()
   "Return a regexp that matches a HTTP method.

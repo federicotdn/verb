@@ -29,6 +29,15 @@
 (defun text-as-spec (&rest args)
   (post--request-spec-from-text (mapconcat #'identity args "")))
 
+(defun override-specs (s1 s2 &optional url method headers body)
+  (should (equal (post--request-spec-override
+		  (post--request-spec-from-text (mapconcat #'identity s1 ""))
+		  (post--request-spec-from-text (mapconcat #'identity s2 "")))
+		 (post--request-spec :url (post--clean-url url)
+				     :method method
+				     :headers headers
+				     :body body))))
+
 (ert-deftest test-back-to-heading-no-headings ()
   ;; Empty buffer
   (with-temp-buffer
@@ -278,6 +287,92 @@
   (should (string= (url-recreate-url (post--clean-url "/foo/bar?a#b"))
 		   "/foo/bar?a#b")))
 
+(ert-deftest test-override-specs ()
+  (override-specs '("GET http://test.com")
+		  '("TEMPLATE")
+		  "http://test.com"
+		  "GET")
+
+  (override-specs '("GET")
+		  '("TEMPLATE http://hello.com")
+		  "http://hello.com"
+		  "GET")
+
+  (override-specs '("GET ?test=1")
+		  '("TEMPLATE http://hello.com")
+		  "http://hello.com/?test=1"
+		  "GET")
+
+  (override-specs '("TEMPLATE http://test.com")
+		  '("TEMPLATE")
+		  "http://test.com")
+
+  (override-specs '("TEMPLATE http://test.com")
+		  '("GET")
+		  "http://test.com"
+		  "GET")
+
+  (override-specs '("TEMPLATE http://test.com")
+		  '("GET /users")
+		  "http://test.com/users"
+		  "GET")
+
+  (override-specs '("TEMPLATE http://test.com?token=hello")
+		  '("GET /users")
+		  "http://test.com/users?token=hello"
+		  "GET")
+
+  (override-specs '("GET http://test.com")
+		  '("POST /users")
+		  "http://test.com/users"
+		  "POST")
+
+  (override-specs '("TEMPLATE http://test.com\n"
+		    "Auth: Bearer hello")
+		  '("POST /users")
+		  "http://test.com/users"
+		  "POST"
+		  (list (cons "Auth" "Bearer hello")))
+
+  (override-specs '("TEMPLATE http://test.com?a=b\n"
+		    "Auth: Bearer hello")
+		  '("POST /users?a=c#hello\n"
+		    "Auth: foobar")
+		  "http://test.com/users?a=c#hello"
+		  "POST"
+		  (list (cons "Auth" "foobar")))
+
+  (override-specs '("TEMPLATE http://test.com\n"
+		    "\n"
+		    "Random body")
+		  '("POST /users/1")
+		  "http://test.com/users/1"
+		  "POST"
+		  nil
+		  "Random body")
+
+  (override-specs '("TEMPLATE http://test.com\n")
+		  '("POST /users/1\n"
+		    "\n"
+		    "Random body")
+		  "http://test.com/users/1"
+		  "POST"
+		  nil
+		  "Random body")
+
+  (override-specs '("TEMPLATE http://bye.com/x?a=1\n"
+		    "Test: 1")
+		  '("POST https://hello.com/users/1\n"
+		    "Hello: 2\n"
+		    "\n"
+		    "Test body")
+		  "https://hello.com/x/users/1?a=1"
+		  "POST"
+		  (list (cons "Test" "1")
+			(cons "Hello" "2"))
+		  "Test body")
+  )
+
 (ert-deftest test-override-headers ()
   (should (equal (post--override-headers (list) (list))
 		 (list)))
@@ -505,6 +600,10 @@
   (assert-url-override "http://hello.com?a=b"
   		       "/hello"
   		       "http://hello.com/hello?a=b")
+
+  (assert-url-override "http://hello.com?a=b"
+  		       "http://hello.com?c=d"
+  		       "http://hello.com/?a=b&c=d")
 
   (assert-url-override "http://hello.com?a=b"
   		       "/hello/bye?a=c"
