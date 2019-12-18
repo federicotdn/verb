@@ -35,15 +35,12 @@
   :prefix "post-"
   :group 'tools)
 
-(defface post-http-keyword '((t :inherit font-lock-constant-face))
+(defface post-http-keyword '((t :inherit font-lock-constant-face
+				:weight bold))
   "Face for highlighting HTTP methods."
   :group 'post)
 
-(defface post-url '((t :inherit font-lock-function-name-face))
-  "Face for highlighting URLs."
-  :group 'post)
-
-(defface post-header '((t :inherit font-lock-doc-face))
+(defface post-header '((t :inherit font-lock-constant-face))
   "Face for highlighting HTTP headers."
   :group 'post)
 
@@ -165,19 +162,20 @@ The contents of all parent headings are used as well; see
   (font-lock-add-keywords
    nil
    `(;; GET www.example.com
-     (,(concat "^\\(" (post--http-methods-regexp) "\\)\\( .*\\)$")
-      (1 'post-http-keyword)
-      (2 'post-url))
-     ;; GET
-     (,(concat "^\\(" (post--http-methods-regexp) "\\)$")
-      (0 'post-http-keyword))
+     (,(concat "^\\(" (post--http-methods-regexp) "\\).*$")
+      (1 'post-http-keyword))
      ;; Content-type: application/json
-     ("^[[:alpha:]-]+: .+$"
-      (0 'post-header))
+     ("^\\([[:alpha:]-]+:\\) .+$"
+      (1 'post-header))
      ;; # This is a comment
      (,(concat "^\\s-*" post--comment-character ".*$")
       (0 'post-comment))))
-  (setq font-lock-keywords-case-fold-search t))
+  (setq font-lock-keywords-case-fold-search t)
+  ;; `outline-4' is just `font-lock-comment-face', avoid using that
+  ;; one in heading fonts.
+  (setq-local outline-font-lock-faces
+	      [outline-1 outline-2 outline-3 outline-5
+			 outline-6 outline-7 outline-8]))
 
 ;;;###autoload
 (define-derived-mode post-mode outline-mode "Post"
