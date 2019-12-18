@@ -54,7 +54,9 @@
 (defconst post--outline-character "-"
   "Character to use to create headings.")
 
-(defconst post--http-methods '("GET" "POST" "DELETE")
+(defconst post--http-methods '("GET" "POST" "DELETE" "PUT"
+			       "OPTIONS" "HEAD" "PATCH"
+			       "TRACE" "CONNECT")
   "List of valid HTTP methods.")
 
 (defconst post--template-keyword "TEMPLATE"
@@ -250,7 +252,10 @@ More response information can be read from STATUS."
 			       "Make sure you specify a host "
 			       "(e.g. \"github.com\") in the heading "
 			       "hierarchy")))
-    (url-retrieve url #'post--request-spec-callback (list rs) t)
+    (let ((url-request-data (oref rs :body))
+	  (url-request-extra-headers (oref rs :headers))
+	  (url-request-method (oref rs :method)))
+      (url-retrieve url #'post--request-spec-callback (list rs) t))
     (message "%s request sent to %s"
 	     (oref rs :method)
 	     (post--request-spec-url-string rs))))

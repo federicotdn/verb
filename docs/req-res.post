@@ -1,0 +1,63 @@
+- REQ|RES
+# Test your front-end against a real API
+# A hosted REST-API ready to respond to your AJAX requests.
+# https://reqres.in/
+
+template https://reqres.in/api?delay=0
+Content-Type: application/json
+
+-- Users
+
+template /users
+
+--- Get endpoint headers
+head
+
+--- Get endpoint options
+options
+
+--- List users
+
+get ?page=1
+
+--- Create user
+post
+
+{
+    "name": "John",
+    "age": 55
+}
+
+---- Operate on a single user
+
+template /2
+
+----- Get a single user
+get
+
+----- Replace a user
+put
+
+{
+    "name": "Bob"
+}
+
+----- Update a user
+patch
+
+{
+    "name": "Bob"
+}
+
+----- Delete a user
+delete
+
+-- Login
+
+post /login
+
+{
+    "email": "eve.holt@reqres.in",
+    "password": "hello"
+}
+
