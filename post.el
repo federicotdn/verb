@@ -63,6 +63,50 @@
   "Keyword to use when defining request templates without defined HTTP
 methods.")
 
+(defvar-local post-inhibit-cookies nil
+  "If non-nil, do not send or receive cookies when sending requests.")
+
+(defvar post-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-o") 'post-execute-request-on-point-other-window)
+    map)
+  "Keymap for post mode.")
+
+(defun post--setup-font-lock-keywords ()
+  "Configure font lock keywords for `post-mode'."
+  (font-lock-add-keywords
+   nil
+   `(;; GET
+     (,(concat "^\\(" (post--http-methods-regexp) "\\)$")
+      (1 'post-http-keyword))
+     ;; GET www.example.com
+     (,(concat "^\\(" (post--http-methods-regexp) "\\)\\s-+.+$")
+      (1 'post-http-keyword))
+     ;; Content-type: application/json
+     ("^\\([[:alpha:]-]+:\\)\\s-.+$"
+      (1 'post-header))
+     ;; # This is a comment
+     (,(concat "^\\s-*" post--comment-character ".*$")
+      (0 'post-comment))))
+  (setq font-lock-keywords-case-fold-search t)
+  (font-lock-ensure)
+  ;; `outline-4' is just `font-lock-comment-face', avoid using that
+  ;; one in heading fonts.
+  (setq-local outline-font-lock-faces
+	      [outline-1 outline-2 outline-3 outline-5
+			 outline-6 outline-7 outline-8]))
+
+;;;###autoload
+(define-derived-mode post-mode outline-mode "Post"
+  "Enable or disable post mode."
+  (setq-local outline-regexp (concat "[" post--outline-character "\^L]+"))
+  (setq-local comment-start post--comment-character)
+  (setq-local fill-prefix (concat post--comment-character " "))
+  (post--setup-font-lock-keywords))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.post\\'" . post-mode))
+
 (defun post--back-to-heading ()
   "Move to the previous heading.
 Or, move to beggining of this line if it's a heading.  If there are no
@@ -127,10 +171,21 @@ Return nil of the heading has no text contents."
       (catch 'empty
 	(post--request-spec-from-text text)))))
 
-(defun post-execute-request-on-point ()
+(defun post-execute-request-on-point-other-window ()
+  "Send the request specified by the selected heading's text contents.
+Show the results on another window (use
+`post-execute-request-on-point')."
+  (interactive)
+  (post-execute-request-on-point 'other-window))
+
+(defun post-execute-request-on-point (&optional where)
   "Send the request specified by the selected heading's text contents.
 The contents of all parent headings are used as well; see
-`post--request-spec-override' to see how this is done."
+`post--request-spec-override' to see how this is done.
+
+If WHERE is `other-window', show the results of the request on another
+window.  If WHERE has any other value, show the results of the request
+in the current window."
   (interactive)
   (let (specs done final-spec)
     (save-excursion
@@ -149,46 +204,9 @@ The contents of all parent headings are used as well; see
 	      ;; 3, then with 4, etc.
 	      (setq final-spec (post--request-spec-override final-spec
 							    spec))))
-	  (post--request-spec-execute final-spec))
+	  (post--request-spec-execute final-spec where))
       (user-error "%s" (concat "No request specification found\nTry "
 			       "writing: get https://<hostname>/<path>")))))
-
-(defvar post-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-o") 'post-execute-request-on-point)
-    map)
-  "Keymap for post mode.")
-
-(defun post--setup-font-lock-keywords ()
-  "Configure font lock keywords for `post-mode'."
-  (font-lock-add-keywords
-   nil
-   `(;; GET www.example.com
-     (,(concat "^\\(" (post--http-methods-regexp) "\\).*$")
-      (1 'post-http-keyword))
-     ;; Content-type: application/json
-     ("^\\([[:alpha:]-]+:\\) .+$"
-      (1 'post-header))
-     ;; # This is a comment
-     (,(concat "^\\s-*" post--comment-character ".*$")
-      (0 'post-comment))))
-  (setq font-lock-keywords-case-fold-search t)
-  ;; `outline-4' is just `font-lock-comment-face', avoid using that
-  ;; one in heading fonts.
-  (setq-local outline-font-lock-faces
-	      [outline-1 outline-2 outline-3 outline-5
-			 outline-6 outline-7 outline-8]))
-
-;;;###autoload
-(define-derived-mode post-mode outline-mode "Post"
-  "Enable or disable post mode."
-  (setq-local outline-regexp (concat "[" post--outline-character "\^L]+"))
-  (setq-local comment-start post--comment-character)
-  (setq-local fill-prefix (concat post--comment-character " "))
-  (post--setup-font-lock-keywords))
-
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.post\\'" . post-mode))
 
 (defun post--http-method-p (m)
   "Return non-nil if M is a valid HTTP method."
@@ -231,13 +249,49 @@ HEADER and VALUE must be nonempty strings."
     (when url
       (url-recreate-url url))))
 
-(defun post--request-spec-callback (status rs)
+(defun post--request-spec-callback (status rs where)
   "Callback for `post--request-spec-execute' for request RS.
-More response information can be read from STATUS."
-  (switch-to-buffer-other-window (current-buffer)))
+More response information can be read from STATUS.
+WHERE describes where the results should be shown in (see
+`post-execute-request-on-point').
 
-(cl-defmethod post--request-spec-execute ((rs post--request-spec))
-  "Execute the HTTP request described by RS."
+This function sets up the current buffer so that it can be used to
+view the HTTP response in a user-friendly way."
+  (let (status headers)
+    (fundamental-mode)
+    (goto-char (point-min))
+    ;; Skip HTTP/1.1 status line
+    (setq status (buffer-substring-no-properties (point)
+						 (line-end-position)))
+    (forward-line)
+    ;; Skip all HTTP headers
+    (while (re-search-forward "^\\s-*\\([[:alpha:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
+			      (line-end-position) t)
+      (push (cons (match-string 1) (match-string 2)) headers)
+      (when (not (eobp)) (forward-char)))
+    ;; Remove headers and blank line from buffer
+    (beginning-of-line)
+    (forward-line)
+    (delete-region (point-min) (point))
+
+    ;; TODO: Set a particular major mode here depending on content type
+    ;; Buffer local variables will be reset...
+    ;; TODO: Set a post-response-minor-mode
+
+    (setq-local post--response-headers (nreverse headers))
+    (setq-local header-line-format status)
+
+    (rename-buffer "*HTTP response*" t)
+
+    (if (eq where 'other-window)
+	(switch-to-buffer-other-window (current-buffer))
+      (switch-to-buffer (current-buffer)))))
+
+
+(cl-defmethod post--request-spec-execute ((rs post--request-spec) where)
+  "Execute the HTTP request described by RS.
+Show the results according to parameter WHERE (see
+`post-execute-request-on-point')."
   (unless (oref rs :method)
     (user-error "%s" (concat "No HTTP method specified\n"
 			     "Make sure you specify a concrete HTTP "
@@ -255,7 +309,8 @@ More response information can be read from STATUS."
     (let ((url-request-data (oref rs :body))
 	  (url-request-extra-headers (oref rs :headers))
 	  (url-request-method (oref rs :method)))
-      (url-retrieve url #'post--request-spec-callback (list rs) t))
+      (url-retrieve url #'post--request-spec-callback (list rs where)
+		    t post-inhibit-cookies))
     (message "%s request sent to %s"
 	     (oref rs :method)
 	     (post--request-spec-url-string rs))))
@@ -545,3 +600,5 @@ empty string, `throw' symbol `empty' with nil as associated value."
 
 (provide 'post)
 ;;; post.el ends here
+
+

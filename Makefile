@@ -8,9 +8,10 @@ test:
 		 -l post-test.el \
 		 -f ert-run-tests-batch-and-exit
 
-load-example:
+load-examples:
 	$(EMACS) -l post.el \
-		 --eval "(find-file \"docs/example.post\")" \
+		 --eval "(find-file \"docs/swapi.post\")" \
+		 --eval "(find-file \"req-res.post\")" \
 		 --eval "(post-mode)" \
 		 --eval "(delete-other-windows)"
 
