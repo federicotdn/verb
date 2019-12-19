@@ -67,6 +67,27 @@
 		   (text-as-spec "# Hello\n"
 				 "#test")))))
 
+(ert-deftest test-response-header-line-string ()
+  (should (string= (post--response-header-line-string
+		    "test" 1.123 2 1)
+		   "test | 1.123s | 2 headers | body size: 1"))
+
+  (should (string= (post--response-header-line-string
+		    "test" 1.123999 2 1)
+		   "test | 1.124s | 2 headers | body size: 1"))
+
+  (should (string= (post--response-header-line-string
+		    "test" 1.123 1 1)
+		   "test | 1.123s | 1 header | body size: 1"))
+
+  (should (string= (post--response-header-line-string
+		    "test" 1.123 1 0)
+		   "test | 1.123s | 1 header"))
+
+  (should (string= (post--response-header-line-string
+		    "test" 1.123 0 0)
+		   "test | 1.123s")))
+
 (ert-deftest test-request-spec-from-text-error ()
   (should-error (text-as-spec "foobar example.com")))
 

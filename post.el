@@ -249,20 +249,38 @@ HEADER and VALUE must be nonempty strings."
     (when url
       (url-recreate-url url))))
 
-(defun post--request-spec-callback (status rs where)
+(defun post--response-header-line-string (status-line elapsed header-count body-size)
+  "Return a short description of a response's results.
+STATUS-LINE should contain the response's first text line.
+ELAPSED should contain the number of seconds the request took, in seconds.
+HEADER-COUNT should contain the number of HTTP headers received.
+BODY-SIZE should contain the HTTP body size."
+  (concat
+   status-line
+   " | "
+   (format "%.4gs" elapsed)
+   (unless (zerop header-count)
+     (format " | %s header%s" header-count (if (= header-count 1) "" "s")))
+   (unless (zerop body-size)
+     (format " | body size: %s" body-size))))
+
+(defun post--request-spec-callback (status rs start where)
   "Callback for `post--request-spec-execute' for request RS.
 More response information can be read from STATUS.
+START should contain a floating point number indicating the timestamp
+at which the request was sent.
 WHERE describes where the results should be shown in (see
 `post-execute-request-on-point').
 
 This function sets up the current buffer so that it can be used to
 view the HTTP response in a user-friendly way."
-  (let (status headers)
+  (let ((elapsed (- (time-to-seconds) start))
+	status-line headers)
     (fundamental-mode)
     (goto-char (point-min))
     ;; Skip HTTP/1.1 status line
-    (setq status (buffer-substring-no-properties (point)
-						 (line-end-position)))
+    (setq status-line (buffer-substring-no-properties (point)
+						      (line-end-position)))
     (forward-line)
     ;; Skip all HTTP headers
     (while (re-search-forward "^\\s-*\\([[:alpha:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
@@ -279,7 +297,11 @@ view the HTTP response in a user-friendly way."
     ;; TODO: Set a post-response-minor-mode
 
     (setq-local post--response-headers (nreverse headers))
-    (setq-local header-line-format status)
+    (setq-local header-line-format
+		(post--response-header-line-string status-line
+						   elapsed
+						   (length post--response-headers)
+						   (buffer-size)))
 
     (rename-buffer "*HTTP response*" t)
 
@@ -309,7 +331,9 @@ Show the results according to parameter WHERE (see
     (let ((url-request-data (oref rs :body))
 	  (url-request-extra-headers (oref rs :headers))
 	  (url-request-method (oref rs :method)))
-      (url-retrieve url #'post--request-spec-callback (list rs where)
+      (url-retrieve url
+		    #'post--request-spec-callback
+		    (list rs (time-to-seconds) where)
 		    t post-inhibit-cookies))
     (message "%s request sent to %s"
 	     (oref rs :method)
