@@ -5,14 +5,13 @@ test:
 	$(EMACS) -Q \
 		 --batch \
 		 -L . \
-		 -l post-test.el \
+		 -l verb-test.el \
 		 -f ert-run-tests-batch-and-exit
 
 load-examples:
-	$(EMACS) -l post.el \
-		 --eval "(find-file \"docs/swapi.post\")" \
-		 --eval "(find-file \"req-res.post\")" \
-		 --eval "(post-mode)" \
+	$(EMACS) -l verb.el \
+		 --eval "(find-file \"docs/swapi.verb\")" \
+		 --eval "(find-file \"req-res.verb\")" \
 		 --eval "(delete-other-windows)"
 
 # TODO:
