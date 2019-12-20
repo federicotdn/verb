@@ -98,7 +98,7 @@ methods.")
 
 ;;;###autoload
 (define-derived-mode verb-mode outline-mode "Verb"
-  "Enable or disable `verb-mode'."
+  "Major mode for making HTTP requests from Emacs."
   (setq-local outline-regexp (concat "[" verb--outline-character "\^L]+"))
   (setq-local comment-start verb--comment-character)
   (setq-local fill-prefix (concat verb--comment-character " "))
@@ -124,7 +124,7 @@ If there is no next heading, skip to the end of the buffer."
 
 (defun verb--up-heading ()
   "Move to the parent heading, if there is one.
-Return t if there was a heading to move towards and nil otherwise."
+Return t if there was a heading to move towards to and nil otherwise."
   (ignore-errors
     (outline-up-heading 1 t)
     t))
