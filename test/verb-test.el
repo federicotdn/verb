@@ -730,6 +730,7 @@
   (declare (indent 1))
   `(progn
      (find-file "test/test.verb")
+     (goto-char (point-min))
      (re-search-forward (concat "^-+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-execute-request-on-point)
@@ -745,6 +746,24 @@
 (ert-deftest test-server-error-400 ()
   (server-test "error-400"
     (should (string-match "400" header-line-format))))
+
+(ert-deftest test-server-response-latin-1 ()
+  (server-test "response-latin-1"
+    (should (coding-system-equal buffer-file-coding-system 'iso-latin-1-unix))
+    (should (string-match "ñáéíóúß" (buffer-string)))))
+
+(ert-deftest test-server-response-big5 ()
+  (server-test "response-big5"
+    (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))
+    (should (string-match "常用字" (buffer-string)))))
+
+(ert-deftest test-server-response-utf-8-default ()
+  (server-test "response-utf-8-default"
+    (should (string= (cdr (assoc-string "Content-Type" verb--response-headers))
+		     "text/plain"))
+    (should (string= verb-default-response-charset "utf-8"))
+    (should (coding-system-equal buffer-file-coding-system 'utf-8-unix))
+    (should (string-match "ñáéíóúß" (buffer-string)))))
 
 (provide 'verb-test)
 ;;; verb-test.el ends here

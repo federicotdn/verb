@@ -8,6 +8,9 @@ setup-tests:
 	python3 -m venv env
 	source env/bin/activate && pip install -r test/requirements-dev.txt
 
+server:
+	source env/bin/activate && python test/server.py
+
 test:
 	source env/bin/activate && python test/server.py &
 	sleep 0.5

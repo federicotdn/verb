@@ -13,3 +13,12 @@ get /basic
 
 -- error-400
 get /error-400
+
+-- response-latin-1
+get /response-latin-1
+
+-- response-utf-8-default
+get /response-utf-8-default
+
+-- response-big5
+get /response-big5
