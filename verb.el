@@ -26,9 +26,11 @@
 ;; Main module for verb.
 
 ;;; Code:
+(require 'outline)
 (require 'eieio)
 (require 'subr-x)
 (require 'url)
+(require 'mm-util)
 
 (defgroup verb nil
   "A new HTTP client for Emacs."
@@ -50,8 +52,7 @@ header value (\"charset=utf-8\")."
 (defcustom verb-content-type-modes-alist
   '(("text/html" . html-mode)
     ("application/json" . js-mode))
-  "Major modes to use for different values of the \"Content-Type\"
-header."
+  "Major modes to use for different values of the \"Content-Type\" header."
   :type '(alist :key-type string :value-type function))
 
 (defcustom verb-inhibit-cookies nil
@@ -80,8 +81,10 @@ header."
   "List of valid HTTP methods.")
 
 (defconst verb--template-keyword "TEMPLATE"
-  "Keyword to use when defining request templates without defined HTTP
-methods.")
+  "Keyword to use when defining request templates without defined HTTP methods.")
+
+(defvar-local verb--response-headers nil
+  "HTTP response headers for this response buffer.")
 
 (defvar verb-mode-map
   (let ((map (make-sparse-keymap)))
@@ -273,7 +276,7 @@ HEADER and VALUE must be nonempty strings."
 
 (cl-defmethod verb--request-spec-url-string ((rs verb--request-spec))
   "Return RS's url member as a string if it is non-nil."
-  (let ((url (oref rs :url)))
+  (let ((url (oref rs url)))
     (when url
       (url-recreate-url url))))
 
@@ -308,7 +311,7 @@ If the header itself is not present, return (nil . nil)."
 	      (match-string 1 value)))
     (cons nil nil)))
 
-(defun verb--request-spec-callback (status rs start where)
+(defun verb--request-spec-callback (_status _rs start where)
   "Callback for `verb--request-spec-execute' for request RS.
 More response information can be read from STATUS.
 START should contain a floating point number indicating the timestamp
@@ -373,12 +376,12 @@ view the HTTP response in a user-friendly way."
     (font-lock-ensure)
 
     ;; TODO: Move to minor modes
-    (setq-local verb--response-headers (nreverse headers))
-    (setq-local header-line-format
-    		(verb--response-header-line-string status-line
-    						   elapsed
-    						   (length verb--response-headers)
-    						   (buffer-size)))
+    (setq verb--response-headers (nreverse headers))
+    (setq header-line-format
+	  (verb--response-header-line-string status-line
+					     elapsed
+					     (length verb--response-headers)
+					     (buffer-size)))
 
     (rename-buffer "*HTTP response*" t)
 
@@ -438,22 +441,22 @@ If CHARSET is nil, use `verb-default-request-charset'."
 Show the results according to parameter WHERE (see
 `verb-execute-request-on-point'). Return the buffer the response will
 be loaded into."
-  (unless (oref rs :method)
+  (unless (oref rs method)
     (user-error "%s" (concat "No HTTP method specified\n"
 			     "Make sure you specify a concrete HTTP "
 			     "method (i.e. not " verb--template-keyword
 			     ") in the heading hierarchy")))
-  (unless (oref rs :url)
+  (unless (oref rs url)
     (user-error "%s" (concat "No URL specified\nMake sure you specify "
 			     "a nonempty URL in the heading hierarchy")))
 
-  (let* ((url (oref rs :url))
-	 (url-request-method (verb--to-ascii (oref rs :method)))
+  (let* ((url (oref rs url))
+	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers
-				     (oref rs :headers)))
+				     (oref rs headers)))
 	 (content-type (verb--headers-content-type
 			url-request-extra-headers))
-	 (url-request-data (verb--encode-http-body (oref rs :body)
+	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
 	 (response-buf))
     (unless (url-host url)
@@ -470,7 +473,7 @@ be loaded into."
 
     ;; Show user some information
     (message "%s request sent to %s"
-	   (oref rs :method)
+	   (oref rs method)
 	   (verb--request-spec-url-string rs))
 
     ;;Return the response buffer
@@ -484,8 +487,7 @@ alist."
   (let ((result (nreverse (copy-alist original)))
 	(processed))
     (dolist (key-value other)
-      (let ((key (car key-value))
-	    (value (cdr key-value)))
+      (let ((key (car key-value)))
 	(when (and (assoc key result)
 		   (not (member key processed)))
 	  ;; key in OTHER is in ORIGINAL, delete all entries using
@@ -514,8 +516,7 @@ Return the results in a new alist.  Work using the rules described in
 For example, return:
   \"foo=bar&quux\"
 as:
-  ((\"foo\" . \"bar\") (\"quux\" . nil))
-"
+  ((\"foo\" . \"bar\") (\"quux\" . nil))"
   (when query
     (let ((parts (split-string query "&"))
 	  result)
@@ -630,15 +631,15 @@ body
 
 Neither request specification is modified, a new one is returned.
 "
-  (unless (object-of-class-p other verb--request-spec)
+  (unless (object-of-class-p other 'verb--request-spec)
     (error "%s" "Argument OTHER must be a `verb--request-spec'."))
-  (verb--request-spec :method (or (oref other :method)
-				  (oref original :method))
-		      :url (verb--override-url (oref original :url)
-					       (oref other :url))
-		      :headers (verb--override-headers (oref original :headers)
-						       (oref other :headers))
-		      :body (or (oref other :body) (oref original :body))))
+  (verb--request-spec :method (or (oref other method)
+				  (oref original method))
+		      :url (verb--override-url (oref original url)
+					       (oref other url))
+		      :headers (verb--override-headers (oref original headers)
+						       (oref other headers))
+		      :body (or (oref other body) (oref original body))))
 
 (defun verb--http-methods-regexp ()
   "Return a regexp that matches a HTTP method.
@@ -682,7 +683,7 @@ fragment component of a URL with no host or schema defined."
     url-obj))
 
 (defun verb--request-spec-from-text (text)
-  "Create a `verb--request-spec' from a text specification.
+  "Create a `verb--request-spec' from a text specification, TEXT.
 
 The text format for defining requests is:
 

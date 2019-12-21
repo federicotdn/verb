@@ -1,5 +1,6 @@
 SHELL = bash
 EMACS = emacs
+NOOUTPUT = { ! grep '^'; }
 
 .PHONY: test
 
@@ -18,6 +19,9 @@ test:
 	kill $$(cat test/server.pid)
 	cat tests.log
 	! grep FAILED tests.log > /dev/null
+
+check:
+	$(EMACS) -Q --batch --eval '(byte-compile-file "verb.el")' 2>&1 | $(NOOUTPUT)
 
 load-examples:
 	$(EMACS) -l verb.el \
