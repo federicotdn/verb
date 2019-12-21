@@ -10,3 +10,6 @@ template http://localhost:8000
 
 -- basic
 get /basic
+
+-- error-400
+get /error-400

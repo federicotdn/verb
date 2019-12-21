@@ -742,5 +742,9 @@
     (should (string= (buffer-string)
 		     "Hello, World!"))))
 
+(ert-deftest test-server-error-400 ()
+  (server-test "error-400"
+    (should (string-match "400" header-line-format))))
+
 (provide 'verb-test)
 ;;; verb-test.el ends here
