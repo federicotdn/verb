@@ -35,9 +35,17 @@
   :prefix "verb-"
   :group 'tools)
 
-(defcustom verb-default-response-coding-system 'utf-8
-  "Default coding system to use when reading HTP responses."
-  :type 'coding-system)
+(defcustom verb-default-response-charset "utf-8"
+  "Default charset to use when reading HTP responses.
+This variable is only used when the charset isn't specified in the
+\"Content-Type\" header value (\"charset=utf-8\")."
+  :type 'string)
+
+(defcustom verb-default-request-charset "utf-8"
+  "Charset to add to \"Content-Type\" headers in HTTP requests.
+This variable is only used when the charset isn't specified in the
+header value (\"charset=utf-8\")."
+  :type 'string)
 
 (defcustom verb-content-type-modes-alist
   '(("text/html" . html-mode)
@@ -74,11 +82,6 @@ header."
 (defconst verb--template-keyword "TEMPLATE"
   "Keyword to use when defining request templates without defined HTTP
 methods.")
-
-(defvar verb--default-request-charset "utf-8"
-  "Charset to add to \"Content-Type\" headers in HTTP requests.
-This variable is only used when the charset isn't specified in the
-header value (\"charset=utf-8\").")
 
 (defvar verb-mode-map
   (let ((map (make-sparse-keymap)))
@@ -339,21 +342,30 @@ view the HTTP response in a user-friendly way."
     (forward-line)
     (delete-region (point-min) (point))
 
-    ;; Decode body content if possible
     (setq content-type (verb--headers-content-type headers))
+    ;; Current buffer should be unibyte
     (when enable-multibyte-characters
       (error "Expected a unibyte buffer for HTTP response"))
-    (set-buffer-multibyte 'to)
 
+    ;; Convert buffer to multibyte, contents are still raw bytes from
+    ;; the response
+    (set-buffer-multibyte 'to)
     (set-buffer-file-coding-system 'binary)
 
-    (if-let ((coding-system (mm-charset-to-coding-system
-			     (cdr content-type))))
+    (if-let* ((charset (or (cdr content-type)
+			   verb-default-response-charset))
+	      (coding-system (mm-charset-to-coding-system
+			      charset)))
+	;; If we were able to read a coding system from the
+	;; Content-Type header (or if there's a default charset set by
+	;; the user), decode the buffer's contents. Also, set the
+	;; buffer coding system.
 	(progn
-	  (decode-coding-region (point-min) (point-max) coding-system)
+	  (decode-coding-region (point-min)
+				(point-max)
+				coding-system)
 	  (set-buffer-file-coding-system coding-system))
-      (message "Unknown charset: '%s'" (or (cdr content-type)
-					   "<none>")))
+      (message "Unknown charset: '%s'" (or charset "<none>")))
 
     ;; Prepare buffer for editing by user
     (buffer-enable-undo)
@@ -393,7 +405,7 @@ Returns a new alist, does not modify HEADERS."
 	       (not (string-match-p "charset=" (cdr content-type))))
       (setcdr content-type (concat (cdr content-type)
 				   "; charset="
-				   verb--default-request-charset)))
+				   verb-default-request-charset)))
     (unless accept-charset
       (push (cons "Accept-Charset" (url-mime-charset-string)) headers))
     ;; Encode all text to `us-ascii'
@@ -405,10 +417,10 @@ Returns a new alist, does not modify HEADERS."
 
 (defun verb--encode-http-body (body charset)
   "Encode content BODY using CHARSET.
-If CHARSET is nil, use `verb--default-request-charset'."
+If CHARSET is nil, use `verb-default-request-charset'."
   (when body
     (if-let ((coding-system (mm-charset-to-coding-system
-			     (or charset verb--default-request-charset))))
+			     (or charset verb-default-request-charset))))
 	(encode-coding-string body coding-system)
       (user-error (concat "No coding system found for charset \"%s\"\n"
 			  "Make sure you set the \"Content-Type\" header"
