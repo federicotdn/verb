@@ -740,17 +740,31 @@
 
 (ert-deftest test-server-basic ()
   (server-test "basic"
+    (should (string= (buffer-string) "Hello, World!"))
+    (should (eq major-mode 'text-mode))))
+
+(ert-deftest test-server-basic-json ()
+  (server-test "basic-json"
     (should (string= (buffer-string)
-		     "Hello, World!"))))
+		     "{\"foo\":true,\"hello\":\"world\"}"))
+    (should (eq major-mode 'js-mode))))
 
 (ert-deftest test-server-error-400 ()
   (server-test "error-400"
     (should (string-match "400" header-line-format))))
 
+(ert-deftest test-server-root-with-args ()
+  (server-test "root-with-args"
+    (should (string= (buffer-string) "OK"))))
+
 (ert-deftest test-server-response-latin-1 ()
   (server-test "response-latin-1"
     (should (coding-system-equal buffer-file-coding-system 'iso-latin-1-unix))
     (should (string-match "ñáéíóúß" (buffer-string)))))
+
+(ert-deftest test-server-request-latin-1 ()
+  (server-test "request-latin-1"
+    (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-server-response-big5 ()
   (server-test "response-big5"

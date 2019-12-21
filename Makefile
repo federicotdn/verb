@@ -12,6 +12,7 @@ server:
 	source env/bin/activate && python test/server.py
 
 test:
+	rm -f verb.elc
 	source env/bin/activate && python test/server.py &
 	sleep 0.5
 	$(EMACS) -Q \
