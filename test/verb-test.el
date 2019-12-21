@@ -724,5 +724,23 @@
   (should-not (verb--http-method-p verb--template-keyword))
   (should-not (verb--http-method-p "test")))
 
+;; Tests using the test server (server.py)
+
+(defmacro server-test (test-name &rest body)
+  (declare (indent 1))
+  `(progn
+     (find-file "test/test.verb")
+     (re-search-forward (concat "^-+ " ,test-name "$"))
+     (let ((inhibit-message t))
+       (with-current-buffer (verb-execute-request-on-point)
+	 (sleep-for 1)
+	 ,@body))
+     (kill-buffer)))
+
+(ert-deftest test-server-basic ()
+  (server-test "basic"
+    (should (string= (buffer-string)
+		     "Hello, World!"))))
+
 (provide 'verb-test)
 ;;; verb-test.el ends here

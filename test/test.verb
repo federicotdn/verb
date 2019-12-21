@@ -1,0 +1,12 @@
+- Testing Endpoints
+# Make some requests against the test server (server.py) The requests
+# are executed programatically by loading this file, moving to a
+# heading and executing verb-execute-request-on-point. See verb-test.el
+# for more details.
+
+# Each header should contain exactly the name of the endpoint used
+
+template http://localhost:8000
+
+-- basic
+get /basic

@@ -436,7 +436,8 @@ If CHARSET is nil, use `verb-default-request-charset'."
 (cl-defmethod verb--request-spec-execute ((rs verb--request-spec) where)
   "Execute the HTTP request described by RS.
 Show the results according to parameter WHERE (see
-`verb-execute-request-on-point')."
+`verb-execute-request-on-point'). Return the buffer the response will
+be loaded into."
   (unless (oref rs :method)
     (user-error "%s" (concat "No HTTP method specified\n"
 			     "Make sure you specify a concrete HTTP "
@@ -453,21 +454,27 @@ Show the results according to parameter WHERE (see
 	 (content-type (verb--headers-content-type
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs :body)
-						   (cdr content-type))))
+						   (cdr content-type)))
+	 (response-buf))
     (unless (url-host url)
       (user-error "%s" (concat "URL has no host defined\n"
 			       "Make sure you specify a host "
 			       "(e.g. \"github.com\") in the heading "
 			       "hierarchy")))
     ;; Send the request!
-    (url-retrieve url
-		  #'verb--request-spec-callback
-		  (list rs (time-to-seconds) where)
-		  t verb-inhibit-cookies))
-  ;; Show user some information
-  (message "%s request sent to %s"
+    (setq response-buf
+	  (url-retrieve url
+			#'verb--request-spec-callback
+			(list rs (time-to-seconds) where)
+			t verb-inhibit-cookies))
+
+    ;; Show user some information
+    (message "%s request sent to %s"
 	   (oref rs :method)
-	   (verb--request-spec-url-string rs)))
+	   (verb--request-spec-url-string rs))
+
+    ;;Return the response buffer
+    response-buf))
 
 (defun verb--override-alist (original other)
   "Override alist ORIGINAL with OTHER.

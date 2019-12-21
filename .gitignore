@@ -10,3 +10,12 @@
 
 # Undo-tree save-files
 *.~undo-tree
+
+# Python env for test server
+/env
+
+# Test server pidfile
+test/server.pid
+
+# Test run results
+tests.log
