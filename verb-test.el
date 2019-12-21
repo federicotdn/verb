@@ -725,4 +725,4 @@
   (should-not (verb--http-method-p "test")))
 
 (provide 'verb-test)
-;;; verb.el ends here
+;;; verb-test.el ends here
