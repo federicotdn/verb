@@ -1,11 +1,13 @@
 EMACS = emacs
 LISP_DIR = lisp
 
+.PHONY: test
+
 test:
 	$(EMACS) -Q \
 		 --batch \
 		 -L . \
-		 -l verb-test.el \
+		 -l test/verb-test.el \
 		 -f ert-run-tests-batch-and-exit
 
 load-examples:
