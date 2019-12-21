@@ -118,7 +118,6 @@ methods.")
   "Major mode for making HTTP requests from Emacs."
   (setq-local outline-regexp (concat "[" verb--outline-character "\^L]+"))
   (setq-local comment-start verb--comment-character)
-  (setq-local fill-prefix (concat verb--comment-character " "))
   (verb--setup-font-lock-keywords))
 
 ;;;###autoload
