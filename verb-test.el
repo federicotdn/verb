@@ -61,11 +61,11 @@
   (should-error (text-as-spec ""))
 
   (should (null (catch 'empty
-		   (text-as-spec ""))))
+		  (text-as-spec ""))))
 
   (should (null (catch 'empty
-		   (text-as-spec "# Hello\n"
-				 "#test")))))
+		  (text-as-spec "# Hello\n"
+				"#test")))))
 
 (ert-deftest test-response-header-line-string ()
   (should (string= (verb--response-header-line-string
@@ -667,6 +667,56 @@
 		       "http://hello.com/test?a=2&a=3&quux#baz"
 		       "http://hello.com/user/test?foo&a=2&a=3&quux#baz")
   )
+
+(ert-deftest test-headers-content-type ()
+  (should (equal (verb--headers-content-type
+		  '(("A" . "a")
+		    ("Content-Type" . "application/json; charset=hello")))
+		 (cons "application/json" "hello")))
+
+  (should (equal (verb--headers-content-type
+		  '(("A" . "a")
+		    ("Content-Type" . "application/json; charset=utf-8; foo")))
+		 (cons "application/json" "utf-8")))
+
+  (should (equal (verb--headers-content-type
+		  '(("A" . "a")
+		    ("Content-Type" . "application/json")))
+		 (cons "application/json" nil)))
+
+  (should (equal (verb--headers-content-type
+		  '(("A" . "a")
+		    ("B" . "b")))
+		 (cons nil nil)))
+
+  (should (equal (verb--headers-content-type nil)
+		 (cons nil nil))))
+
+(ert-deftest test-prepare-http-headers ()
+  (should (equal (verb--prepare-http-headers '(("A" . "a")
+					       ("B" . "v")))
+		 `(("Accept-Charset" . ,(url-mime-charset-string))
+		   ("A" . "a")
+		   ("B" . "v"))))
+
+  (should (equal (verb--prepare-http-headers '(("A" . "test")
+					       ("B" . "test")
+					       ("Content-Type" . "text")))
+		 `(("Accept-Charset" . ,(url-mime-charset-string))
+		   ("A" . "test")
+		   ("B" . "test")
+		   ("Content-Type" . "text; charset=utf-8"))))
+
+  (should (equal (verb--prepare-http-headers '(("A" . "test")
+					       ("B" . "test")
+					       ("Content-Type" . "text; charset=hello")))
+		 `(("Accept-Charset" . ,(url-mime-charset-string))
+		   ("A" . "test")
+		   ("B" . "test")
+		   ("Content-Type" . "text; charset=hello")))))
+
+(ert-deftest test-to-ascii ()
+  (should-not (multibyte-string-p (verb--to-ascii "ññáé"))))
 
 (ert-deftest test-http-method-p ()
   (should (verb--http-method-p "GET"))

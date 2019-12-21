@@ -22,9 +22,10 @@ get ?page=1
 
 --- Create user
 post
+Content-Type: application/json
 
 {
-    "name": "John",
+    "name": "Juan N. Ananá",
     "age": 55
 }
 

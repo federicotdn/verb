@@ -10,6 +10,7 @@ test:
 
 load-examples:
 	$(EMACS) -l verb.el \
+		 --eval "(toggle-debug-on-error)" \
 		 --eval "(find-file \"docs/swapi.verb\")" \
 		 --eval "(find-file \"req-res.verb\")" \
 		 --eval "(delete-other-windows)"

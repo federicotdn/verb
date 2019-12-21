@@ -35,18 +35,30 @@
   :prefix "verb-"
   :group 'tools)
 
+(defcustom verb-default-response-coding-system 'utf-8
+  "Default coding system to use when reading HTP responses."
+  :type 'coding-system)
+
+(defcustom verb-content-type-modes-alist
+  '(("text/html" . html-mode)
+    ("application/json" . js-mode))
+  "Major modes to use for different values of the \"Content-Type\"
+header."
+  :type '(alist :key-type string :value-type function))
+
+(defcustom verb-inhibit-cookies nil
+  "If non-nil, do not send or receive cookies when sending requests."
+  :type 'boolean)
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
-  "Face for highlighting HTTP methods."
-  :group 'verb)
+  "Face for highlighting HTTP methods.")
 
 (defface verb-header '((t :inherit font-lock-constant-face))
-  "Face for highlighting HTTP headers."
-  :group 'verb)
+  "Face for highlighting HTTP headers.")
 
 (defface verb-comment '((t :inherit font-lock-comment-face))
-  "Face for highlighting comments."
-  :group 'verb)
+  "Face for highlighting comments.")
 
 (defconst verb--comment-character "#"
   "Character to use to mark commented lines.")
@@ -63,8 +75,10 @@
   "Keyword to use when defining request templates without defined HTTP
 methods.")
 
-(defvar-local verb-inhibit-cookies nil
-  "If non-nil, do not send or receive cookies when sending requests.")
+(defvar verb--default-request-charset "utf-8"
+  "Charset to add to \"Content-Type\" headers in HTTP requests.
+This variable is only used when the charset isn't specified in the
+header value (\"charset=utf-8\").")
 
 (defvar verb-mode-map
   (let ((map (make-sparse-keymap)))
@@ -106,6 +120,18 @@ methods.")
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.verb\\'" . verb-mode))
+
+(define-minor-mode verb-response-body-mode
+  "Minor mode to allow for some extra functionality in response
+buffers showing the resulting HTTP body."
+  :lighter " Verb[Body]"
+  :group 'verb)
+
+(define-minor-mode verb-response-headers-mode
+  "Minor mode to allow for some extra functionality in response
+buffers showing the resulting HTTP headers."
+  :lighter " Verb[Headers]"
+  :group 'verb)
 
 (defun verb--back-to-heading ()
   "Move to the previous heading.
@@ -264,6 +290,22 @@ BODY-SIZE should contain the HTTP body size."
    (unless (zerop body-size)
      (format " | body size: %s" body-size))))
 
+(defun verb--major-mode-for-content (content-type)
+  "Return the appropiate major mode for handling content of type CONTENT-TYPE."
+  (or (cdr (assoc content-type verb-content-type-modes-alist))
+      'fundamental-mode))
+
+(defun verb--headers-content-type (headers)
+  "Return (TYPE . CHARSET) parsed from the \"Content-Type\" header in HEADERS.
+If the charset is not present, return (TYPE . nil).
+If the header itself is not present, return (nil . nil)."
+  (if-let* ((value (cdr (assoc-string "Content-Type" headers t)))
+	    (type-subtype (string-trim (car (split-string value ";")))))
+      (cons type-subtype
+	    (when (string-match "charset=\\([[:alnum:]-.]+\\)" value)
+	      (match-string 1 value)))
+    (cons nil nil)))
+
 (defun verb--request-spec-callback (status rs start where)
   "Callback for `verb--request-spec-execute' for request RS.
 More response information can be read from STATUS.
@@ -275,33 +317,57 @@ WHERE describes where the results should be shown in (see
 This function sets up the current buffer so that it can be used to
 view the HTTP response in a user-friendly way."
   (let ((elapsed (- (time-to-seconds) start))
-	status-line headers)
-    (fundamental-mode)
+	status-line headers content-type)
+    (widen)
     (goto-char (point-min))
-    ;; Skip HTTP/1.1 status line
+    ;; Skip HTTP/1.X status line
     (setq status-line (buffer-substring-no-properties (point)
 						      (line-end-position)))
     (forward-line)
     ;; Skip all HTTP headers
-    (while (re-search-forward "^\\s-*\\([[:alpha:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
+    (while (re-search-forward "^\\s-*\\([[:alpha:]-]+\\)\\s-*:\\s-*\\(.*\\)$"
 			      (line-end-position) t)
-      (push (cons (match-string 1) (match-string 2)) headers)
-      (when (not (eobp)) (forward-char)))
+      (let ((key (match-string 1))
+	    (value (match-string 2)))
+	;; Save header to alist
+	(push (cons key value) headers)
+	(when (not (eobp)) (forward-char))))
+
     ;; Remove headers and blank line from buffer
+    ;; All left should be the content
     (beginning-of-line)
     (forward-line)
     (delete-region (point-min) (point))
 
-    ;; TODO: Set a particular major mode here depending on content type
-    ;; Buffer local variables will be reset...
-    ;; TODO: Set a verb-response-minor-mode
+    ;; Decode body content if possible
+    (setq content-type (verb--headers-content-type headers))
+    (when enable-multibyte-characters
+      (error "Expected a unibyte buffer for HTTP response"))
+    (set-buffer-multibyte 'to)
 
+    (set-buffer-file-coding-system 'binary)
+
+    (if-let ((coding-system (mm-charset-to-coding-system
+			     (cdr content-type))))
+	(progn
+	  (decode-coding-region (point-min) (point-max) coding-system)
+	  (set-buffer-file-coding-system coding-system))
+      (message "Unknown charset: '%s'" (or (cdr content-type)
+					   "<none>")))
+
+    ;; Prepare buffer for editing by user
+    (buffer-enable-undo)
+    (goto-char (point-min))
+    (funcall (verb--major-mode-for-content (car content-type)))
+    (font-lock-ensure)
+
+    ;; TODO: Move to minor modes
     (setq-local verb--response-headers (nreverse headers))
     (setq-local header-line-format
-		(verb--response-header-line-string status-line
-						   elapsed
-						   (length verb--response-headers)
-						   (buffer-size)))
+    		(verb--response-header-line-string status-line
+    						   elapsed
+    						   (length verb--response-headers)
+    						   (buffer-size)))
 
     (rename-buffer "*HTTP response*" t)
 
@@ -309,6 +375,52 @@ view the HTTP response in a user-friendly way."
 	(switch-to-buffer-other-window (current-buffer))
       (switch-to-buffer (current-buffer)))))
 
+(defun verb--prepare-http-headers (headers)
+  "Prepare alist HEADERS of HTTP headers to use them on a request.
+Add/modify the following headers if they are not already
+present/incomplete:
+
+Content-Type:
+  Add \"charset=\" to it if not already present.
+Accept-Charset:
+  Set it if not already present.
+
+Uses `verb--to-ascii' to ensure all added text is unibyte.
+Returns a new alist, does not modify HEADERS."
+  (let ((content-type (assoc-string "Content-Type" headers t))
+	(accept-charset (assoc-string "Accept-Charset" headers t)))
+    (when (and content-type
+	       (not (string-match-p "charset=" (cdr content-type))))
+      (setcdr content-type (concat (cdr content-type)
+				   "; charset="
+				   verb--default-request-charset)))
+    (unless accept-charset
+      (push (cons "Accept-Charset" (url-mime-charset-string)) headers))
+    ;; Encode all text to `us-ascii'
+    (mapcar (lambda (e)
+	      (cons (verb--to-ascii (car e))
+		    (verb--to-ascii (cdr e))))
+	    headers)))
+
+
+(defun verb--encode-http-body (body charset)
+  "Encode content BODY using CHARSET.
+If CHARSET is nil, use `verb--default-request-charset'."
+  (when body
+    (if-let ((coding-system (mm-charset-to-coding-system
+			     (or charset verb--default-request-charset))))
+	(encode-coding-string body coding-system)
+      (user-error (concat "No coding system found for charset \"%s\"\n"
+			  "Make sure you set the \"Content-Type\" header"
+			  " correctly (e.g. \"application/json;"
+			  " charset=utf-8\")")
+		  charset))))
+
+(defun verb--to-ascii (s)
+  "Encode string S to `us-ascii'."
+  (if (multibyte-string-p s)
+      (encode-coding-string s 'us-ascii)
+    s))
 
 (cl-defmethod verb--request-spec-execute ((rs verb--request-spec) where)
   "Execute the HTTP request described by RS.
@@ -322,22 +434,29 @@ Show the results according to parameter WHERE (see
   (unless (oref rs :url)
     (user-error "%s" (concat "No URL specified\nMake sure you specify "
 			     "a nonempty URL in the heading hierarchy")))
-  (let ((url (oref rs :url)))
+
+  (let* ((url (oref rs :url))
+	 (url-request-method (verb--to-ascii (oref rs :method)))
+	 (url-request-extra-headers (verb--prepare-http-headers
+				     (oref rs :headers)))
+	 (content-type (verb--headers-content-type
+			url-request-extra-headers))
+	 (url-request-data (verb--encode-http-body (oref rs :body)
+						   (cdr content-type))))
     (unless (url-host url)
       (user-error "%s" (concat "URL has no host defined\n"
 			       "Make sure you specify a host "
 			       "(e.g. \"github.com\") in the heading "
 			       "hierarchy")))
-    (let ((url-request-data (oref rs :body))
-	  (url-request-extra-headers (oref rs :headers))
-	  (url-request-method (oref rs :method)))
-      (url-retrieve url
-		    #'verb--request-spec-callback
-		    (list rs (time-to-seconds) where)
-		    t verb-inhibit-cookies))
-    (message "%s request sent to %s"
-	     (oref rs :method)
-	     (verb--request-spec-url-string rs))))
+    ;; Send the request!
+    (url-retrieve url
+		  #'verb--request-spec-callback
+		  (list rs (time-to-seconds) where)
+		  t verb-inhibit-cookies))
+  ;; Show user some information
+  (message "%s request sent to %s"
+	   (oref rs :method)
+	   (verb--request-spec-url-string rs)))
 
 (defun verb--override-alist (original other)
   "Override alist ORIGINAL with OTHER.
