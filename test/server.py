@@ -46,6 +46,24 @@ async def test_request_latin_1(request: Request):
     return response.text("OK")
 
 
+@app.route("/request-utf-8-default", methods=["POST"])
+async def test_request_utf_8_default(request: Request):
+    if request.headers["Content-Type"] != "text/plain; charset=utf-8":
+        return response.text("FAIL")
+
+    if request.body.decode("utf-8") != "áéíóúñü":
+        return response.text("FAIL")
+
+    return response.text("OK")
+
+@app.route("/request-utf-8-default-2", methods=["POST"])
+async def test_request_utf_8_default_2(request: Request):
+    if request.body.decode("utf-8") != "áéíóúñü":
+        return response.text("FAIL")
+
+    return response.text("OK")
+
+
 @app.route("/response-utf-8-default")
 async def test4(request: Request):
     # Do not specify charset=

@@ -23,6 +23,17 @@ post /request-latin-1
 Content-Type: text/plain; charset=latin1
 
 áéíóúñü
+-- request-utf-8-default
+# No not set charset=
+post /request-utf-8-default
+Content-Type: text/plain
+
+áéíóúñü
+-- request-utf-8-default-2
+# No not set Content-Type
+post /request-utf-8-default-2
+
+áéíóúñü
 -- response-utf-8-default
 get /response-utf-8-default
 

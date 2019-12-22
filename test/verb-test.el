@@ -734,7 +734,7 @@
      (re-search-forward (concat "^-+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-execute-request-on-point)
-	 (sleep-for 1)
+	 (sleep-for 0.5)
 	 ,@body))
      (kill-buffer)))
 
@@ -764,6 +764,14 @@
 
 (ert-deftest test-server-request-latin-1 ()
   (server-test "request-latin-1"
+    (should (string= (buffer-string) "OK"))))
+
+(ert-deftest test-server-request-utf-8-default ()
+  (server-test "request-utf-8-default"
+    (should (string= (buffer-string) "OK"))))
+
+(ert-deftest test-server-request-utf-8-default ()
+  (server-test "request-utf-8-default-2"
     (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-server-response-big5 ()
