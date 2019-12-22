@@ -317,9 +317,11 @@ If the header itself is not present, return (nil . nil)."
 	      (match-string 1 value)))
     (cons nil nil)))
 
-(defun verb--request-spec-callback (_status _rs start where)
+(defun verb--request-spec-callback (_status _rs response-buf start where)
   "Callback for `verb--request-spec-execute' for request RS.
 More response information can be read from STATUS.
+RESPONSE-BUF should point to a buffer where the response should be
+copied to, which the user can then use or edit freely.
 START should contain a floating point number indicating the timestamp
 at which the request was sent.
 WHERE describes where the results should be shown in (see
@@ -328,7 +330,7 @@ WHERE describes where the results should be shown in (see
 This function sets up the current buffer so that it can be used to
 view the HTTP response in a user-friendly way."
   (let ((elapsed (- (time-to-seconds) start))
-	status-line headers content-type)
+	status-line headers content-type charset coding-system)
     (widen)
     (goto-char (point-min))
     ;; Skip HTTP/1.X status line
@@ -344,13 +346,16 @@ view the HTTP response in a user-friendly way."
 	(push (cons key value) headers)
 	(when (not (eobp)) (forward-char))))
 
+    ;; Read Content-Type and charset
+    (setq content-type (verb--headers-content-type headers))
+    (setq charset (or (cdr content-type) verb-default-response-charset))
+
     ;; Remove headers and blank line from buffer
     ;; All left should be the content
     (beginning-of-line)
     (forward-line)
     (delete-region (point-min) (point))
 
-    (setq content-type (verb--headers-content-type headers))
     ;; Current buffer should be unibyte
     (when enable-multibyte-characters
       (error "Expected a unibyte buffer for HTTP response"))
@@ -360,39 +365,32 @@ view the HTTP response in a user-friendly way."
     (set-buffer-multibyte 'to)
     (set-buffer-file-coding-system 'binary)
 
-    (if-let* ((charset (or (cdr content-type)
-			   verb-default-response-charset))
-	      (coding-system (mm-charset-to-coding-system
-			      charset)))
-	;; If we were able to read a coding system from the
-	;; Content-Type header (or if there's a default charset set by
-	;; the user), decode the buffer's contents. Also, set the
-	;; buffer coding system.
-	(progn
-	  (decode-coding-region (point-min)
-				(point-max)
-				coding-system)
-	  (set-buffer-file-coding-system coding-system))
-      (message "Unknown charset: '%s'" (or charset "<none>")))
+    ;; Choose corresponding coding system for charset
+    (setq coding-system (or (mm-charset-to-coding-system charset)
+			    'utf-8))
 
-    ;; Prepare buffer for editing by user
-    (buffer-enable-undo)
-    (goto-char (point-min))
-    (funcall (verb--major-mode-for-content (car content-type)))
-    (font-lock-ensure)
+    ;; Decode contents into RESPONSE-BUF
+    (decode-coding-region (point-min) (point-max)
+			  coding-system
+			  response-buf)
 
-    ;; TODO: Move to minor modes
-    (setq verb--response-headers (nreverse headers))
-    (setq header-line-format
-	  (verb--response-header-line-string status-line
-					     elapsed
-					     verb--response-headers))
+    (with-current-buffer response-buf
+      (set-buffer-file-coding-system coding-system)
 
-    (rename-buffer "*HTTP response*" t)
+      ;; Prepare buffer for editing by user
+      (goto-char (point-min))
+      (funcall (verb--major-mode-for-content (car content-type)))
 
-    (if (eq where 'other-window)
-	(switch-to-buffer-other-window (current-buffer))
-      (switch-to-buffer (current-buffer)))))
+      ;; TODO: Move to minor modes
+      (setq verb--response-headers (nreverse headers))
+      (setq header-line-format
+	    (verb--response-header-line-string status-line
+					       elapsed
+					       verb--response-headers))
+
+      (if (eq where 'other-window)
+	  (switch-to-buffer-other-window (current-buffer))
+	(switch-to-buffer (current-buffer))))))
 
 (defun verb--prepare-http-headers (headers)
   "Prepare alist HEADERS of HTTP headers to use them on a request.
@@ -463,18 +461,17 @@ be loaded into."
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
-	 (response-buf))
+	 (response-buf (generate-new-buffer "*HTTP Response*")))
     (unless (url-host url)
       (user-error "%s" (concat "URL has no host defined\n"
 			       "Make sure you specify a host "
 			       "(e.g. \"github.com\") in the heading "
 			       "hierarchy")))
     ;; Send the request!
-    (setq response-buf
-	  (url-retrieve url
-			#'verb--request-spec-callback
-			(list rs (time-to-seconds) where)
-			t verb-inhibit-cookies))
+    (url-retrieve url
+		  #'verb--request-spec-callback
+		  (list rs response-buf (time-to-seconds) where)
+		  t verb-inhibit-cookies)
 
     ;; Show user some information
     (message "%s request sent to %s"
