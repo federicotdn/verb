@@ -751,6 +751,14 @@
   (server-test "error-400"
     (should (string-match "400" header-line-format))))
 
+(ert-deftest test-server-error-404 ()
+  (server-test "error-404"
+    (should (string-match "404" header-line-format))))
+
+(ert-deftest test-server-error-405 ()
+  (server-test "error-405"
+    (should (string-match "405" header-line-format))))
+
 (ert-deftest test-server-root-with-args ()
   (server-test "root-with-args"
     (should (string= (buffer-string) "OK"))))
@@ -796,6 +804,18 @@
 (ert-deftest test-redirect-308 ()
   (server-test "redirect-308"
     (should (string= (buffer-string) "Redirect successful"))))
+
+(ert-deftest test-buffers-created ()
+  (setq num-buffers (length (buffer-list)))
+  (server-test "basic")
+  (should (= (1+ num-buffers) (length (buffer-list)))))
+
+(ert-deftest test-connection-error ()
+  (setq num-buffers (length (buffer-list)))
+  (ignore-errors
+    (server-test "connection-fail-test"))
+  (kill-buffer "test.verb")
+  (should (= num-buffers (length (buffer-list)))))
 
 (provide 'verb-test)
 ;;; verb-test.el ends here

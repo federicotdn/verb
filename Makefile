@@ -9,11 +9,11 @@ setup-tests:
 	source env/bin/activate && pip install -r test/requirements-dev.txt
 
 server:
-	source env/bin/activate && python test/server.py
+	source env/bin/activate && python3 test/server.py
 
 test:
 	rm -f verb.elc
-	source env/bin/activate && python test/server.py &
+	source env/bin/activate && python3 test/server.py &
 	sleep 0.5
 	$(EMACS) -Q \
 		 --batch \
@@ -29,8 +29,11 @@ check:
 
 load-examples:
 	$(EMACS) -l verb.el \
+		 --eval "(setq verb--debug-enable t)" \
+		 --eval "(setq url-debug t)" \
 		 --eval "(toggle-debug-on-error)" \
-		 --eval "(find-file \"docs/swapi.verb\")" \
+		 --eval "(find-file \"test/test.verb\")" \
+		 --eval "(find-file \"../docs/swapi.verb\")" \
 		 --eval "(find-file \"req-res.verb\")" \
 		 --eval "(delete-other-windows)"
 

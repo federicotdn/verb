@@ -15,6 +15,12 @@ get /basic-json
 -- error-400
 get /error-400
 
+-- error-404
+get /this-endpoint-doesnt-exist
+
+-- error-405
+put /basic-json
+
 -- response-latin-1
 get /response-latin-1
 
@@ -51,3 +57,6 @@ get /redirect-301
 
 -- redirect-308
 post /redirect-308
+
+- connection-fail-test
+get http://localhost:1234/test

@@ -1,8 +1,11 @@
 import os
+import logging
 from sanic import Sanic, response
+from sanic.log import logger
 from sanic.request import Request
 
 app = Sanic()
+logger.setLevel(logging.CRITICAL)
 
 pidfile = os.path.join(os.path.dirname(__file__), "server.pid")
 with open(pidfile, "w") as f:

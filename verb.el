@@ -87,6 +87,15 @@ header value (\"charset=utf-8\")."
 (defvar-local verb--response-headers nil
   "HTTP response headers for this response buffer.")
 
+(defvar-local verb--response-request nil
+  "The `verb--request-spec' object that was used for this repsonse.")
+
+(defvar-local verb--response-status nil
+  "The status plist for this response returned by `url-retrieve'.")
+
+(defvar verb--debug-enable nil
+  "If non-nil, enable logging debug messages with `verb--debug'.")
+
 (defvar verb-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-o") 'verb-execute-request-on-point-other-window)
@@ -317,7 +326,13 @@ If the header itself is not present, return (nil . nil)."
 	      (match-string 1 value)))
     (cons nil nil)))
 
-(defun verb--request-spec-callback (_status _rs response-buf start where)
+(defun verb--debug (&rest args)
+  "Log ARGS in the debugging buffer using `format'."
+  (when verb--debug-enable
+    (with-current-buffer (get-buffer-create "*verb-debug*")
+      (insert (apply #'format args) "\n"))))
+
+(defun verb--request-spec-callback (status rs response-buf start where)
   "Callback for `verb--request-spec-execute' for request RS.
 More response information can be read from STATUS.
 RESPONSE-BUF should point to a buffer where the response should be
@@ -329,6 +344,21 @@ WHERE describes where the results should be shown in (see
 
 This function sets up the current buffer so that it can be used to
 view the HTTP response in a user-friendly way."
+  ;; Handle errors first
+  (when-let ((http-error (plist-get status :error))
+	     (error-info (cdr http-error))
+	     (url (oref rs url)))
+    ;; If there's an HTTP error code (404, 405, etc.) in the error
+    ;; information, continue as normal
+    (unless (numberp (and (eq (car error-info) 'http)
+			  (cadr error-info)))
+      (kill-current-buffer)
+      (kill-buffer response-buf)
+      (verb--debug "Connection error (from status plist): %s" http-error)
+      (user-error "Failed to connect to host %s (port: %s)"
+		  (url-host url) (url-port url))))
+
+  ;; No errors, continue to read response
   (let ((elapsed (- (time-to-seconds) start))
 	status-line headers content-type charset coding-system)
     (widen)
@@ -374,6 +404,9 @@ view the HTTP response in a user-friendly way."
 			  coding-system
 			  response-buf)
 
+    ;; Kill original response buffer
+    (kill-current-buffer)
+
     (with-current-buffer response-buf
       (set-buffer-file-coding-system coding-system)
 
@@ -381,8 +414,11 @@ view the HTTP response in a user-friendly way."
       (goto-char (point-min))
       (funcall (verb--major-mode-for-content (car content-type)))
 
-      ;; TODO: Move to minor modes
-      (setq verb--response-headers (nreverse headers))
+      (setq verb--response-headers (nreverse headers)
+	    verb--response-request rs
+	    verb--response-status status)
+
+      ;; TODO: Move to minor mode
       (setq header-line-format
 	    (verb--response-header-line-string status-line
 					       elapsed
