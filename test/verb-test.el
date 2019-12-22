@@ -785,5 +785,17 @@
     (should (coding-system-equal buffer-file-coding-system 'utf-8-unix))
     (should (string-match "ñáéíóúß" (buffer-string)))))
 
+(ert-deftest test-redirect-302 ()
+  (server-test "redirect-302"
+    (should (string= (buffer-string) "Hello, World!"))))
+
+(ert-deftest test-redirect-301 ()
+  (server-test "redirect-301"
+    (should (string= (buffer-string) "Hello, World!"))))
+
+(ert-deftest test-redirect-308 ()
+  (server-test "redirect-308"
+    (should (string= (buffer-string) "Redirect successful"))))
+
 (provide 'verb-test)
 ;;; verb-test.el ends here

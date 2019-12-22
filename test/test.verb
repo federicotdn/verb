@@ -42,3 +42,12 @@ get /response-big5
 
 -- root-with-args
 get ?foo=bar
+
+-- redirect-302
+get /redirect-302
+
+-- redirect-301
+get /redirect-301
+
+-- redirect-308
+post /redirect-308

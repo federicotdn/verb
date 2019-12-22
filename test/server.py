@@ -56,6 +56,7 @@ async def test_request_utf_8_default(request: Request):
 
     return response.text("OK")
 
+
 @app.route("/request-utf-8-default-2", methods=["POST"])
 async def test_request_utf_8_default_2(request: Request):
     if request.body.decode("utf-8") != "áéíóúñü":
@@ -81,6 +82,26 @@ async def test6(request: Request):
         return response.text("OK")
 
     return response.text("FAIL")
+
+
+@app.route("/redirect-301")
+async def test_redirect_301(request: Request):
+    return response.redirect("/basic", status=301)
+
+
+@app.route("/redirect-302")
+async def test_redirect_302(request: Request):
+    return response.redirect("/basic", status=302)
+
+
+@app.route("/redirect-308-2", methods=["POST"])
+async def test_redirect_308_2(request: Request):
+    return response.text("Redirect successful")
+
+
+@app.route("/redirect-308", methods=["POST"])
+async def test_redirect_308(request: Request):
+    return response.redirect("/redirect-308-2", status=308)
 
 
 if __name__ == "__main__":
