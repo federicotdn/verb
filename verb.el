@@ -281,20 +281,25 @@ HEADER and VALUE must be nonempty strings."
     (when url
       (url-recreate-url url))))
 
-(defun verb--response-header-line-string (status-line elapsed header-count body-size)
+(defun verb--response-header-line-string (status-line elapsed headers)
   "Return a short description of a response's results.
 STATUS-LINE should contain the response's first text line.
 ELAPSED should contain the number of seconds the request took, in seconds.
-HEADER-COUNT should contain the number of HTTP headers received.
-BODY-SIZE should contain the HTTP body size."
+HEADERS should contain the HTTP headers received."
   (concat
    status-line
    " | "
    (format "%.4gs" elapsed)
-   (unless (zerop header-count)
-     (format " | %s header%s" header-count (if (= header-count 1) "" "s")))
-   (unless (zerop body-size)
-     (format " | body size: %s" body-size))))
+   (when-let ((content-type (car (verb--headers-content-type headers))))
+     (format " | %s" content-type))
+   (let ((content-length (string-to-number
+			  (or (cdr (assoc-string "Content-Length"
+						 headers t))
+			      "0"))))
+     (when (< 0 content-length)
+       (format " | %s byte%s"
+	       content-length
+	       (if (= content-length 1) "" "s"))))))
 
 (defun verb--major-mode-for-content (content-type)
   "Return the appropiate major mode for handling content of type CONTENT-TYPE."
@@ -381,8 +386,7 @@ view the HTTP response in a user-friendly way."
     (setq header-line-format
 	  (verb--response-header-line-string status-line
 					     elapsed
-					     (length verb--response-headers)
-					     (buffer-size)))
+					     verb--response-headers))
 
     (rename-buffer "*HTTP response*" t)
 
