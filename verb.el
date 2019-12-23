@@ -93,6 +93,15 @@ header value (\"charset=utf-8\")."
 (defvar-local verb--response-status nil
   "The status plist for this response returned by `url-retrieve'.")
 
+(defvar-local verb--response-duration nil
+  "Time took in seconds to receive the response since the request was sent.")
+
+(defvar-local verb--response-status-line nil
+  "First line of the HTTP response's body.")
+
+(defvar-local verb--response-body-bytes nil
+  "Length of HTTP response body, in bytes (measured locally).")
+
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
 
@@ -137,14 +146,19 @@ header value (\"charset=utf-8\")."
 (add-to-list 'auto-mode-alist '("\\.verb\\'" . verb-mode))
 
 (define-minor-mode verb-response-body-mode
-  "Minor mode to allow for some extra functionality in response
-buffers showing the resulting HTTP body."
+  "Minor mode for displaying a HTTP response's body."
   :lighter " Verb[Body]"
-  :group 'verb)
+  :group 'verb
+  (if verb-response-body-mode
+      (setq header-line-format
+	    (verb--response-header-line-string verb--response-status-line
+					       verb--response-duration
+					       verb--response-headers
+					       verb--response-body-bytes))
+    (setq header-line-format nil)))
 
 (define-minor-mode verb-response-headers-mode
-  "Minor mode to allow for some extra functionality in response
-buffers showing the resulting HTTP headers."
+  "Minor mode for displaying a HTTP response's headers."
   :lighter " Verb[Headers]"
   :group 'verb)
 
@@ -291,25 +305,29 @@ HEADER and VALUE must be nonempty strings."
     (when url
       (url-recreate-url url))))
 
-(defun verb--response-header-line-string (status-line elapsed headers)
+(defun verb--response-header-line-string (status-line elapsed headers bytes)
   "Return a short description of a response's results.
 STATUS-LINE should contain the response's first text line.
-ELAPSED should contain the number of seconds the request took, in seconds.
-HEADERS should contain the HTTP headers received."
+ELAPSED should contain the number of seconds the request took, in
+seconds.
+HEADERS should contain the HTTP headers received.
+BYTES should contain the length of the HTTP body in bytes (measured
+locally)."
   (concat
    status-line
    " | "
    (format "%.4gs" elapsed)
-   (when-let ((content-type (car (verb--headers-content-type headers))))
+   (let ((content-type (or (car (verb--headers-content-type headers))
+			   "?")))
      (format " | %s" content-type))
-   (let ((content-length (string-to-number
-			  (or (cdr (assoc-string "Content-Length"
-						 headers t))
-			      "0"))))
-     (when (< 0 content-length)
-       (format " | %s byte%s"
-	       content-length
-	       (if (= content-length 1) "" "s"))))))
+   (let* ((content-length (cdr (assoc-string "Content-Length"
+					     headers t)))
+	  (value (if content-length
+		     (string-to-number content-length)
+		   bytes)))
+     (format " | %s byte%s"
+	     value
+	     (if (= value 1) "" "s")))))
 
 (defun verb--major-mode-for-content (content-type)
   "Return the appropiate major mode for handling content of type CONTENT-TYPE."
@@ -361,7 +379,7 @@ view the HTTP response in a user-friendly way."
 
   ;; No errors, continue to read response
   (let ((elapsed (- (time-to-seconds) start))
-	status-line headers content-type charset coding-system)
+	status-line headers content-type charset coding-system bytes)
     (widen)
     (goto-char (point-min))
     ;; Skip HTTP/1.X status line
@@ -386,6 +404,9 @@ view the HTTP response in a user-friendly way."
     (beginning-of-line)
     (forward-line)
     (delete-region (point-min) (point))
+
+    ;; Record body size in bytes
+    (setq bytes (buffer-size))
 
     ;; Current buffer should be unibyte
     (when enable-multibyte-characters
@@ -415,15 +436,15 @@ view the HTTP response in a user-friendly way."
       (goto-char (point-min))
       (funcall (verb--major-mode-for-content (car content-type)))
 
+      ;; Store details of request and response
       (setq verb--response-headers (nreverse headers)
 	    verb--response-request rs
-	    verb--response-status status)
+	    verb--response-status status
+	    verb--response-status-line status-line
+	    verb--response-duration elapsed
+	    verb--response-body-bytes bytes)
 
-      ;; TODO: Move to minor mode
-      (setq header-line-format
-	    (verb--response-header-line-string status-line
-					       elapsed
-					       verb--response-headers))
+      (verb-response-body-mode)
 
       (if (eq where 'other-window)
 	  (switch-to-buffer-other-window (current-buffer))

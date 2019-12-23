@@ -64,21 +64,23 @@
 (ert-deftest test-response-header-line-string ()
   (should (string= (verb--response-header-line-string
 		    "test" 1.123 '(("Content-Type" . "hello")
-				   ("Content-Length" . "1")))
+				   ("Content-Length" . "1"))
+		    999)
 		   "test | 1.123s | hello | 1 byte"))
 
   (should (string= (verb--response-header-line-string
 		    "test" 1.123 '(("Content-Type" . "hello")
-				   ("Content-Length" . "33")))
+				   ("Content-Length" . "33"))
+		    999)
 		   "test | 1.123s | hello | 33 bytes"))
 
   (should (string= (verb--response-header-line-string
-		    "test" 1.123 '(("Content-Length" . "33")))
-		   "test | 1.123s | 33 bytes"))
+		    "test" 1.123 '(("Content-Length" . "33")) 0)
+		   "test | 1.123s | ? | 33 bytes"))
 
   (should (string= (verb--response-header-line-string
-		    "test" 1.123 '(("Content-Type" . "hello")))
-		   "test | 1.123s | hello")))
+		    "test" 1.123 '(("Content-Type" . "hello")) 55)
+		   "test | 1.123s | hello | 55 bytes")))
 
 (ert-deftest test-request-spec-from-text-error ()
   (should-error (text-as-spec "foobar example.com")))
