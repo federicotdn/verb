@@ -102,6 +102,9 @@ header value (\"charset=utf-8\")."
 (defvar-local verb--response-body-bytes nil
   "Length of HTTP response body, in bytes (measured locally).")
 
+(defvar-local verb--response-headers-buffer nil
+  "Buffer currently showing the HTTP response's headers.")
+
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
 
@@ -109,7 +112,7 @@ header value (\"charset=utf-8\")."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-o") 'verb-execute-request-on-point-other-window)
     map)
-  "Keymap for verb mode.")
+  "Keymap for `verb-mode'.")
 
 (defun verb--setup-font-lock-keywords ()
   "Configure font lock keywords for `verb-mode'."
@@ -140,6 +143,8 @@ header value (\"charset=utf-8\")."
   "Major mode for making HTTP requests from Emacs."
   (setq-local outline-regexp (concat "[" verb--outline-character "\^L]+"))
   (setq-local comment-start verb--comment-character)
+  (setq imenu-generic-expression
+	(list (list nil (concat "^\\(?:" outline-regexp "\\).*$") 0)))
   (verb--setup-font-lock-keywords))
 
 ;;;###autoload
@@ -149,6 +154,7 @@ header value (\"charset=utf-8\")."
   "Minor mode for displaying a HTTP response's body."
   :lighter " Verb[Body]"
   :group 'verb
+  :keymap `((,(kbd "C-c C-o") . verb-toggle-show-headers))
   (if verb-response-body-mode
       (setq header-line-format
 	    (verb--response-header-line-string verb--response-status-line
@@ -157,10 +163,11 @@ header value (\"charset=utf-8\")."
 					       verb--response-body-bytes))
     (setq header-line-format nil)))
 
-(define-minor-mode verb-response-headers-mode
-  "Minor mode for displaying a HTTP response's headers."
-  :lighter " Verb[Headers]"
-  :group 'verb)
+(define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
+  "Major mode for displaying a HTTP response's headers."
+  (setq header-line-format "HTTP Headers listing")
+  (font-lock-add-keywords
+   nil '(("^\\([[:alpha:]-]+:\\)\\s-.+$" (1 'verb-header)))))
 
 (defun verb--back-to-heading ()
   "Move to the previous heading.
@@ -226,6 +233,47 @@ Return nil of the heading has no text contents."
       (condition-case nil
 	  (verb--request-spec-from-text text)
 	(verb--empty-spec nil)))))
+
+(defun verb--split-window ()
+  "Split selected window by its longest side."
+  (split-window nil nil (if (< (window-pixel-height)
+			       (window-pixel-width))
+			    'right
+			  'below)))
+
+(defun verb--insert-header-contents (headers)
+  "Insert the contents of HTTP HEADERS into the current buffer."
+  (let ((inhibit-read-only t))
+    (dolist (key-value headers)
+      (let ((key (car key-value))
+	    (value (cdr key-value)))
+	(insert key ": " value "\n")))
+    (backward-delete-char 1)))
+
+(defun verb-toggle-show-headers ()
+  "Show or hide the HTTP response's headers on a separate buffer."
+  (interactive)
+
+  (when (and verb--response-headers-buffer
+	     (not (get-buffer-window verb--response-headers-buffer)))
+    (when (buffer-live-p verb--response-headers-buffer)
+      (kill-buffer verb--response-headers-buffer))
+    (setq verb--response-headers-buffer nil))
+
+  (if verb--response-headers-buffer
+      (progn
+	(ignore-errors
+	  (delete-window (get-buffer-window verb--response-headers-buffer)))
+	(kill-buffer verb--response-headers-buffer)
+	(setq verb--response-headers-buffer nil))
+    (setq verb--response-headers-buffer
+	  (generate-new-buffer "*HTTP Headers*"))
+    (let ((headers verb--response-headers))
+      (with-selected-window (verb--split-window)
+	(switch-to-buffer verb--response-headers-buffer)
+	(verb-response-headers-mode)
+	(verb--insert-header-contents headers)
+	(fit-window-to-buffer)))))
 
 (defun verb-execute-request-on-point-other-window ()
   "Send the request specified by the selected heading's text contents.
