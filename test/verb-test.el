@@ -26,6 +26,8 @@
 
 (require 'verb)
 
+(setq verb-show-headers-buffer nil)
+
 (defun text-as-spec (&rest args)
   (verb--request-spec-from-text (mapconcat #'identity args "")))
 

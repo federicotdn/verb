@@ -60,6 +60,18 @@ header value (\"charset=utf-8\")."
   "If non-nil, do not send or receive cookies when sending requests."
   :type 'boolean)
 
+(defcustom verb-show-headers-buffer t
+  "Choose whether to automatically show the headers buffer after
+receiving a HTTP response.
+
+Value nil means never show the headers buffer.
+Value `when-empty' means automatically show the headers buffer only when the
+response's body size is 0.
+Any other value means always show the headers buffer."
+  :type '(choice (const :tag "Never" nil)
+		 (const :tag "When empty" when-empty)
+		 (const :tag "Always" t)))
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
   "Face for highlighting HTTP methods.")
@@ -156,11 +168,17 @@ header value (\"charset=utf-8\")."
   :group 'verb
   :keymap `((,(kbd "C-c C-o") . verb-toggle-show-headers))
   (if verb-response-body-mode
-      (setq header-line-format
-	    (verb--response-header-line-string verb--response-status-line
-					       verb--response-duration
-					       verb--response-headers
-					       verb--response-body-bytes))
+      (progn
+	(setq header-line-format
+	      (verb--response-header-line-string verb--response-status-line
+						 verb--response-duration
+						 verb--response-headers
+						 verb--response-body-bytes))
+	(when verb-show-headers-buffer
+	  (if (eq verb-show-headers-buffer 'when-empty)
+	      (when (zerop verb--response-body-bytes)
+		(verb-toggle-show-headers))
+	    (verb-toggle-show-headers))))
     (setq header-line-format nil)))
 
 (defvar verb-response-headers-mode-map
@@ -506,11 +524,11 @@ view the HTTP response in a user-friendly way."
 	    verb--response-duration elapsed
 	    verb--response-body-bytes bytes)
 
-      (verb-response-body-mode)
-
       (if (eq where 'other-window)
 	  (switch-to-buffer-other-window (current-buffer))
-	(switch-to-buffer (current-buffer))))))
+	(switch-to-buffer (current-buffer)))
+
+      (verb-response-body-mode))))
 
 (defun verb--prepare-http-headers (headers)
   "Prepare alist HEADERS of HTTP headers to use them on a request.
