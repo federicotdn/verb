@@ -163,6 +163,12 @@ header value (\"charset=utf-8\")."
 					       verb--response-body-bytes))
     (setq header-line-format nil)))
 
+(defvar verb-response-headers-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") 'verb-kill-buffer-and-window)
+    map)
+  "Keymap for `verb-response-headers-mode'.")
+
 (define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
   "Major mode for displaying a HTTP response's headers."
   (setq header-line-format "HTTP Headers listing")
@@ -240,6 +246,14 @@ Return nil of the heading has no text contents."
 			       (window-pixel-width))
 			    'right
 			  'below)))
+
+(defun verb-kill-buffer-and-window ()
+  "Delete selected window and kill its current buffer.
+Delete the window only if it isn't the only window in the frame."
+  (interactive)
+  (kill-current-buffer)
+  (ignore-errors
+    (delete-window)))
 
 (defun verb--insert-header-contents (headers)
   "Insert the contents of HTTP HEADERS into the current buffer."
