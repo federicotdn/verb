@@ -2,7 +2,6 @@
 # The Star Wars API
 
 template https://swapi.co/api?format=json
-User-Agent: emacs-post
 
 -- Root
 # The Root resource provides information on all available resources within the API.
