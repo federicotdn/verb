@@ -209,8 +209,9 @@ Return nil of the heading has no text contents."
   (let ((text (verb--heading-contents)))
     (unless (or (null text)
 		(string-empty-p (string-trim text)))
-      (catch 'empty
-	(verb--request-spec-from-text text)))))
+      (condition-case nil
+	  (verb--request-spec-from-text text)
+	(verb--empty-spec nil)))))
 
 (defun verb-execute-request-on-point-other-window ()
   "Send the request specified by the selected heading's text contents.
@@ -720,6 +721,9 @@ fragment component of a URL with no host or schema defined."
 	(setf (url-filename url-obj) (concat "/" path))))
     url-obj))
 
+(define-error 'verb--empty-spec
+  "Request specification has no contents.")
+
 (defun verb--request-spec-from-text (text)
   "Create a `verb--request-spec' from a text specification, TEXT.
 
@@ -740,7 +744,7 @@ fragment part of a URL.
 HEADERS and BODY can be separated by a blank line, which will be
 ignored.  Each line of HEADERS must be in the form of KEY: VALUE.
 If the text specification consists exclusively of comments or is the
-empty string, `throw' symbol `empty' with nil as associated value."
+empty string, signal `verb--empty-spec'."
   (let (method url headers body)
     (with-temp-buffer
       (insert text)
@@ -755,8 +759,8 @@ empty string, `throw' symbol `empty' with nil as associated value."
       ;; Check if the entire specification was just comments or empty
       (when (string-empty-p (string-trim (buffer-substring (point)
 							   (point-max))))
-	;; Throw `empty' if so
-	(throw 'empty nil))
+	;; Signal `verb--empty-spec' if so
+	(signal 'verb--empty-spec nil))
       ;; Read HTTP method and URL
       (let ((case-fold-search t))
 	(when (re-search-forward (concat "^\\s-*\\("

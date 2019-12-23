@@ -52,20 +52,14 @@
     (should (= (point) 1))))
 
 (ert-deftest test-request-spec-from-text-comments-only ()
-  (should-error (text-as-spec "# Hello\n"
-			      "# world"))
+  (should-error (text-as-spec "# Hello\n" "# world")
+		:type 'verb--empty-spec)
 
-  (should-error (text-as-spec "# Hello\n"
-			      ""))
+  (should-error (text-as-spec "# Hello\n" "")
+		:type 'verb--empty-spec)
 
-  (should-error (text-as-spec ""))
-
-  (should (null (catch 'empty
-		  (text-as-spec ""))))
-
-  (should (null (catch 'empty
-		  (text-as-spec "# Hello\n"
-				"#test")))))
+  (should-error (text-as-spec "")
+		:type 'verb--empty-spec))
 
 (ert-deftest test-response-header-line-string ()
   (should (string= (verb--response-header-line-string
