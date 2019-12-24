@@ -60,7 +60,7 @@ header value (\"charset=utf-8\")."
   "If non-nil, do not send or receive cookies when sending requests."
   :type 'boolean)
 
-(defcustom verb-show-headers-buffer t
+(defcustom verb-show-headers-buffer nil
   "Choose whether to automatically show the headers buffer after
 receiving a HTTP response.
 
