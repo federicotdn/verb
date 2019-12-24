@@ -62,7 +62,7 @@ header value (\"charset=utf-8\")."
 
 (defcustom verb-show-headers-buffer nil
   "Choose whether to automatically show the headers buffer after
-receiving a HTTP response.
+receiving an HTTP response.
 
 Value nil means never show the headers buffer.
 Value `when-empty' means automatically show the headers buffer only when the
@@ -71,6 +71,13 @@ Any other value means always show the headers buffer."
   :type '(choice (const :tag "Never" nil)
 		 (const :tag "When empty" when-empty)
 		 (const :tag "Always" t)))
+
+(defcustom verb-show-timeout-warning 5.0
+  "Number of seconds to wait after an HTTP request is sent to warn the
+user about a possible network timeout.
+When set to nil, don't show any warnings."
+  :type '(choice (float :tag "Time in seconds")
+		 (const :tag "Off" nil)))
 
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
@@ -163,7 +170,7 @@ Any other value means always show the headers buffer."
 (add-to-list 'auto-mode-alist '("\\.verb\\'" . verb-mode))
 
 (define-minor-mode verb-response-body-mode
-  "Minor mode for displaying a HTTP response's body."
+  "Minor mode for displaying an HTTP response's body."
   :lighter " Verb[Body]"
   :group 'verb
   :keymap `((,(kbd "C-c C-o") . verb-toggle-show-headers))
@@ -188,7 +195,7 @@ Any other value means always show the headers buffer."
   "Keymap for `verb-response-headers-mode'.")
 
 (define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
-  "Major mode for displaying a HTTP response's headers."
+  "Major mode for displaying an HTTP response's headers."
   (setq header-line-format "HTTP Headers listing")
   (font-lock-add-keywords
    nil '(("^\\([[:alpha:]-]+:\\)\\s-.+$" (1 'verb-header)))))
@@ -431,18 +438,23 @@ If the header itself is not present, return (nil . nil)."
     (with-current-buffer (get-buffer-create "*verb-debug*")
       (insert (apply #'format args) "\n"))))
 
-(defun verb--request-spec-callback (status rs response-buf start where)
+(defun verb--request-spec-callback (status rs response-buf start timeout-timer where)
   "Callback for `verb--request-spec-execute' for request RS.
 More response information can be read from STATUS.
 RESPONSE-BUF should point to a buffer where the response should be
 copied to, which the user can then use or edit freely.
 START should contain a floating point number indicating the timestamp
 at which the request was sent.
+TIMEOUT-TIMER should contain a timer set to call `verb--timeout-warn',
+or nil.
 WHERE describes where the results should be shown in (see
 `verb-execute-request-on-point').
 
 This function sets up the current buffer so that it can be used to
 view the HTTP response in a user-friendly way."
+  (when timeout-timer
+    (cancel-timer timeout-timer))
+
   ;; Handle errors first
   (when-let ((http-error (plist-get status :error))
 	     (error-info (cdr http-error))
@@ -599,16 +611,27 @@ be loaded into."
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
-	 (response-buf (generate-new-buffer "*HTTP Response*")))
+	 (response-buf (generate-new-buffer "*HTTP Response*"))
+	 timeout-timer)
     (unless (url-host url)
       (user-error "%s" (concat "URL has no host defined\n"
 			       "Make sure you specify a host "
 			       "(e.g. \"github.com\") in the heading "
 			       "hierarchy")))
+
+    ;; Start the timeout warning timer
+    (when verb-show-timeout-warning
+      (setq timeout-timer (run-with-timer verb-show-timeout-warning nil
+					  #'verb--timeout-warn
+					  response-buf rs)))
     ;; Send the request!
     (url-retrieve url
 		  #'verb--request-spec-callback
-		  (list rs response-buf (time-to-seconds) where)
+		  (list rs
+			response-buf
+			(time-to-seconds)
+			timeout-timer
+			where)
 		  t verb-inhibit-cookies)
 
     ;; Show user some information
@@ -618,6 +641,15 @@ be loaded into."
 
     ;;Return the response buffer
     response-buf))
+
+(defun verb--timeout-warn (buffer rs)
+  "Show the user a warning about a possible network timeout for request RS.
+This function should be run `verb-show-timeout-warning' seconds after
+an HTTP request has been sent. Show the warning only when response
+buffer BUFFER is live."
+  (when (buffer-live-p buffer)
+    (message "Request to %s is taking too long"
+	     (verb--request-spec-url-string rs))))
 
 (defun verb--override-alist (original other)
   "Override alist ORIGINAL with OTHER.
@@ -782,7 +814,7 @@ Neither request specification is modified, a new one is returned.
 		      :body (or (oref other body) (oref original body))))
 
 (defun verb--http-methods-regexp ()
-  "Return a regexp that matches a HTTP method.
+  "Return a regexp that matches an HTTP method.
 HTTP methods are defined in `verb--http-methods'.
 Additionally, allow matching `verb--template-keyword'."
   (mapconcat #'identity
