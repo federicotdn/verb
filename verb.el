@@ -164,7 +164,7 @@ When set to nil, don't show any warnings."
   (setq-local outline-regexp (concat "[" verb--outline-character "\^L]+"))
   (setq-local comment-start verb--comment-character)
   (setq imenu-generic-expression
-	(list (list nil (concat "^" outline-regexp "\\s-\\(.+\\)$") 1)))
+	(list (list nil (concat "^" outline-regexp "\\s-+\\(.+\\)$") 1)))
   (verb--setup-font-lock-keywords))
 
 ;;;###autoload
