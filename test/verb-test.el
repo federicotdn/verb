@@ -264,6 +264,18 @@
   (should-not (verb--http-headers-p (list (cons "Hello" ""))))
   (should-not (verb--http-headers-p (list (cons "" "Hello")))))
 
+(ert-deftest test-insert-header-contents ()
+  (should (string= (with-temp-buffer
+		     (verb--insert-header-contents nil)
+		     (buffer-string))
+		   ""))
+
+  (should (string= (with-temp-buffer
+		     (verb--insert-header-contents '(("A" . "B")
+						     ("C" . "D")))
+		     (buffer-string))
+		   "A: B\nC: D")))
+
 (ert-deftest test-url-port ()
   (should (null (verb--url-port (verb--clean-url "http://hello.com"))))
   (should (null (verb--url-port (verb--clean-url "https://hello.com"))))

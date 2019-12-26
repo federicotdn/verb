@@ -318,7 +318,8 @@ If point is not on a heading, emulate a TAB key press."
       (let ((key (car key-value))
 	    (value (cdr key-value)))
 	(insert key ": " value "\n")))
-    (backward-delete-char 1)))
+    (unless (zerop (buffer-size))
+      (backward-delete-char 1))))
 
 (defun verb-toggle-show-headers ()
   "Show or hide the HTTP response's headers on a separate buffer."
