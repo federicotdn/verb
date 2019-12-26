@@ -130,6 +130,7 @@ When set to nil, don't show any warnings."
 (defvar verb-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-o") 'verb-execute-request-on-point-other-window)
+    (define-key map (kbd "TAB") 'verb-cycle)
     map)
   "Keymap for `verb-mode'.")
 
@@ -279,6 +280,36 @@ Delete the window only if it isn't the only window in the frame."
   (kill-current-buffer)
   (ignore-errors
     (delete-window)))
+
+
+(defun verb--heading-invisible-p ()
+  "Return non-nil if the contents of the current heading are invisible."
+  (save-excursion
+    (end-of-line)
+    (outline-invisible-p)))
+
+(defun verb-cycle ()
+  "Cycle the current heading's visibility, like in Org mode.
+If point is not on a heading, emulate a TAB key press."
+  (interactive)
+  (if (outline-on-heading-p)
+      (let ((level (save-excursion
+		     (beginning-of-line)
+		     (outline-level)))
+	    (next-invisible (save-excursion
+			      (and (outline-next-heading)
+				   (verb--heading-invisible-p))))
+	    (next-level (save-excursion
+			  (and (outline-next-heading)
+			       (outline-level)))))
+	(cond
+	 ((verb--heading-invisible-p)
+	  (outline-toggle-children))
+	 ((and next-level (> next-level level) next-invisible)
+	  (outline-show-subtree))
+	 (t
+	  (outline-hide-subtree))))
+    (call-interactively (global-key-binding "\t"))))
 
 (defun verb--insert-header-contents (headers)
   "Insert the contents of HTTP HEADERS into the current buffer."
