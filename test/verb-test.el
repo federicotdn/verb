@@ -198,6 +198,10 @@
 			  "hello world"))
   (should (string= (oref aux :body) "hello world")))
 
+(ert-deftest test-request-spec-from-text-code-tags ()
+  (setq aux (text-as-spec "GET http://example.com/users/{{(+ 1 1)}}\n"))
+  (should (string= (verb--request-spec-url-string aux) "http://example.com/users/2")))
+
 (ert-deftest test-request-spec-from-text-complete ()
   (setq aux (text-as-spec "# Comment\n"
 			  "  #\n"
@@ -275,6 +279,47 @@
 						     ("C" . "D")))
 		     (buffer-string))
 		   "A: B\nC: D")))
+
+(ert-deftest test-eval-string ()
+  (should (string= (verb--eval-string "1")
+		   "1"))
+
+  (setq hello 1)
+  (should (string= (verb--eval-string "(+ 1 hello)")
+		   "2"))
+
+  (should (string= (verb--eval-string "\"test\"")
+		   "test"))
+
+  (should (string= (verb--eval-string "'test")
+		   "test"))
+
+  (should (string= (verb--eval-string "nil")
+		   "nil"))
+
+  (should (string= (verb--eval-string "t")
+		   "t"))
+
+  (should-error (verb--eval-string "asdf")))
+
+(ert-deftest test-eval-lisp-code-in ()
+  (should (string= (verb--eval-lisp-code-in "1 {{1}}")
+		   "1 1"))
+
+  (should (string= (verb--eval-lisp-code-in "1 {{(+ 1 1)}}")
+		   "1 2"))
+
+  (setq hello 99)
+  (should (string= (verb--eval-lisp-code-in "1 {{(+ 1 hello)}}")
+		   "1 100"))
+
+  (should (string= (verb--eval-lisp-code-in "{{\"{{\"}}")
+  		   "{{"))
+
+  (should (string= (verb--eval-lisp-code-in "{{\"}\"}}{{\"}\"}}")
+  		   "}}"))
+
+  (should-error (verb--eval-lisp-code-in "Hello {{asdfasdf}}")))
 
 (ert-deftest test-url-port ()
   (should (null (verb--url-port (verb--clean-url "http://hello.com"))))
@@ -742,7 +787,7 @@
      (re-search-forward (concat "^-+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-execute-request-on-point)
-	 (sleep-for 0.5)
+	 (sleep-for 0.3)
 	 ,@body))
      (kill-buffer)))
 

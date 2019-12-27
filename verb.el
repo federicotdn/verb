@@ -103,6 +103,12 @@ When set to nil, don't show any warnings."
 (defconst verb--template-keyword "TEMPLATE"
   "Keyword to use when defining request templates without defined HTTP methods.")
 
+(defconst verb--code-tag-left "{{"
+  "Left delimiter for Lisp code tags.")
+
+(defconst verb--code-tag-right "}}"
+  "Right delimiter for Lisp code tags.")
+
 (defvar-local verb--response-headers nil
   "HTTP response headers for this response buffer.")
 
@@ -854,6 +860,32 @@ Additionally, allow matching `verb--template-keyword'."
 		     (list verb--template-keyword))
 	     "\\|"))
 
+(defun verb--eval-string (s)
+  "Evaluate S as Lisp code and return the string respresentation of the result."
+  (when (string-empty-p s)
+    (user-error "%s" "Code tag is empty"))
+  (save-mark-and-excursion
+    (save-match-data
+      (let ((result
+	     (eval (car (read-from-string (format "(progn %s)" s))) t)))
+	(format "%s" result)))))
+
+(defun verb--eval-lisp-code-in (s)
+  "Evalue and replace Lisp code within code tags in S.
+Code tags are delimited with `verb--code-tag-left' and
+`verb--code-tag-right' (default values \"{{\" and \"}}\",
+respectively)."
+  (when s
+    (with-temp-buffer
+      (insert s)
+      (goto-char (point-min))
+      (while (re-search-forward (concat verb--code-tag-left
+					"\\(.+?\\)"
+					verb--code-tag-right)
+				nil t)
+	(replace-match (verb--eval-string (match-string 1))))
+      (buffer-string))))
+
 (defun verb--clean-url (url)
   "Return a correctly encoded URL struct to be used with `url-retrieve'.
 
@@ -949,7 +981,9 @@ empty string, signal `verb--empty-spec'."
       ;; Stop as soon as we find a blank line or a non-matching line
       (while (re-search-forward "^\\s-*\\([[:alpha:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
 				(line-end-position) t)
-	(push (cons (match-string 1) (match-string 2)) headers)
+	(push (cons (verb--eval-lisp-code-in (match-string 1))
+		    (verb--eval-lisp-code-in (match-string 2)))
+	      headers)
 	(when (not (eobp)) (forward-char)))
       (setq headers (nreverse headers))
       ;; Allow a blank like to separate headers and body (not required)
@@ -963,9 +997,10 @@ empty string, signal `verb--empty-spec'."
       ;; Return a `verb--request-spec'
       (verb--request-spec :method method
 			  :url (unless (string-empty-p url)
-				 (verb--clean-url url))
+				 (verb--clean-url
+				  (verb--eval-lisp-code-in url)))
 			  :headers headers
-			  :body body))))
+			  :body (verb--eval-lisp-code-in body)))))
 
 (provide 'verb)
 ;;; verb.el ends here
