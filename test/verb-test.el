@@ -200,7 +200,15 @@
 
 (ert-deftest test-request-spec-from-text-code-tags ()
   (setq aux (text-as-spec "GET http://example.com/users/{{(+ 1 1)}}\n"))
-  (should (string= (verb--request-spec-url-string aux) "http://example.com/users/2")))
+  (should (string= (verb--request-spec-url-string aux) "http://example.com/users/2"))
+
+  (setq aux (text-as-spec "GET http://example.com\n"
+			  "Accept: {{(* 3 2)}}\n"
+			  "\n"
+			  "test body {{(+ 10 20)}}"))
+  (should (equal (oref aux :headers)
+		 (list (cons "Accept" "6"))))
+  (should (string= (oref aux :body) "test body 30")))
 
 (ert-deftest test-request-spec-from-text-complete ()
   (setq aux (text-as-spec "# Comment\n"

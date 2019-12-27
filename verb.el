@@ -30,6 +30,7 @@
 (require 'eieio)
 (require 'subr-x)
 (require 'url)
+(require 'url-queue)
 (require 'mm-util)
 
 (defgroup verb nil
@@ -79,6 +80,21 @@ When set to nil, don't show any warnings."
   :type '(choice (float :tag "Time in seconds")
 		 (const :tag "Off" nil)))
 
+(defcustom verb-code-tag-delimiters '("{{" . "}}")
+  "Delimiters (left and right) used to evaluate and replace Lisp code
+tags inside HTTP request specifications.
+If different parts of your HTTP request specifications need to include
+literal values identical to one or both of the delimiters, it is
+recommended you change them to something else through this setting."
+  :type '(cons string string))
+
+(defcustom verb-url-retrieve-function #'url-retrieve
+  "Function to use in order to send HTTP requests.
+For more information on `url-retrieve' and `url-queue-retrieve', see
+info node `(url)Retrieving URLs'."
+  :type '(choice (const #'url-retrieve)
+		 (const #'url-queue-retrieve)))
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
   "Face for highlighting HTTP methods.")
@@ -102,12 +118,6 @@ When set to nil, don't show any warnings."
 
 (defconst verb--template-keyword "TEMPLATE"
   "Keyword to use when defining request templates without defined HTTP methods.")
-
-(defconst verb--code-tag-left "{{"
-  "Left delimiter for Lisp code tags.")
-
-(defconst verb--code-tag-right "}}"
-  "Right delimiter for Lisp code tags.")
 
 (defvar-local verb--response-headers nil
   "HTTP response headers for this response buffer.")
@@ -663,14 +673,15 @@ be loaded into."
 					  #'verb--timeout-warn
 					  response-buf rs)))
     ;; Send the request!
-    (url-retrieve url
-		  #'verb--request-spec-callback
-		  (list rs
-			response-buf
-			(time-to-seconds)
-			timeout-timer
-			where)
-		  t verb-inhibit-cookies)
+    (funcall verb-url-retrieve-function
+	     url
+	     #'verb--request-spec-callback
+	     (list rs
+		   response-buf
+		   (time-to-seconds)
+		   timeout-timer
+		   where)
+	     t verb-inhibit-cookies)
 
     ;; Show user some information
     (message "%s request sent to %s"
@@ -872,16 +883,14 @@ Additionally, allow matching `verb--template-keyword'."
 
 (defun verb--eval-lisp-code-in (s)
   "Evalue and replace Lisp code within code tags in S.
-Code tags are delimited with `verb--code-tag-left' and
-`verb--code-tag-right' (default values \"{{\" and \"}}\",
-respectively)."
+Code tags are delimited with `verb-code-tag-delimiters'."
   (when s
     (with-temp-buffer
       (insert s)
       (goto-char (point-min))
-      (while (re-search-forward (concat verb--code-tag-left
+      (while (re-search-forward (concat (car verb-code-tag-delimiters)
 					"\\(.+?\\)"
-					verb--code-tag-right)
+					(cdr verb-code-tag-delimiters))
 				nil t)
 	(replace-match (verb--eval-string (match-string 1))))
       (buffer-string))))
