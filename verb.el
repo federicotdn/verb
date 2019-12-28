@@ -92,8 +92,12 @@ recommended you change them to something else through this setting."
   "Function to use in order to send HTTP requests.
 For more information on `url-retrieve' and `url-queue-retrieve', see
 info node `(url)Retrieving URLs'."
-  :type '(choice (const #'url-retrieve)
-		 (const #'url-queue-retrieve)))
+  :type '(choice (function-item
+		  :tag "url-retrieve from url.el"
+		  url-retrieve)
+		 (function-item
+		  :tag "url-queue-retrieve from url-queue.el"
+		  url-queue-retrieve)))
 
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
