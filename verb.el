@@ -73,7 +73,7 @@ Any other value means always show the headers buffer."
 		 (const :tag "When empty" when-empty)
 		 (const :tag "Always" t)))
 
-(defcustom verb-show-timeout-warning 5.0
+(defcustom verb-show-timeout-warning 10.0
   "Number of seconds to wait after an HTTP request is sent to warn the
 user about a possible network timeout.
 When set to nil, don't show any warnings."
@@ -108,6 +108,9 @@ info node `(url)Retrieving URLs'."
 
 (defface verb-comment '((t :inherit font-lock-comment-face))
   "Face for highlighting comments.")
+
+(defface verb-code-tag '((t :inherit italic))
+  "Face for highlighting Lisp code tags.")
 
 (defconst verb--comment-character "#"
   "Character to use to mark commented lines.")
@@ -169,7 +172,14 @@ info node `(url)Retrieving URLs'."
       (1 'verb-header))
      ;; # This is a comment
      (,(concat "^\\s-*" verb--comment-character ".*$")
-      (0 'verb-comment))))
+      (0 'verb-comment))
+     ;; Lisp code tags
+     (,(concat "^.*?\\("
+	       (car verb-code-tag-delimiters)
+	       ".*?"
+	       (cdr verb-code-tag-delimiters)
+	       "\\).*$")
+      (1 'verb-code-tag))))
   (setq font-lock-keywords-case-fold-search t)
   (font-lock-ensure)
   ;; `outline-4' is just `font-lock-comment-face', avoid using that
