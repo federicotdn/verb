@@ -154,6 +154,7 @@ info node `(url)Retrieving URLs'."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-r") #'verb-execute-request-on-point-other-window)
     (define-key map (kbd "C-f") #'verb-execute-request-on-point)
+    (define-key map (kbd "C-p") #'verb-preview-request-on-point)
     map)
   "Prefix map for `verb-mode'.")
 
@@ -304,6 +305,34 @@ Return nil of the heading has no text contents."
 	  (verb--request-spec-from-text text)
 	(verb--empty-spec nil)))))
 
+(defun verb--request-spec-from-hierarchy ()
+  "Return a `verb--request-spec' generated from the headings hierarchy.
+To do this, use `verb--request-spec-from-heading' for the current
+heading, for that heading's parent, and so on until the root of the
+hierarchy is reached.  Once all the request specs have been collected,
+override them in inverse order according to the rules described in
+`verb--request-spec-override'."
+  (let (specs done final-spec)
+    (save-excursion
+      ;; Go up through the Outline tree taking a request specification
+      ;; from each level
+      (while (not done)
+	(let ((spec (verb--request-spec-from-heading)))
+	  (when spec (push spec specs)))
+	(setq done (not (verb--up-heading)))))
+    (if specs
+	(progn
+	  (setq final-spec (car specs))
+	  (when (< 1 (length specs))
+	    (dolist (spec (cdr specs))
+	      ;; Override spec 1 with spec 2, and the result with spec
+	      ;; 3, then with 4, etc.
+	      (setq final-spec (verb--request-spec-override final-spec
+							    spec))))
+	  final-spec)
+      (user-error "%s" (concat "No request specification found\nTry "
+			       "writing: get https://<hostname>/<path>")))))
+
 (defun verb--split-window ()
   "Split selected window by its longest side."
   (split-window nil nil (if (< (window-pixel-height)
@@ -396,32 +425,20 @@ Show the results on another window (use
 (defun verb-execute-request-on-point (&optional where)
   "Send the request specified by the selected heading's text contents.
 The contents of all parent headings are used as well; see
-`verb--request-spec-override' to see how this is done.
+`verb--request-spec-from-hierarchy' to see how this is done.
 
 If WHERE is `other-window', show the results of the request on another
-window.  If WHERE has any other value, show the results of the request
-in the current window."
+window.  If WHERE is `preview', only show information about the
+request, but don't actually send it.  If WHERE has any other value,
+show the results of the request in the current window."
   (interactive)
-  (let (specs done final-spec)
-    (save-excursion
-      ;; Go up through the Outline tree taking a request specification
-      ;; from each level
-      (while (not done)
-	(let ((spec (verb--request-spec-from-heading)))
-	  (when spec (push spec specs)))
-	(setq done (not (verb--up-heading)))))
-    (if specs
-	(progn
-	  (setq final-spec (car specs))
-	  (when (< 1 (length specs))
-	    (dolist (spec (cdr specs))
-	      ;; Override spec 1 with spec 2, and the result with spec
-	      ;; 3, then with 4, etc.
-	      (setq final-spec (verb--request-spec-override final-spec
-							    spec))))
-	  (verb--request-spec-execute final-spec where))
-      (user-error "%s" (concat "No request specification found\nTry "
-			       "writing: get https://<hostname>/<path>")))))
+  (verb--request-spec-execute (verb--request-spec-from-hierarchy)
+			      where))
+
+(defun verb-preview-request-on-point ()
+  "Preview the request that would be sent using `verb-execute-request-on-point'."
+  (interactive)
+  (verb-execute-request-on-point 'preview))
 
 (defun verb--http-method-p (m)
   "Return non-nil if M is a valid HTTP method."
@@ -683,7 +700,9 @@ be loaded into."
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
-	 (response-buf (generate-new-buffer "*HTTP Response*"))
+	 (not-preview (not (eq where 'preview)))
+	 (response-buf (and not-preview
+			    (generate-new-buffer "*HTTP Response*")))
 	 timeout-timer)
     (unless (url-host url)
       (user-error "%s" (concat "URL has no host defined\n"
@@ -691,26 +710,34 @@ be loaded into."
 			       "(e.g. \"github.com\") in the heading "
 			       "hierarchy")))
 
-    ;; Start the timeout warning timer
-    (when verb-show-timeout-warning
-      (setq timeout-timer (run-with-timer verb-show-timeout-warning nil
-					  #'verb--timeout-warn
-					  response-buf rs)))
-    ;; Send the request!
-    (funcall verb-url-retrieve-function
-	     url
-	     #'verb--request-spec-callback
-	     (list rs
-		   response-buf
-		   (time-to-seconds)
-		   timeout-timer
-		   where)
-	     t verb-inhibit-cookies)
+    (when not-preview
+      ;; Start the timeout warning timer
+      (when verb-show-timeout-warning
+	(setq timeout-timer (run-with-timer verb-show-timeout-warning nil
+					    #'verb--timeout-warn
+					    response-buf rs)))
+
+      ;; Send the request!
+      (funcall verb-url-retrieve-function
+	       url
+	       #'verb--request-spec-callback
+	       (list rs
+		     response-buf
+		     (time-to-seconds)
+		     timeout-timer
+		     where)
+	       t verb-inhibit-cookies))
 
     ;; Show user some information
-    (message "%s request sent to %s"
-	   (oref rs method)
-	   (verb--request-spec-url-string rs))
+    (message "%s request %ssent to %s%s"
+	     (oref rs method)
+	     (if not-preview "" "would be ")
+	     (verb--request-spec-url-string rs)
+	     (if not-preview ""
+	       (format (concat "\nHeaders count: %s"
+			       "\nBody present: %s")
+		       (length (oref rs headers))
+		       (if (oref rs body) "yes" "no"))))
 
     ;;Return the response buffer
     response-buf))
