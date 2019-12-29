@@ -208,7 +208,15 @@
 			  "test body {{(+ 10 20)}}"))
   (should (equal (oref aux :headers)
 		 (list (cons "Accept" "6"))))
-  (should (string= (oref aux :body) "test body 30")))
+  (should (string= (oref aux :body) "test body 30"))
+
+  (setq aux (text-as-spec "GET http://example.com\n"
+			  "Content-Type: text/markdown"
+			  "\n"
+			  "# A markdown list.\n"
+			  "{{}}- Hello\n"
+			  "{{}}- World"))
+  (should (string= (oref aux :body) "# A markdown list.\n- Hello\n- World")))
 
 (ert-deftest test-request-spec-from-text-complete ()
   (setq aux (text-as-spec "# Comment\n"
@@ -308,11 +316,15 @@
   (should (string= (verb--eval-string "t")
 		   "t"))
 
-  (should-error (verb--eval-string "asdf")))
+  (should (string= (verb--eval-string "")
+		   "")))
 
 (ert-deftest test-eval-lisp-code-in ()
   (should (string= (verb--eval-lisp-code-in "1 {{1}}")
 		   "1 1"))
+
+  (should (string= (verb--eval-lisp-code-in "{{}}--")
+		   "--"))
 
   (should (string= (verb--eval-lisp-code-in "1 {{(+ 1 1)}}")
 		   "1 2"))

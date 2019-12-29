@@ -876,14 +876,15 @@ Additionally, allow matching `verb--template-keyword'."
 	     "\\|"))
 
 (defun verb--eval-string (s)
-  "Evaluate S as Lisp code and return the string respresentation of the result."
-  (when (string-empty-p s)
-    (user-error "%s" "Code tag is empty"))
-  (save-mark-and-excursion
-    (save-match-data
-      (let ((result
-	     (eval (car (read-from-string (format "(progn %s)" s))) t)))
-	(format "%s" result)))))
+  "Evaluate S as Lisp code and return the string respresentation of the result.
+As a special case, if S is the empty string, return the empty string."
+  (if (string-empty-p s)
+      ""
+    (save-mark-and-excursion
+      (save-match-data
+	(let ((result
+	       (eval (car (read-from-string (format "(progn %s)" s))) t)))
+	  (format "%s" result))))))
 
 (defun verb--eval-lisp-code-in (s)
   "Evalue and replace Lisp code within code tags in S.
@@ -893,7 +894,7 @@ Code tags are delimited with `verb-code-tag-delimiters'."
       (insert s)
       (goto-char (point-min))
       (while (re-search-forward (concat (car verb-code-tag-delimiters)
-					"\\(.+?\\)"
+					"\\(.*?\\)"
 					(cdr verb-code-tag-delimiters))
 				nil t)
 	(replace-match (verb--eval-string (match-string 1))))
