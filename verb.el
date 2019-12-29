@@ -150,10 +150,17 @@ info node `(url)Retrieving URLs'."
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
 
+(defvar verb-mode-prefix-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-r") #'verb-execute-request-on-point-other-window)
+    (define-key map (kbd "C-f") #'verb-execute-request-on-point)
+    map)
+  "Prefix map for `verb-mode'.")
+
 (defvar verb-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-o") 'verb-execute-request-on-point-other-window)
-    (define-key map (kbd "TAB") 'verb-cycle)
+    (define-key map (kbd "C-c C-r") verb-mode-prefix-map)
+    (define-key map (kbd "TAB") #'verb-cycle)
     map)
   "Keymap for `verb-mode'.")
 
@@ -204,7 +211,8 @@ info node `(url)Retrieving URLs'."
   "Minor mode for displaying an HTTP response's body."
   :lighter " Verb[Body]"
   :group 'verb
-  :keymap `((,(kbd "C-c C-o") . verb-toggle-show-headers))
+  :keymap `((,(kbd "C-c C-r C-r") . verb-toggle-show-headers)
+	    (,(kbd "C-c C-r C-k") . verb-kill-buffer-and-window))
   (if verb-response-body-mode
       (progn
 	(setq header-line-format
@@ -354,6 +362,8 @@ If point is not on a heading, emulate a TAB key press."
 (defun verb-toggle-show-headers ()
   "Show or hide the HTTP response's headers on a separate buffer."
   (interactive)
+  (unless verb-response-body-mode
+    (user-error "%s" "This buffer is not showing an HTTP response"))
 
   (when (and verb--response-headers-buffer
 	     (not (get-buffer-window verb--response-headers-buffer)))
