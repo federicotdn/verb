@@ -132,9 +132,6 @@ info node `(url)Retrieving URLs'."
 (defvar-local verb--response-request nil
   "The `verb--request-spec' object that was used for this repsonse.")
 
-(defvar-local verb--response-status nil
-  "The status plist for this response returned by `url-retrieve'.")
-
 (defvar-local verb--response-duration nil
   "Time took in seconds to receive the response since the request was sent.")
 
@@ -620,7 +617,6 @@ view the HTTP response in a user-friendly way."
       ;; Store details of request and response
       (setq verb--response-headers (nreverse headers)
 	    verb--response-request rs
-	    verb--response-status status
 	    verb--response-status-line status-line
 	    verb--response-duration elapsed
 	    verb--response-body-bytes bytes)
