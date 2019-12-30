@@ -804,17 +804,19 @@
 
 ;; Tests using the test server (server.py)
 
+(setq test-file-name (expand-file-name "test/test.verb"))
+(setq test-buf (find-file test-file-name))
+
 (defmacro server-test (test-name &rest body)
   (declare (indent 1))
   `(progn
-     (find-file "test/test.verb")
+     (set-buffer test-buf)
      (goto-char (point-min))
      (re-search-forward (concat "^-+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-execute-request-on-point)
 	 (sleep-for 0.3)
-	 ,@body))
-     (kill-buffer)))
+	 ,@body))))
 
 (ert-deftest test-server-basic ()
   (server-test "basic"
@@ -891,11 +893,17 @@
   (server-test "basic")
   (should (= (1+ num-buffers) (length (buffer-list)))))
 
+(ert-deftest test-kill-buffer-and-window ()
+  (setq num-buffers (length (buffer-list)))
+  (server-test "basic")
+  (switch-to-buffer "*HTTP Response*")
+  (verb-kill-buffer-and-window)
+  (should (= num-buffers (length (buffer-list)))))
+
 (ert-deftest test-connection-error ()
   (setq num-buffers (length (buffer-list)))
   (ignore-errors
     (server-test "connection-fail-test"))
-  (kill-buffer "test.verb")
   (should (= num-buffers (length (buffer-list)))))
 
 (provide 'verb-test)

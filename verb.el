@@ -736,7 +736,7 @@ be loaded into."
 	     (if not-preview "" "would be ")
 	     (verb--request-spec-url-string rs)
 	     (if not-preview ""
-	       (format (concat "\nHeaders count: %s"
+	       (format (concat "\nUser headers count: %s"
 			       "\nBody present: %s")
 		       (length (oref rs headers))
 		       (if (oref rs body) "yes" "no"))))

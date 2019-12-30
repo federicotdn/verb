@@ -35,6 +35,7 @@ load-examples:
 		 --eval "(toggle-debug-on-error)" \
 		 --eval "(find-file \"test/test.verb\")" \
 		 --eval "(find-file \"../docs/swapi.verb\")" \
+		 --eval "(find-file \"postman-echo.verb\")" \
 		 --eval "(find-file \"req-res.verb\")" \
 		 --eval "(delete-other-windows)"
 
