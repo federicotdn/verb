@@ -33,10 +33,7 @@ load-examples:
 		 --eval "(setq confirm-kill-emacs nil)" \
 		 --eval "(setq url-debug t)" \
 		 --eval "(toggle-debug-on-error)" \
-		 --eval "(find-file \"test/test.verb\")" \
-		 --eval "(find-file \"../docs/swapi.verb\")" \
-		 --eval "(find-file \"postman-echo.verb\")" \
-		 --eval "(find-file \"req-res.verb\")" \
+		 --eval "(dired \"docs\")" \
 		 --eval "(delete-other-windows)"
 
 # TODO:
