@@ -59,7 +59,9 @@ header value (\"charset=utf-8\")."
     ("application/css" . css-mode)
     ("text/plain" . text-mode))
   "List of text content type handlers.
-Handlers are functions to be called without any arguments.
+Handlers are functions to be called without any arguments.  Text handlers, specifically,
+are called after the text contents of the response have been decoded into a multibyte
+buffer (with that buffer as the current buffer).
 Note: if a content type is listed in `verb-binary-content-type-handlers', then its
 binary handler will be used instead of any handler specified here.  This behaviour can't
 be disabled."
@@ -68,7 +70,9 @@ be disabled."
 (defcustom verb-binary-content-type-handlers
   '(("application/pdf" . verb--binary-handler-pdf))
   "List of binary content type handlers.
-Handlers are functions to be called without any arguments.
+Handlers are functions to be called without any arguments.  Binary handlers,
+specifically, are called after the binary contents of the response have been inserted
+into a unibyte buffer (with that buffer as the current buffer).
 See also: `verb-text-content-type-handlers'."
   :type '(alist :key-type string :value-type function))
 
