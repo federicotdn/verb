@@ -1,0 +1,7 @@
+- Binary content type tests
+# Each subheading specifies a request for a binary content type
+# (non-text), like PDF documents, images, etc.
+
+-- PDF
+# Read a PDF document using doc-view-mode.
+get https://www.gnu.org/licenses/quick-guide-gplv3.pdf

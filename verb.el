@@ -58,7 +58,10 @@ header value (\"charset=utf-8\")."
     ("application/javascript" . js-mode)
     ("application/css" . css-mode)
     ("text/plain" . text-mode))
-  "Major modes to use for different values of the \"Content-Type\" header."
+  "Major modes to use for different values of the \"Content-Type\" header.
+Note: if a content type is listed in `verb-binary-handlers', then its
+binary handler will be used instead of any mode specified here.  This
+behaviour can't be disabled."
   :type '(alist :key-type string :value-type function))
 
 (defcustom verb-inhibit-cookies nil
@@ -136,6 +139,10 @@ The body contents of the response are in the buffer itself.")
 
 (defvar-local verb--response-headers-buffer nil
   "Buffer currently showing the HTTP response's headers.")
+
+(defvar verb-binary-handlers
+  '(("application/pdf" . verb--binary-handler-pdf))
+  "List of binary content type handlers.")
 
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
@@ -516,6 +523,10 @@ show the results of the request in the current window."
   (or (cdr (assoc content-type verb-content-type-modes-alist))
       'fundamental-mode))
 
+(defun verb--binary-handler-pdf ()
+  "Handler for PDF content type."
+  (doc-view-mode))
+
 (defun verb--headers-content-type (headers)
   "Return (TYPE . CHARSET) parsed from the \"Content-Type\" header in HEADERS.
 If the charset is not present, return (TYPE . nil).
@@ -566,7 +577,10 @@ view the HTTP response in a user-friendly way."
 
   ;; No errors, continue to read response
   (let ((elapsed (- (time-to-seconds) start))
-	status-line headers content-type charset coding-system bytes)
+	(original-buffer (current-buffer))
+	status-line headers content-type charset coding-system bytes
+	binary-handler)
+
     (widen)
     (goto-char (point-min))
     ;; Skip HTTP/1.X status line
@@ -584,6 +598,11 @@ view the HTTP response in a user-friendly way."
 
     ;; Read Content-Type and charset
     (setq content-type (verb--headers-content-type headers))
+    (verb--debug "Content-Type: %s" content-type)
+
+    (setq binary-handler (cdr (assoc-string (car content-type)
+					    verb-binary-handlers
+					    t)))
     (setq charset (or (cdr content-type) verb-default-response-charset))
 
     ;; Remove headers and blank line from buffer
@@ -599,29 +618,41 @@ view the HTTP response in a user-friendly way."
     (when enable-multibyte-characters
       (error "Expected a unibyte buffer for HTTP response"))
 
-    ;; Convert buffer to multibyte, contents are still raw bytes from
-    ;; the response
-    (set-buffer-multibyte 'to)
-    (set-buffer-file-coding-system 'binary)
+    (if binary-handler
+	;; Response content is a binary format
+	(with-current-buffer response-buf
+	  ;; Copy bytes and call the binary handler function
+	  (set-buffer-multibyte nil)
+	  (insert-buffer-substring original-buffer)
+	  (goto-char (point-min))
+	  (funcall binary-handler))
 
-    ;; Choose corresponding coding system for charset
-    (setq coding-system (or (mm-charset-to-coding-system charset)
-			    'utf-8))
+      ;; Response content is text
 
-    ;; Decode contents into RESPONSE-BUF
-    (decode-coding-region (point-min) (point-max)
-			  coding-system
-			  response-buf)
+      ;; Convert buffer to multibyte, contents are still raw bytes from
+      ;; the response
+      (set-buffer-multibyte 'to)
+      (set-buffer-file-coding-system 'binary)
+
+      ;; Choose corresponding coding system for charset
+      (setq coding-system (or (mm-charset-to-coding-system charset)
+			      'utf-8))
+
+      ;; Decode contents into RESPONSE-BUF
+      (decode-coding-region (point-min) (point-max)
+			    coding-system
+			    response-buf))
 
     ;; Kill original response buffer
-    (kill-current-buffer)
+    (kill-buffer original-buffer)
 
     (with-current-buffer response-buf
-      (set-buffer-file-coding-system coding-system)
+      (unless binary-handler
+	(set-buffer-file-coding-system coding-system)
 
-      ;; Prepare buffer for editing by user
-      (goto-char (point-min))
-      (funcall (verb--major-mode-for-content (car content-type)))
+	;; Prepare buffer for editing by user
+	(goto-char (point-min))
+	(funcall (verb--major-mode-for-content (car content-type))))
 
       ;; Store details of request and response
       (setq verb--http-response
