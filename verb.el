@@ -52,7 +52,11 @@ header value (\"charset=utf-8\")."
 
 (defcustom verb-content-type-modes-alist
   '(("text/html" . html-mode)
+    ("application/xml" . xml-mode)
+    ("application/xhtml+xml" . xml-mode)
     ("application/json" . js-mode)
+    ("application/javascript" . js-mode)
+    ("application/css" . css-mode)
     ("text/plain" . text-mode))
   "Major modes to use for different values of the \"Content-Type\" header."
   :type '(alist :key-type string :value-type function))
