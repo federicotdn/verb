@@ -50,7 +50,7 @@ This variable is only used when the charset isn't specified in the
 header value (\"charset=utf-8\")."
   :type 'string)
 
-(defcustom verb-content-type-modes-alist
+(defcustom verb-text-content-type-handlers
   '(("text/html" . html-mode)
     ("application/xml" . xml-mode)
     ("application/xhtml+xml" . xml-mode)
@@ -58,10 +58,18 @@ header value (\"charset=utf-8\")."
     ("application/javascript" . js-mode)
     ("application/css" . css-mode)
     ("text/plain" . text-mode))
-  "Major modes to use for different values of the \"Content-Type\" header.
-Note: if a content type is listed in `verb-binary-handlers', then its
-binary handler will be used instead of any mode specified here.  This
-behaviour can't be disabled."
+  "List of text content type handlers.
+Handlers are functions to be called without any arguments.
+Note: if a content type is listed in `verb-binary-content-type-handlers', then its
+binary handler will be used instead of any handler specified here.  This behaviour can't
+be disabled."
+  :type '(alist :key-type string :value-type function))
+
+(defcustom verb-binary-content-type-handlers
+  '(("application/pdf" . verb--binary-handler-pdf))
+  "List of binary content type handlers.
+Handlers are functions to be called without any arguments.
+See also: `verb-text-content-type-handlers'."
   :type '(alist :key-type string :value-type function))
 
 (defcustom verb-inhibit-cookies nil
@@ -139,10 +147,6 @@ The body contents of the response are in the buffer itself.")
 
 (defvar-local verb--response-headers-buffer nil
   "Buffer currently showing the HTTP response's headers.")
-
-(defvar verb-binary-handlers
-  '(("application/pdf" . verb--binary-handler-pdf))
-  "List of binary content type handlers.")
 
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
@@ -518,11 +522,6 @@ show the results of the request in the current window."
     (when url
       (url-recreate-url url))))
 
-(defun verb--major-mode-for-content (content-type)
-  "Return the appropiate major mode for handling content of type CONTENT-TYPE."
-  (or (cdr (assoc content-type verb-content-type-modes-alist))
-      'fundamental-mode))
-
 (defun verb--binary-handler-pdf ()
   "Handler for PDF content type."
   (doc-view-mode))
@@ -543,6 +542,11 @@ If the header itself is not present, return (nil . nil)."
   (when verb--debug-enable
     (with-current-buffer (get-buffer-create "*verb-debug*")
       (insert (apply #'format args) "\n"))))
+
+(defun verb--get-handler (content-type handlers-list)
+  "Get a handler from HANDLERS-LIST for a specific CONTENT-TYPE.
+CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
+  (cdr (assoc-string (car content-type) handlers-list t)))
 
 (defun verb--request-spec-callback (status rs response-buf start timeout-timer where)
   "Callback for `verb--request-spec-execute' for request RS.
@@ -579,7 +583,7 @@ view the HTTP response in a user-friendly way."
   (let ((elapsed (- (time-to-seconds) start))
 	(original-buffer (current-buffer))
 	status-line headers content-type charset coding-system bytes
-	binary-handler)
+	binary-handler text-handler)
 
     (widen)
     (goto-char (point-min))
@@ -600,10 +604,16 @@ view the HTTP response in a user-friendly way."
     (setq content-type (verb--headers-content-type headers))
     (verb--debug "Content-Type: %s" content-type)
 
-    (setq binary-handler (cdr (assoc-string (car content-type)
-					    verb-binary-handlers
-					    t)))
-    (setq charset (or (cdr content-type) verb-default-response-charset))
+    ;; Try to get a buffer handler function for this content type
+    ;; Binary handlers have priority over text handlers
+    (setq binary-handler (verb--get-handler content-type
+					    verb-binary-content-type-handlers))
+
+    (unless binary-handler
+      (setq text-handler (or (verb--get-handler content-type
+						verb-text-content-type-handlers)
+			     #'fundamental-mode))
+      (setq charset (or (cdr content-type) verb-default-response-charset)))
 
     ;; Remove headers and blank line from buffer
     ;; All left should be the content
@@ -623,6 +633,7 @@ view the HTTP response in a user-friendly way."
 	(with-current-buffer response-buf
 	  ;; Copy bytes and call the binary handler function
 	  (set-buffer-multibyte nil)
+	  (buffer-disable-undo)
 	  (insert-buffer-substring original-buffer)
 	  (goto-char (point-min))
 	  (funcall binary-handler))
@@ -647,12 +658,12 @@ view the HTTP response in a user-friendly way."
     (kill-buffer original-buffer)
 
     (with-current-buffer response-buf
-      (unless binary-handler
+      (when text-handler
 	(set-buffer-file-coding-system coding-system)
 
 	;; Prepare buffer for editing by user
 	(goto-char (point-min))
-	(funcall (verb--major-mode-for-content (car content-type))))
+	(funcall text-handler))
 
       ;; Store details of request and response
       (setq verb--http-response
