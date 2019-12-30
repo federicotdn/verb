@@ -65,24 +65,29 @@
 
 (ert-deftest test-response-header-line-string ()
   (should (string= (verb--response-header-line-string
-		    "test" 1.123 '(("Content-Type" . "hello")
-				   ("Content-Length" . "1"))
-		    999)
+		    (verb--response
+		     :status "test"
+		     :duration 1.123
+		     :headers '(("Content-Type" . "hello")
+				("Content-Length" . "1"))
+		     :body-bytes 999))
 		   "test | 1.123s | hello | 1 byte"))
 
   (should (string= (verb--response-header-line-string
-		    "test" 1.123 '(("Content-Type" . "hello")
-				   ("Content-Length" . "33"))
-		    999)
-		   "test | 1.123s | hello | 33 bytes"))
+		    (verb--response
+		     :status "test"
+		     :duration 1.123
+		     :headers '(("Content-Length" . "1"))
+		     :body-bytes 999))
+		   "test | 1.123s | ? | 1 byte"))
 
   (should (string= (verb--response-header-line-string
-		    "test" 1.123 '(("Content-Length" . "33")) 0)
-		   "test | 1.123s | ? | 33 bytes"))
-
-  (should (string= (verb--response-header-line-string
-		    "test" 1.123 '(("Content-Type" . "hello")) 55)
-		   "test | 1.123s | hello | 55 bytes")))
+		    (verb--response
+		     :status "test"
+		     :duration 1.123
+		     :headers '(("Content-Type" . "hello"))
+		     :body-bytes 999))
+		   "test | 1.123s | hello | 999 bytes")))
 
 (ert-deftest test-request-spec-from-text-error ()
   (should-error (text-as-spec "foobar example.com")))
@@ -862,7 +867,8 @@
 
 (ert-deftest test-server-response-utf-8-default ()
   (server-test "response-utf-8-default"
-    (should (string= (cdr (assoc-string "Content-Type" verb--response-headers))
+	       (should (string= (cdr (assoc-string "Content-Type"
+						   (oref verb--http-response headers)))
 		     "text/plain"))
     (should (string= verb-default-response-charset "utf-8"))
     (should (coding-system-equal buffer-file-coding-system 'utf-8-unix))

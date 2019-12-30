@@ -126,20 +126,9 @@ info node `(url)Retrieving URLs'."
 (defconst verb--template-keyword "TEMPLATE"
   "Keyword to use when defining request templates without defined HTTP methods.")
 
-(defvar-local verb--response-headers nil
-  "HTTP response headers for this response buffer.")
-
-(defvar-local verb--response-request nil
-  "The `verb--request-spec' object that was used for this repsonse.")
-
-(defvar-local verb--response-duration nil
-  "Time took in seconds to receive the response since the request was sent.")
-
-(defvar-local verb--response-status-line nil
-  "First line of the HTTP response's body.")
-
-(defvar-local verb--response-body-bytes nil
-  "Length of HTTP response body, in bytes (measured locally).")
+(defvar-local verb--http-response nil
+  "HTTP response for this response buffer, as a `verb--response' object.
+The body contents of the response are in the buffer itself.")
 
 (defvar-local verb--response-headers-buffer nil
   "Buffer currently showing the HTTP response's headers.")
@@ -205,6 +194,72 @@ info node `(url)Retrieving URLs'."
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.verb\\'" . verb-mode))
 
+(defvar verb-response-headers-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") 'verb-kill-buffer-and-window)
+    map)
+  "Keymap for `verb-response-headers-mode'.")
+
+(define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
+  "Major mode for displaying an HTTP response's headers."
+  (font-lock-add-keywords
+   nil '(("^\\([[:alpha:]-]+:\\)\\s-.+$" (1 'verb-header)))))
+
+(defun verb--http-method-p (m)
+  "Return non-nil if M is a valid HTTP method."
+  (member m verb--http-methods))
+
+(defun verb--http-headers-p (h)
+  "Return non-nil if H is an alist of (HEADER . VALUE) elements.
+HEADER and VALUE must be nonempty strings."
+  (when (consp h)
+    (catch 'end
+      (dolist (elem h)
+	(unless (and (consp elem)
+		     (stringp (car elem))
+		     (stringp (cdr elem))
+		     (< 0 (length (car elem)))
+		     (< 0 (length (cdr elem))))
+	  (throw 'end nil)))
+      t)))
+
+(defclass verb--request-spec ()
+  ((method :initarg :method
+	   :type (or null verb--http-method)
+	   :documentation "HTTP method.")
+   (url :initarg :url
+	:type (or null url)
+	:documentation "Request URL.")
+   (headers :initarg :headers
+	    :initform ()
+	    :type (or null verb--http-headers)
+	    :documentation "HTTP headers.")
+   (body :initarg :body
+	 :initform nil
+	 :type (or null string)
+	 :documentation "Request body."))
+  "Represents an HTTP request to be made.")
+
+(defclass verb--response ()
+  ((request :initarg :request
+	    :type verb--request-spec
+	    :documentation "Corresponding request.")
+   (headers :initarg :headers
+	    :type verb--http-headers
+	    :documentation "Response headers.")
+   (status :initarg :status
+	   :type string
+	   :documentation "Response's first line.")
+   (duration :initarg :duration
+	     :type float
+	     :documentation
+	     "Time taken for response to be received, in seconds.")
+   (body-bytes :initarg :body-bytes
+	       :initform 0
+	       :type integer
+	       :documentation "Number of bytes in response body."))
+  "Represents an HTTP response to a request.")
+
 (define-minor-mode verb-response-body-mode
   "Minor mode for displaying an HTTP response's body."
   :lighter " Verb[Body]"
@@ -214,28 +269,13 @@ info node `(url)Retrieving URLs'."
   (if verb-response-body-mode
       (progn
 	(setq header-line-format
-	      (verb--response-header-line-string verb--response-status-line
-						 verb--response-duration
-						 verb--response-headers
-						 verb--response-body-bytes))
+	      (verb--response-header-line-string verb--http-response))
 	(when verb-show-headers-buffer
 	  (if (eq verb-show-headers-buffer 'when-empty)
-	      (when (zerop verb--response-body-bytes)
+	      (when (zerop (oref verb--http-response body-bytes))
 		(verb-toggle-show-headers))
 	    (verb-toggle-show-headers))))
     (setq header-line-format nil)))
-
-(defvar verb-response-headers-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "q") 'verb-kill-buffer-and-window)
-    map)
-  "Keymap for `verb-response-headers-mode'.")
-
-(define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
-  "Major mode for displaying an HTTP response's headers."
-  (setq header-line-format "HTTP Headers listing")
-  (font-lock-add-keywords
-   nil '(("^\\([[:alpha:]-]+:\\)\\s-.+$" (1 'verb-header)))))
 
 (defun verb--back-to-heading ()
   "Move to the previous heading.
@@ -405,10 +445,12 @@ If point is not on a heading, emulate a TAB key press."
 	(setq verb--response-headers-buffer nil))
     (setq verb--response-headers-buffer
 	  (generate-new-buffer "*HTTP Headers*"))
-    (let ((headers verb--response-headers))
+    (let ((headers (oref verb--http-response headers)))
       (with-selected-window (verb--split-window)
 	(switch-to-buffer verb--response-headers-buffer)
 	(verb-response-headers-mode)
+	(setq header-line-format (format "HTTP Response Headers | count: %s"
+					 (length headers)))
 	(verb--insert-header-contents headers)
 	(fit-window-to-buffer)))))
 
@@ -437,70 +479,33 @@ show the results of the request in the current window."
   (interactive)
   (verb-execute-request-on-point 'preview))
 
-(defun verb--http-method-p (m)
-  "Return non-nil if M is a valid HTTP method."
-  (member m verb--http-methods))
-
-(defun verb--http-headers-p (h)
-  "Return non-nil if H is an alist of (HEADER . VALUE) elements.
-HEADER and VALUE must be nonempty strings."
-  (when (consp h)
-    (catch 'end
-      (dolist (elem h)
-	(unless (and (consp elem)
-		     (stringp (car elem))
-		     (stringp (cdr elem))
-		     (< 0 (length (car elem)))
-		     (< 0 (length (cdr elem))))
-	  (throw 'end nil)))
-      t)))
-
-(defclass verb--request-spec ()
-  ((method :initarg :method
-	   :type (or null verb--http-method)
-	   :documentation "HTTP method.")
-   (url :initarg :url
-	:type (or null url)
-	:documentation "Request URL.")
-   (headers :initarg :headers
-	    :initform ()
-	    :type (or null verb--http-headers)
-	    :documentation "HTTP headers.")
-   (body :initarg :body
-	 :initform nil
-	 :type (or null string)
-	 :documentation "Request body."))
-  "Represents an HTTP request to be made.")
+(cl-defmethod verb--response-header-line-string ((response verb--response))
+  "Return a short description of an HTTP RESPONSE's properties."
+  (let ((status-line (oref response status))
+	(elapsed (oref response duration))
+	(headers (oref response headers))
+	(bytes (oref response body-bytes)))
+    (concat
+     status-line
+     " | "
+     (format "%.4gs" elapsed)
+     (let ((content-type (or (car (verb--headers-content-type headers))
+			     "?")))
+       (format " | %s" content-type))
+     (let* ((content-length (cdr (assoc-string "Content-Length"
+					       headers t)))
+	    (value (if content-length
+		       (string-to-number content-length)
+		     bytes)))
+       (format " | %s byte%s"
+	       value
+	       (if (= value 1) "" "s"))))))
 
 (cl-defmethod verb--request-spec-url-string ((rs verb--request-spec))
   "Return RS's url member as a string if it is non-nil."
   (let ((url (oref rs url)))
     (when url
       (url-recreate-url url))))
-
-(defun verb--response-header-line-string (status-line elapsed headers bytes)
-  "Return a short description of a response's results.
-STATUS-LINE should contain the response's first text line.
-ELAPSED should contain the number of seconds the request took, in
-seconds.
-HEADERS should contain the HTTP headers received.
-BYTES should contain the length of the HTTP body in bytes (measured
-locally)."
-  (concat
-   status-line
-   " | "
-   (format "%.4gs" elapsed)
-   (let ((content-type (or (car (verb--headers-content-type headers))
-			   "?")))
-     (format " | %s" content-type))
-   (let* ((content-length (cdr (assoc-string "Content-Length"
-					     headers t)))
-	  (value (if content-length
-		     (string-to-number content-length)
-		   bytes)))
-     (format " | %s byte%s"
-	     value
-	     (if (= value 1) "" "s")))))
 
 (defun verb--major-mode-for-content (content-type)
   "Return the appropiate major mode for handling content of type CONTENT-TYPE."
@@ -615,11 +620,12 @@ view the HTTP response in a user-friendly way."
       (funcall (verb--major-mode-for-content (car content-type)))
 
       ;; Store details of request and response
-      (setq verb--response-headers (nreverse headers)
-	    verb--response-request rs
-	    verb--response-status-line status-line
-	    verb--response-duration elapsed
-	    verb--response-body-bytes bytes)
+      (setq verb--http-response
+	    (verb--response :headers (nreverse headers)
+			    :request rs
+			    :status status-line
+			    :duration elapsed
+			    :body-bytes bytes))
 
       (if (eq where 'other-window)
 	  (switch-to-buffer-other-window (current-buffer))
