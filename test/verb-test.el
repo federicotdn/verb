@@ -743,8 +743,23 @@
   ;; Various things
   (assert-url-override "http://hello.com/user?a=1&a=2&foo#foobar"
 		       "http://hello.com/test?a=2&a=3&quux#baz"
-		       "http://hello.com/user/test?foo&a=2&a=3&quux#baz")
-  )
+		       "http://hello.com/user/test?foo&a=2&a=3&quux#baz"))
+
+(ert-deftest test-get-handler ()
+  (should (equal (verb--get-handler (cons "image/png" nil)
+				    verb-binary-content-type-handlers)
+		 #'image-mode))
+
+  (should (equal (verb--get-handler (cons "application/pdf" nil)
+				    verb-binary-content-type-handlers)
+		 #'doc-view-mode))
+
+  (should (equal (verb--get-handler (cons "application/xml" nil)
+				    verb-text-content-type-handlers)
+		 #'xml-mode))
+
+  (should-not (verb--get-handler (cons "application/foobar" nil)
+				 verb-binary-content-type-handlers)))
 
 (ert-deftest test-headers-content-type ()
   (should (equal (verb--headers-content-type
@@ -821,7 +836,8 @@
 (ert-deftest test-server-basic ()
   (server-test "basic"
     (should (string= (buffer-string) "Hello, World!"))
-    (should (eq major-mode 'text-mode))))
+    (should (eq major-mode 'text-mode))
+    (should verb-response-body-mode)))
 
 (ert-deftest test-server-basic-json ()
   (server-test "basic-json"

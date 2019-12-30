@@ -68,7 +68,10 @@ be disabled."
   :type '(alist :key-type string :value-type function))
 
 (defcustom verb-binary-content-type-handlers
-  '(("application/pdf" . verb--binary-handler-pdf))
+  '(("application/pdf" . doc-view-mode)
+    ("image/png" . image-mode)
+    ("image/svg+xml" . image-mode)
+    ("image/jpeg" . image-mode))
   "List of binary content type handlers.
 Handlers are functions to be called without any arguments.  Binary handlers,
 specifically, are called after the binary contents of the response have been inserted
@@ -526,10 +529,6 @@ show the results of the request in the current window."
     (when url
       (url-recreate-url url))))
 
-(defun verb--binary-handler-pdf ()
-  "Handler for PDF content type."
-  (doc-view-mode))
-
 (defun verb--headers-content-type (headers)
   "Return (TYPE . CHARSET) parsed from the \"Content-Type\" header in HEADERS.
 If the charset is not present, return (TYPE . nil).
@@ -636,6 +635,7 @@ view the HTTP response in a user-friendly way."
 	;; Response content is a binary format
 	(with-current-buffer response-buf
 	  ;; Copy bytes and call the binary handler function
+	  (fundamental-mode)
 	  (set-buffer-multibyte nil)
 	  (buffer-disable-undo)
 	  (insert-buffer-substring original-buffer)
@@ -800,7 +800,7 @@ This function should be run `verb-show-timeout-warning' seconds after
 an HTTP request has been sent. Show the warning only when response
 buffer BUFFER is live."
   (when (buffer-live-p buffer)
-    (message "Request to %s is taking too long"
+    (message "Request to %s is taking longer than expected"
 	     (verb--request-spec-url-string rs))))
 
 (defun verb--override-alist (original other)
