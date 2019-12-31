@@ -837,7 +837,11 @@
   (server-test "basic"
     (should (string= (buffer-string) "Hello, World!"))
     (should (eq major-mode 'text-mode))
-    (should verb-response-body-mode)))
+    (should verb-response-body-mode)
+    (should verb--http-response)
+    (should (oref verb--http-response request))
+    (should (string= (verb--request-spec-url-string (oref verb--http-response request))
+		     "http://localhost:8000/basic"))))
 
 (ert-deftest test-server-basic-json ()
   (let ((verb-json-max-pretty-print-size nil))
