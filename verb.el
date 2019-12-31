@@ -32,6 +32,8 @@
 (require 'url)
 (require 'url-queue)
 (require 'mm-util)
+(require 'json)
+(require 'js)
 
 (defgroup verb nil
   "A new HTTP client for Emacs."
@@ -54,7 +56,7 @@ header value (\"charset=utf-8\")."
   '(("text/html" . html-mode)
     ("application/xml" . xml-mode)
     ("application/xhtml+xml" . xml-mode)
-    ("application/json" . js-mode)
+    ("application/json" . verb--handler-json)
     ("application/javascript" . js-mode)
     ("application/css" . css-mode)
     ("text/plain" . text-mode))
@@ -121,6 +123,12 @@ info node `(url)Retrieving URLs'."
 		  :tag "url-queue-retrieve from url-queue.el"
 		  url-queue-retrieve)))
 
+(defcustom verb-json-max-pretty-print-size (* 1 1024 1024)
+  "Max JSON file size in bytes to automatically prettify when received.
+If nil, never prettify JSON files automatically."
+  :type '(choice (integer :tag "Max bytes")
+		 (const :tag "Off" nil)))
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
   "Face for highlighting HTTP methods.")
@@ -146,11 +154,13 @@ info node `(url)Retrieving URLs'."
   "List of valid HTTP methods.")
 
 (defconst verb--template-keyword "TEMPLATE"
-  "Keyword to use when defining request templates without defined HTTP methods.")
+  "Keyword to use when defining request templates without defined HTTP
+methods/hosts/paths.")
 
 (defvar-local verb--http-response nil
   "HTTP response for this response buffer, as a `verb--response' object.
 The body contents of the response are in the buffer itself.")
+(put 'verb--http-response 'permanent-local t)
 
 (defvar-local verb--response-headers-buffer nil
   "Buffer currently showing the HTTP response's headers.")
@@ -279,7 +289,8 @@ HEADER and VALUE must be nonempty strings."
    (body-bytes :initarg :body-bytes
 	       :initform 0
 	       :type integer
-	       :documentation "Number of bytes in response body."))
+	       :documentation
+	       "Number of bytes in response buffer, without headers."))
   "Represents an HTTP response to a request.")
 
 (define-minor-mode verb-response-body-mode
@@ -529,6 +540,15 @@ show the results of the request in the current window."
     (when url
       (url-recreate-url url))))
 
+(defun verb--handler-json ()
+  "Handler for \"application/json\" content type."
+  (js-mode)
+  (when (< (oref verb--http-response body-bytes)
+	   (or verb-json-max-pretty-print-size 0))
+    (let ((json-encoding-default-indentation (make-string js-indent-level ? )))
+      (json-pretty-print-buffer))
+    (goto-char (point-min))))
+
 (defun verb--headers-content-type (headers)
   "Return (TYPE . CHARSET) parsed from the \"Content-Type\" header in HEADERS.
 If the charset is not present, return (TYPE . nil).
@@ -631,6 +651,16 @@ view the HTTP response in a user-friendly way."
     (when enable-multibyte-characters
       (error "Expected a unibyte buffer for HTTP response"))
 
+    ;; Store details of request and response
+    ;; `verb--http-response' is a permanent buffer local variable
+    (with-current-buffer response-buf
+      (setq verb--http-response
+	    (verb--response :headers (nreverse headers)
+			    :request rs
+			    :status status-line
+			    :duration elapsed
+			    :body-bytes bytes)))
+
     (if binary-handler
 	;; Response content is a binary format
 	(with-current-buffer response-buf
@@ -668,14 +698,6 @@ view the HTTP response in a user-friendly way."
 	;; Prepare buffer for editing by user
 	(goto-char (point-min))
 	(funcall text-handler))
-
-      ;; Store details of request and response
-      (setq verb--http-response
-	    (verb--response :headers (nreverse headers)
-			    :request rs
-			    :status status-line
-			    :duration elapsed
-			    :body-bytes bytes))
 
       (if (eq where 'other-window)
 	  (switch-to-buffer-other-window (current-buffer))

@@ -840,10 +840,11 @@
     (should verb-response-body-mode)))
 
 (ert-deftest test-server-basic-json ()
-  (server-test "basic-json"
-    (should (string= (buffer-string)
-		     "{\"foo\":true,\"hello\":\"world\"}"))
-    (should (eq major-mode 'js-mode))))
+  (let ((verb-json-max-pretty-print-size nil))
+    (server-test "basic-json"
+		 (should (string= (buffer-string)
+				  "{\"foo\":true,\"hello\":\"world\"}"))
+		 (should (eq major-mode 'js-mode)))))
 
 (ert-deftest test-server-error-400 ()
   (server-test "error-400"
