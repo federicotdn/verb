@@ -334,9 +334,10 @@ If there is no next heading, skip to the end of the buffer."
 (defun verb--up-heading ()
   "Move to the parent heading, if there is one.
 Return t if there was a heading to move towards to and nil otherwise."
-  (ignore-errors
-    (outline-up-heading 1 t)
-    t))
+  (let ((p (point)))
+    (ignore-errors
+      (outline-up-heading 1 t)
+      (not (= p (point))))))
 
 (defun verb--outline-level ()
   "Return the outline level.

@@ -34,6 +34,7 @@ check:
 
 load-examples:
 	$(EMACS) -l verb.el \
+		 --eval "(with-current-buffer (get-buffer \"*scratch*\") (verb-mode))" \
 		 --eval "(setq verb--debug-enable t)" \
 		 --eval "(setq confirm-kill-emacs nil)" \
 		 --eval "(setq url-debug t)" \

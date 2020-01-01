@@ -28,6 +28,9 @@
 
 (setq verb-show-headers-buffer nil)
 
+(defun join-lines (&rest args)
+  (mapconcat #'identity args "\n"))
+
 (defun text-as-spec (&rest args)
   (verb--request-spec-from-text (mapconcat #'identity args "")))
 
@@ -45,6 +48,70 @@
     (outline-mode)
     (should (eq (key-binding (kbd "C-c C-a")) 'outline-show-all)) ; sanity check
     (should-not (key-binding (kbd "C-c C-r")))))
+
+(ert-deftest test-up-heading ()
+  (setq outline-test
+	;; Test up-heading without level 1 heading
+	(join-lines "-- Level 2 heading"
+		    "--- Level 3 heading"
+		    "get http://test.com"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (verb--up-heading)
+    (should (= (point) 1))
+    (verb--up-heading)
+    (should (= (point) 1)))
+
+  (setq outline-test
+	;; Test up-heading without level 1 heading, with empty space
+	(join-lines "test"
+		    ""
+		    "-- Level 2 heading"
+		    "--- Level 3 heading"
+		    "get http://test.com"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (verb--up-heading)
+    (should (= (point) 7))
+    (verb--up-heading)
+    (should (= (point) 1))))
+
+(ert-deftest test-heading-contents ()
+  (setq outline-test
+	(join-lines "- Heading"
+		    "get http://test.com"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should (string= (verb--heading-contents)
+		     "get http://test.com")))
+
+  (setq outline-test
+	(join-lines "- Heading"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should-not (verb--heading-contents)))
+
+  (setq outline-test
+	(join-lines "-- Heading level 2"
+		    "get http://test.com"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should (string= (verb--heading-contents)
+		     "get http://test.com")))
+
+  (setq outline-test
+	;; no headers
+	(join-lines "get http://test.com"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should (string= (verb--heading-contents)
+		     "get http://test.com"))))
 
 (ert-deftest test-back-to-heading-no-headings ()
   ;; Empty buffer
