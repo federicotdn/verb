@@ -934,6 +934,14 @@
   (verb-kill-buffer-and-window)
   (should (= num-buffers (length (buffer-list)))))
 
+(ert-deftest test-headers ()
+  (server-test "headers"
+    (should (string= (buffer-string) "HeadersTest"))
+    (should (string= (cdr (assoc "x-test-1"
+				 (oref verb--http-response headers))) "foo"))
+    (should (string= (cdr (assoc "OTHER-TEST"
+				 (oref verb--http-response headers))) "bar"))))
+
 (ert-deftest test-connection-error ()
   (setq num-buffers (length (buffer-list)))
   (ignore-errors

@@ -17,6 +17,13 @@ async def test1(request: Request):
     return response.text("Hello, World!")
 
 
+@app.route("/headers-test")
+async def headers_test(request: Request):
+    return response.text(
+        "HeadersTest", headers={"x-test-1": "foo", "OTHER-TEST": "bar"}
+    )
+
+
 @app.route("/basic-json")
 async def test1(request: Request):
     return response.json({"hello": "world", "foo": True}, sort_keys=True)

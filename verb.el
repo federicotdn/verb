@@ -196,7 +196,7 @@ The body contents of the response are in the buffer itself.")
      (,(concat "^\\(" (verb--http-methods-regexp) "\\)\\s-+.+$")
       (1 'verb-http-keyword))
      ;; Content-type: application/json
-     ("^\\([[:alpha:]-]+:\\)\\s-.+$"
+     ("^\\([[:alnum:]-]+:\\)\\s-.+$"
       (1 'verb-header))
      ;; # This is a comment
      (,(concat "^\\s-*" verb--comment-character ".*$")
@@ -237,7 +237,7 @@ The body contents of the response are in the buffer itself.")
 (define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
   "Major mode for displaying an HTTP response's headers."
   (font-lock-add-keywords
-   nil '(("^\\([[:alpha:]-]+:\\)\\s-.+$" (1 'verb-header)))))
+   nil '(("^\\([[:alnum:]-]+:\\)\\s-.+$" (1 'verb-header)))))
 
 (defun verb--http-method-p (m)
   "Return non-nil if M is a valid HTTP method."
@@ -620,7 +620,7 @@ view the HTTP response in a user-friendly way."
 						      (line-end-position)))
     (forward-line)
     ;; Skip all HTTP headers
-    (while (re-search-forward "^\\s-*\\([[:alpha:]-]+\\)\\s-*:\\s-*\\(.*\\)$"
+    (while (re-search-forward "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-*\\(.*\\)$"
 			      (line-end-position) t)
       (let ((key (match-string 1))
 	    (value (match-string 2)))
@@ -1120,7 +1120,7 @@ empty string, signal `verb--empty-spec'."
       (when (not (eobp)) (forward-char))
       ;; Search for HTTP headers
       ;; Stop as soon as we find a blank line or a non-matching line
-      (while (re-search-forward "^\\s-*\\([[:alpha:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
+      (while (re-search-forward "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
 				(line-end-position) t)
 	(push (cons (verb--eval-lisp-code-in (match-string 1))
 		    (verb--eval-lisp-code-in (match-string 2)))
