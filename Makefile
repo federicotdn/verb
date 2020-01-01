@@ -24,8 +24,13 @@ test:
 	cat tests.log
 	! grep FAILED tests.log > /dev/null
 
+# TODO:
+# package-lint (https://github.com/purcell/package-lint)
+
 check:
 	$(EMACS) -Q --batch --eval '(byte-compile-file "verb.el")' 2>&1 | $(NOOUTPUT)
+	yes n | $(EMACS) -Q --batch --eval '(find-file "verb.el")' \
+		      	    	    --eval '(checkdoc-current-buffer)'
 
 load-examples:
 	$(EMACS) -l verb.el \
@@ -35,8 +40,3 @@ load-examples:
 		 --eval "(toggle-debug-on-error)" \
 		 --eval "(dired \"docs\")" \
 		 --eval "(delete-other-windows)"
-
-# TODO:
-# package-lint (https://github.com/purcell/package-lint)
-# checkdoc
-# byte-compile-file

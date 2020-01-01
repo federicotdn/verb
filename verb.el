@@ -61,12 +61,14 @@ header value (\"charset=utf-8\")."
     ("application/css" . css-mode)
     ("text/plain" . text-mode))
   "List of text content type handlers.
-Handlers are functions to be called without any arguments.  Text handlers, specifically,
-are called after the text contents of the response have been decoded into a multibyte
-buffer (with that buffer as the current buffer).
-Note: if a content type is listed in `verb-binary-content-type-handlers', then its
-binary handler will be used instead of any handler specified here.  This behaviour can't
-be disabled."
+Handlers are functions to be called without any arguments.  Text
+handlers, specifically, are called after the text contents of the
+response have been decoded into a multibyte buffer (with that buffer
+as the current buffer).
+Note: if a content type is listed in
+`verb-binary-content-type-handlers', then its binary handler will be
+used instead of any handler specified here.  This behaviour can't be
+disabled."
   :type '(alist :key-type string :value-type function))
 
 (defcustom verb-binary-content-type-handlers
@@ -77,9 +79,10 @@ be disabled."
     ("image/gif" . image-mode)
     ("image/jpeg" . image-mode))
   "List of binary content type handlers.
-Handlers are functions to be called without any arguments.  Binary handlers,
-specifically, are called after the binary contents of the response have been inserted
-into a unibyte buffer (with that buffer as the current buffer).
+Handlers are functions to be called without any arguments.  Binary
+handlers, specifically, are called after the binary contents of the
+response have been inserted into a unibyte buffer (with that buffer as
+the current buffer).
 See also: `verb-text-content-type-handlers'."
   :type '(alist :key-type string :value-type function))
 
@@ -88,27 +91,28 @@ See also: `verb-text-content-type-handlers'."
   :type 'boolean)
 
 (defcustom verb-show-headers-buffer nil
-  "Choose whether to automatically show the headers buffer after
-receiving an HTTP response.
+  "Automatically show headers buffer after receiving an HTTP response.
 
 Value nil means never show the headers buffer.
-Value `when-empty' means automatically show the headers buffer only when the
-response's body size is 0.
+Value `when-empty' means automatically show the headers buffer only
+when the response's body size is 0.
 Any other value means always show the headers buffer."
   :type '(choice (const :tag "Never" nil)
 		 (const :tag "When empty" when-empty)
 		 (const :tag "Always" t)))
 
 (defcustom verb-show-timeout-warning 10.0
-  "Number of seconds to wait after an HTTP request is sent to warn the
-user about a possible network timeout.
-When set to nil, don't show any warnings."
+  "Reasonable max duration (s) for an HTTP request.
+Indicates the nunmber of seconds to wait after an HTTP request is sent
+to warn the user about a possible network timeout.  When set to nil,
+don't show any warnings."
   :type '(choice (float :tag "Time in seconds")
 		 (const :tag "Off" nil)))
 
 (defcustom verb-code-tag-delimiters '("{{" . "}}")
-  "Delimiters (left and right) used to evaluate and replace Lisp code
-tags inside HTTP request specifications.
+  "Lisp code tag delimeters for HTTP request specifications.
+The delimiters (left and right) are used to specify, evaluate and then
+substitute Lisp code tags inside HTTP request specifications.
 If different parts of your HTTP request specifications need to include
 literal values identical to one or both of the delimiters, it is
 recommended you change them to something else through this setting."
@@ -126,7 +130,7 @@ info node `(url)Retrieving URLs'."
 		  url-queue-retrieve)))
 
 (defcustom verb-json-max-pretty-print-size (* 1 1024 1024)
-  "Max JSON file size in bytes to automatically prettify when received.
+  "Max JSON file size (bytes) to automatically prettify when received.
 If nil, never prettify JSON files automatically."
   :type '(choice (integer :tag "Max bytes")
 		 (const :tag "Off" nil)))
@@ -156,11 +160,11 @@ If nil, never prettify JSON files automatically."
   "List of valid HTTP methods.")
 
 (defconst verb--template-keyword "TEMPLATE"
-  "Keyword to use when defining request templates without defined HTTP
-methods/hosts/paths.")
+  "Keyword to use when defining request templates.
+Request templates are defined without HTTP methods, paths or hosts.")
 
 (defvar-local verb--http-response nil
-  "HTTP response for this response buffer, as a `verb--response' object.
+  "HTTP response for this response buffer (`verb--response' object).
 The body contents of the response are in the buffer itself.")
 (put 'verb--http-response 'permanent-local t)
 
@@ -368,7 +372,7 @@ Return nil if `verb--heading-has-content-p' returns nil."
       (buffer-substring-no-properties start end))))
 
 (defun verb--request-spec-from-heading ()
-  "Return a `verb--request-spec' generated from the heading's text contents.
+  "Return a request spec generated from the heading's text contents.
 Return nil of the heading has no text contents."
   (let ((text (verb--heading-contents)))
     (unless (or (null text)
@@ -378,7 +382,7 @@ Return nil of the heading has no text contents."
 	(verb--empty-spec nil)))))
 
 (defun verb--request-spec-from-hierarchy ()
-  "Return a `verb--request-spec' generated from the headings hierarchy.
+  "Return a request spec generated from the headings hierarchy.
 To do this, use `verb--request-spec-from-heading' for the current
 heading, for that heading's parent, and so on until the root of the
 hierarchy is reached.  Once all the request specs have been collected,
@@ -558,9 +562,10 @@ show the results of the request in the current window."
     (goto-char (point-min))))
 
 (defun verb--headers-content-type (headers)
-  "Return (TYPE . CHARSET) parsed from the \"Content-Type\" header in HEADERS.
-If the charset is not present, return (TYPE . nil).
-If the header itself is not present, return (nil . nil)."
+  "Return the value of the \"Content-Type\" header in HEADERS.
+The value returned has the form (TYPE . CHARSET).  If the charset is
+not present, return (TYPE . nil).  If the header itself is not
+present, return (nil . nil)."
   (if-let* ((value (cdr (assoc-string "Content-Type" headers t)))
 	    (type-subtype (string-trim (car (split-string value ";")))))
       (cons type-subtype
@@ -826,9 +831,9 @@ be loaded into."
     response-buf))
 
 (defun verb--timeout-warn (buffer rs)
-  "Show the user a warning about a possible network timeout for request RS.
+  "Warn the user about a possible network timeout for request RS.
 This function should be run `verb-show-timeout-warning' seconds after
-an HTTP request has been sent. Show the warning only when response
+an HTTP request has been sent.  Show the warning only when response
 buffer BUFFER is live."
   (when (buffer-live-p buffer)
     (message "Request to %s is taking longer than expected"
@@ -955,7 +960,7 @@ Do this using the rules described in `verb--request-spec-override'."
 			     attributes fullness))))
 
 (cl-defmethod verb--request-spec-override ((original verb--request-spec) other)
-  "Override request specification ORIGINAL with OTHER, return the result.
+  "Override request spec ORIGINAL with OTHER, return the result.
 
 Each member of request ORIGINAL is overridden with the one from OTHER
 in the following way, to form a new request specification:
@@ -984,8 +989,7 @@ body
 
   Use OTHER's body if it is non-nil, otherwise use ORIGINAL's.
 
-Neither request specification is modified, a new one is returned.
-"
+Neither request specification is modified, a new one is returned."
   (unless (object-of-class-p other 'verb--request-spec)
     (error "%s" "Argument OTHER must be a `verb--request-spec'."))
   (verb--request-spec :method (or (oref other method)
@@ -997,7 +1001,7 @@ Neither request specification is modified, a new one is returned.
 		      :body (or (oref other body) (oref original body))))
 
 (defun verb--http-methods-regexp ()
-  "Return a regexp that matches an HTTP method.
+  "Return a regexp to match an HTTP method.
 HTTP methods are defined in `verb--http-methods'.
 Additionally, allow matching `verb--template-keyword'."
   (mapconcat #'identity
@@ -1006,7 +1010,7 @@ Additionally, allow matching `verb--template-keyword'."
 	     "\\|"))
 
 (defun verb--eval-string (s)
-  "Evaluate S as Lisp code and return the string respresentation of the result.
+  "Eval S as Lisp code, return the result as a string.
 As a special case, if S is the empty string, return the empty string."
   (if (string-empty-p s)
       ""
@@ -1031,14 +1035,14 @@ Code tags are delimited with `verb-code-tag-delimiters'."
       (buffer-string))))
 
 (defun verb--clean-url (url)
-  "Return a correctly encoded URL struct to be used with `url-retrieve'.
+  "Return a correctly encoded URL struct to use with `url-retrieve'.
 
 Additionally, given a URL like \"http://foo.com?a=b\", return
 \"http://foo.com/?a=b\". This is what curl does when the path is empty
 and there are query string arguments present.
 
-If a schema is not present, interpret the URL as a path, query string and
-fragment component of a URL with no host or schema defined."
+If a schema is not present, interpret the URL as a path, query string
+and fragment component of a URL with no host or schema defined."
   (let* ((url-obj (url-generic-parse-url (url-encode-url url)))
 	 (path (url-filename url-obj))
 	 (schema (url-type url-obj)))
@@ -1066,26 +1070,29 @@ fragment component of a URL with no host or schema defined."
   "Request specification has no contents.")
 
 (defun verb--request-spec-from-text (text)
-  "Create a `verb--request-spec' from a text specification, TEXT.
+  "Create a request spec from a text specification, TEXT.
 
 The text format for defining requests is:
 
 [COMMENTS]
-[METHOD] [URL | PARTIAL-URL]
+METHOD [URL | PARTIAL-URL]
 [HEADERS]
 
 [BODY]
 
 COMMENTS must be lines starting with `verb--comment-character'.
-METHOD must be a method matched by `verb--http-methods-regexp'.
-URL can be an empty string, or a URL with a \"http\" or \"https\"
+Adding comments is optional.
+METHOD must be a method matched by `verb--http-methods-regexp' (that
+is, an HTTP method or the value of `verb--template-keyword').
+URL can be the empty string, or a URL with a \"http\" or \"https\"
 schema.
-PARTIAL-URL can be an empty string, or the path + query string +
+PARTIAL-URL can be the empty string, or the path + query string +
 fragment part of a URL.
 HEADERS and BODY can be separated by a blank line, which will be
 ignored.  Each line of HEADERS must be in the form of KEY: VALUE.
-If the text specification consists exclusively of comments or is the
-empty string, signal `verb--empty-spec'."
+
+As a special case, if the text specification consists exclusively of
+comments or is the empty string, signal `verb--empty-spec'."
   (let (method url headers body)
     (with-temp-buffer
       (insert text)
