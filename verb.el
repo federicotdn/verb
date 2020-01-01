@@ -545,8 +545,11 @@ show the results of the request in the current window."
   (js-mode)
   (when (< (oref verb--http-response body-bytes)
 	   (or verb-json-max-pretty-print-size 0))
-    (let ((json-encoding-default-indentation (make-string js-indent-level ? )))
-      (json-pretty-print-buffer))
+    (unwind-protect
+	(let ((json-pretty-print-max-secs 0))
+	  (buffer-disable-undo)
+	  (json-pretty-print-buffer))
+      (buffer-enable-undo))
     (goto-char (point-min))))
 
 (defun verb--headers-content-type (headers)
@@ -662,17 +665,18 @@ view the HTTP response in a user-friendly way."
 			    :body-bytes bytes)))
 
     (if binary-handler
-	;; Response content is a binary format
+	;; Response content is a binary format:
+
 	(with-current-buffer response-buf
-	  ;; Copy bytes and call the binary handler function
 	  (fundamental-mode)
 	  (set-buffer-multibyte nil)
 	  (buffer-disable-undo)
+	  ;; Copy bytes into RESPONSE-BUF
 	  (insert-buffer-substring original-buffer)
 	  (goto-char (point-min))
 	  (funcall binary-handler))
 
-      ;; Response content is text
+      ;; Response content is text:
 
       ;; Convert buffer to multibyte, contents are still raw bytes from
       ;; the response

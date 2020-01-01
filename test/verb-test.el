@@ -40,6 +40,12 @@
 				     :headers headers
 				     :body body))))
 
+(ert-deftest test-outline-C-c-C-r-unbound ()
+  (with-temp-buffer
+    (outline-mode)
+    (should (eq (key-binding (kbd "C-c C-a")) 'outline-show-all)) ; sanity check
+    (should-not (key-binding (kbd "C-c C-r")))))
+
 (ert-deftest test-back-to-heading-no-headings ()
   ;; Empty buffer
   (with-temp-buffer
@@ -848,6 +854,13 @@
     (server-test "basic-json"
 		 (should (string= (buffer-string)
 				  "{\"foo\":true,\"hello\":\"world\"}"))
+		 (should (eq major-mode 'js-mode)))))
+
+(ert-deftest test-server-basic-json-pretty ()
+  (let ((verb-json-max-pretty-print-size 99999))
+    (server-test "basic-json"
+		 (should (string= (buffer-string)
+				  "{\n  \"foo\": true,\n  \"hello\": \"world\"\n}"))
 		 (should (eq major-mode 'js-mode)))))
 
 (ert-deftest test-server-error-400 ()
