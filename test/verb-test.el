@@ -113,6 +113,10 @@
     (should (string= (verb--heading-contents)
 		     "get http://test.com"))))
 
+(ert-deftest test-nonempty-string ()
+  (should (string= (verb--nonempty-string "hello") "hello"))
+  (should-not (verb--nonempty-string "")))
+
 (ert-deftest test-back-to-heading-no-headings ()
   ;; Empty buffer
   (with-temp-buffer
@@ -160,7 +164,14 @@
 		     :duration 1.123
 		     :headers '(("Content-Type" . "hello"))
 		     :body-bytes 999))
-		   "test | 1.123s | hello | 999 bytes")))
+		   "test | 1.123s | hello | 999 bytes"))
+
+  (should (string= (verb--response-header-line-string
+		    (verb--response
+		     :status nil
+		     :duration 1.123
+		     :headers nil))
+		   "No Response | 1.123s | ? | 0 bytes")))
 
 (ert-deftest test-request-spec-from-text-error ()
   (should-error (text-as-spec "foobar example.com")))

@@ -283,10 +283,10 @@ HEADER and VALUE must be nonempty strings."
 	    :type verb--request-spec
 	    :documentation "Corresponding request.")
    (headers :initarg :headers
-	    :type verb--http-headers
+	    :type (or null verb--http-headers)
 	    :documentation "Response headers.")
    (status :initarg :status
-	   :type string
+	   :type (or null string)
 	   :documentation "Response's first line.")
    (duration :initarg :duration
 	     :type float
@@ -315,6 +315,12 @@ HEADER and VALUE must be nonempty strings."
 		(verb-toggle-show-headers))
 	    (verb-toggle-show-headers))))
     (setq header-line-format nil)))
+
+(defun verb--nonempty-string (s)
+  "Return S. If S is the empty string, return nil."
+  (if (string-empty-p s)
+      nil
+    s))
 
 (defun verb--back-to-heading ()
   "Move to the previous heading.
@@ -526,7 +532,7 @@ show the results of the request in the current window."
 	(headers (oref response headers))
 	(bytes (oref response body-bytes)))
     (concat
-     status-line
+     (or status-line "No Response")
      " | "
      (format "%.4gs" elapsed)
      (let ((content-type (or (car (verb--headers-content-type headers))
@@ -625,8 +631,10 @@ view the HTTP response in a user-friendly way."
     (widen)
     (goto-char (point-min))
     ;; Skip HTTP/1.X status line
-    (setq status-line (buffer-substring-no-properties (point)
-						      (line-end-position)))
+    (setq status-line (verb--nonempty-string
+		       (buffer-substring-no-properties (point)
+						       (line-end-position))))
+
     (forward-line)
     ;; Skip all HTTP headers
     (while (re-search-forward "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-*\\(.*\\)$"
@@ -1138,13 +1146,16 @@ comments or is the empty string, signal `verb--empty-spec'."
 	      headers)
 	(when (not (eobp)) (forward-char)))
       (setq headers (nreverse headers))
-      ;; Allow a blank like to separate headers and body (not required)
+      ;; Allow a blank like to separate headers and body (not
+      ;; required)
       (when (re-search-forward "^$" (line-end-position) t)
 	(when (not (eobp)) (forward-char)))
       ;; The rest of the buffer is the request body
       (let ((rest (buffer-substring (point) (point-max))))
 	(unless (string-empty-p (string-trim rest))
-	  ;; Only read body if it isn't comprised entirely of whitespace
+	  ;; Only read body if it isn't comprised entirely of
+	  ;; whitespace, but if it's not and has leading/trailing
+	  ;; whitespace, include it
 	  (setq body rest)))
       ;; Return a `verb--request-spec'
       (verb--request-spec :method method
