@@ -73,6 +73,8 @@ be disabled."
   '(("application/pdf" . doc-view-mode)
     ("image/png" . image-mode)
     ("image/svg+xml" . image-mode)
+    ("image/x-windows-bmp" . image-mode)
+    ("image/gif" . image-mode)
     ("image/jpeg" . image-mode))
   "List of binary content type handlers.
 Handlers are functions to be called without any arguments.  Binary handlers,
