@@ -550,7 +550,10 @@ show the results of the request in the current window."
     (unwind-protect
 	(let ((json-pretty-print-max-secs 0))
 	  (buffer-disable-undo)
-	  (json-pretty-print-buffer))
+	  (json-pretty-print-buffer)
+	  ;; "Use" `json-pretty-print-max-secs' here to avoid byte-compiler warning in
+	  ;; Emacs 26
+	  json-pretty-print-max-secs)
       (buffer-enable-undo))
     (goto-char (point-min))))
 
