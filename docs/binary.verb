@@ -1,23 +1,23 @@
-- Binary content type tests
+* Binary content type tests
 # Each subheading specifies a request for a binary content type
 # (non-text), like PDF documents, images, etc.
 template https://www.gnu.org
 
--- PDF
+** PDF
 # Read a PDF document using doc-view-mode.
 get /licenses/quick-guide-gplv3.pdf
 
--- Images
+** Images
 template /graphics
 
---- PNG image
+*** PNG image
 # Get a PNG image
 get /gnu-head.png
 
---- JPG image
+*** JPG image
 # Get a JPG image
 get /bokma-gnu.jpg
 
---- SVG image
+*** SVG image
 # Get a SVG image
 get /logo-fsf.org.svg

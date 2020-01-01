@@ -1,32 +1,32 @@
-- SWAPI
+* SWAPI
 # The Star Wars API
 
 template https://swapi.co/api?format=json
 
--- Root
+** Root
 # The Root resource provides information on all available resources within the API.
 
 get
 
--- People
+** People
 # A People resource is an individual person or character within the
 # Star Wars universe.
 
 get /people
 
---- Luke Skywalker
+*** Luke Skywalker
 get /1
 
----- Luke Skywalker (Wookie response)
+**** Luke Skywalker (Wookie response)
 get ?format=wookiee
 Accept: text/html
 Cache-Control: max-age=0
 
---- C-3PO
+*** C-3PO
 get /2
 
 
--- Films
+** Films
 # A Film resource is a single film.
 
 get /films

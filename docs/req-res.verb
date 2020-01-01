@@ -1,4 +1,4 @@
-- REQ|RES
+* REQ|RES
 # Test your front-end against a real API
 # A hosted REST-API ready to respond to your AJAX requests.
 # https://reqres.in/
@@ -6,21 +6,21 @@
 template https://reqres.in/api?delay=0
 Content-Type: application/json
 
--- Users
+** Users
 
 template /users
 
---- Get endpoint headers
+*** Get endpoint headers
 head
 
---- Get endpoint options
+*** Get endpoint options
 options
 
---- List users
+*** List users
 
 get ?page=1
 
---- Create user
+*** Create user
 post
 Content-Type: application/json
 
@@ -29,31 +29,31 @@ Content-Type: application/json
     "age": 55
 }
 
---- Operate on a single user
+*** Operate on a single user
 
 template /2
 
----- Get a single user
+**** Get a single user
 get
 
----- Replace a user
+**** Replace a user
 put
 
 {
     "name": "Bob"
 }
 
----- Update a user
+**** Update a user
 patch
 
 {
     "name": "Bob"
 }
 
----- Delete a user
+**** Delete a user
 delete
 
--- Login
+** Login
 
 post /login
 

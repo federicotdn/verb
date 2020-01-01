@@ -162,9 +162,6 @@ If nil, never prettify JSON files automatically."
 (defconst verb--comment-character "#"
   "Character to use to mark commented lines.")
 
-(defconst verb--outline-character "-"
-  "Character to use to create headings.")
-
 (defconst verb--http-methods '("GET" "POST" "DELETE" "PUT"
 			       "OPTIONS" "HEAD" "PATCH"
 			       "TRACE" "CONNECT")
@@ -234,7 +231,6 @@ The body contents of the response are in the buffer itself.")
 ;;;###autoload
 (define-derived-mode verb-mode outline-mode "Verb"
   "Major mode for making HTTP requests from Emacs."
-  (setq-local outline-regexp (concat "[" verb--outline-character "\^L]+"))
   (setq-local comment-start verb--comment-character)
   (setq imenu-generic-expression
 	(list (list nil (concat "^" outline-regexp "\\s-+\\(.+\\)$") 1)))

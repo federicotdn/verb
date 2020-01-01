@@ -1,4 +1,4 @@
-- Postman Echo API
+* Postman Echo API
 # Postman Echo is service you can use to test your REST clients and
 # make sample API calls. It provides endpoints for GET, POST, PUT,
 # various auth mechanisms and other utility endpoints.
@@ -8,19 +8,19 @@
 
 template https://postman-echo.com
 
--- GZIP test
+** GZIP test
 # This endpoint returns the response using gzip compression
 # algoritm. The uncompressed response is a JSON string containing the
 # details of the request sent by the client.
 get /gzip
 Accept-Encoding: gzip
 
--- Stream test
+** Stream test
 # This endpoint allows one to recieve streaming http response using
 # chunked transfer encoding of a configurable length.
 get /stream/5
 
--- Post
+** Post
 # This endpoint echoes the HTTP headers, request parameters, the
 # contents of the request body and the complete URI requested when data
 # is sent as a form parameter.
@@ -31,7 +31,7 @@ Content-Type: application/json
   "hello": 1, "bye": {}
 }
 
--- Status code
+** Status code
 # This endpoint allows one to instruct the server which status code to
 # respond with.
 get /status/{{(read-number "Status: ")}}

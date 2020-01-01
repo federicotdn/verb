@@ -3,4 +3,17 @@
   <br/>
 </p>
 
-A new HTTP client for Emacs
+Project description
+
+# Related Packages
+
+- [restclient.el](https://github.com/pashky/restclient.el)
+- [http.el](https://github.com/emacs-pe/http.el)
+
+# License
+
+Distributed under the GNU General Public License, version 3.
+
+# Author
+
+Federico Tedin (<federicotedin@gmail.com>)
