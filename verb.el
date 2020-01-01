@@ -96,6 +96,11 @@ See also: `url-using-proxy'."
   :type '(choice (string :tag "Proxy URL")
 		 (const :tag "No proxy" nil)))
 
+(defcustom verb-max-redirections url-max-redirections
+  "Max number of redirection requests to honor in an HTTP connection.
+See also: `url-max-redirections'."
+  :type 'integer)
+
 (defcustom verb-show-headers-buffer nil
   "Automatically show headers buffer after receiving an HTTP response.
 
@@ -814,6 +819,7 @@ be loaded into."
 	 (url-request-extra-headers (verb--prepare-http-headers
 				     (oref rs headers)))
 	 (url-using-proxy verb-using-proxy)
+	 (url-max-redirections verb-max-redirections)
 	 (content-type (verb--headers-content-type
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
