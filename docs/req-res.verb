@@ -29,28 +29,28 @@ Content-Type: application/json
     "age": 55
 }
 
----- Operate on a single user
+--- Operate on a single user
 
 template /2
 
------ Get a single user
+---- Get a single user
 get
 
------ Replace a user
+---- Replace a user
 put
 
 {
     "name": "Bob"
 }
 
------ Update a user
+---- Update a user
 patch
 
 {
     "name": "Bob"
 }
 
------ Delete a user
+---- Delete a user
 delete
 
 -- Login
