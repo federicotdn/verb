@@ -304,7 +304,7 @@ HEADER and VALUE must be nonempty strings."
   :lighter " Verb[Body]"
   :group 'verb
   :keymap `((,(kbd "C-c C-r C-r") . verb-toggle-show-headers)
-	    (,(kbd "C-c C-r C-k") . verb-kill-buffer-and-window))
+	    (,(kbd "C-c C-r C-k") . verb-kill-response-buffer-and-window))
   (if verb-response-body-mode
       (progn
 	(setq header-line-format
@@ -423,6 +423,21 @@ override them in inverse order according to the rules described in
 			    'right
 			  'below)))
 
+(defun verb-kill-response-buffer-and-window ()
+  "Delete response window and kill its buffer.
+If the response buffer has a corresponding headers buffer, kill it and
+delete any window displaying it."
+  (interactive)
+  (when verb--response-headers-buffer
+    (when-let ((w (get-buffer-window verb--response-headers-buffer)))
+      (ignore-errors
+	(delete-window w)))
+    (when (buffer-live-p verb--response-headers-buffer)
+      (kill-buffer verb--response-headers-buffer)))
+  (kill-current-buffer)
+  (ignore-errors
+    (delete-window)))
+
 (defun verb-kill-buffer-and-window ()
   "Delete selected window and kill its current buffer.
 Delete the window only if it isn't the only window in the frame."
@@ -430,7 +445,6 @@ Delete the window only if it isn't the only window in the frame."
   (kill-current-buffer)
   (ignore-errors
     (delete-window)))
-
 
 (defun verb--heading-invisible-p ()
   "Return non-nil if the contents of the current heading are invisible."
