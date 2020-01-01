@@ -90,6 +90,12 @@ See also: `verb-text-content-type-handlers'."
   "If non-nil, do not send or receive cookies when sending requests."
   :type 'boolean)
 
+(defcustom verb-using-proxy nil
+  "Either nil or the fully qualified proxy URL in use.
+See also: `url-using-proxy'."
+  :type '(choice (string :tag "Proxy URL")
+		 (const :tag "No proxy" nil)))
+
 (defcustom verb-show-headers-buffer nil
   "Automatically show headers buffer after receiving an HTTP response.
 
@@ -807,6 +813,7 @@ be loaded into."
 	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers
 				     (oref rs headers)))
+	 (url-using-proxy verb-using-proxy)
 	 (content-type (verb--headers-content-type
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
