@@ -1,6 +1,6 @@
 ;;; verb.el --- A new HTTP client for Emacs  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2019  Federico Tedin
+;; Copyright (C) 2020  Federico Tedin
 
 ;; Author: Federico Tedin <federicotedin@gmail.com>
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
