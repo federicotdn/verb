@@ -113,6 +113,62 @@
     (should (string= (verb--heading-contents)
 		     "get http://test.com"))))
 
+(ert-deftest test-request-spec-from-hierarchy ()
+  (setq outline-test
+	(join-lines "* Test"
+		    "template http://hello.com"
+		    "** Test2"
+		    "get"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should (equal (verb--request-spec-from-hierarchy)
+		   (verb--request-spec :method "GET"
+				       :url (verb--clean-url
+					     "http://hello.com")))))
+  (setq outline-test
+	(join-lines "* Test"
+		    "template http://hello.com"
+		    "** Test2"
+		    "post ?a=b"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should (equal (verb--request-spec-from-hierarchy)
+		   (verb--request-spec :method "POST"
+				       :url (verb--clean-url
+					     "http://hello.com?a=b")))))
+  (setq outline-test
+	(join-lines "* Test"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should-error (verb--request-spec-from-hierarchy)))
+
+  (setq outline-test
+	(join-lines "* Test"
+		    "template http://hello.com"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should-error (verb--request-spec-from-hierarchy)))
+
+    (setq outline-test
+	(join-lines "* Test"
+		    "get"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should-error (verb--request-spec-from-hierarchy)))
+
+  (setq outline-test
+	(join-lines "* Test"
+		    "get /some/path"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should-error (verb--request-spec-from-hierarchy))))
+
 (ert-deftest test-nonempty-string ()
   (should (string= (verb--nonempty-string "hello") "hello"))
   (should-not (verb--nonempty-string "")))

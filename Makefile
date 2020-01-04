@@ -30,7 +30,7 @@ test:
 check:
 	$(EMACS) -Q --batch --eval '(byte-compile-file "verb.el")' 2>&1 | $(NOOUTPUT)
 	yes n | $(EMACS) -Q --batch --eval '(find-file "verb.el")' \
-		      	    	    --eval '(checkdoc-current-buffer)'
+		      	    	    --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
 
 load-examples:
 	$(EMACS) -l verb.el \

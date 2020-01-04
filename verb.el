@@ -60,7 +60,7 @@ header value (\"charset=utf-8\")."
     ("application/javascript" . js-mode)
     ("application/css" . css-mode)
     ("text/plain" . text-mode))
-  "List of text content type handlers.
+  "Alist of text content type handlers.
 Handlers are functions to be called without any arguments.  Text
 handlers, specifically, are called after the text contents of the
 response have been decoded into a multibyte buffer (with that buffer
@@ -78,13 +78,23 @@ disabled."
     ("image/x-windows-bmp" . image-mode)
     ("image/gif" . image-mode)
     ("image/jpeg" . image-mode))
-  "List of binary content type handlers.
+  "Alist of binary content type handlers.
 Handlers are functions to be called without any arguments.  Binary
 handlers, specifically, are called after the binary contents of the
 response have been inserted into a unibyte buffer (with that buffer as
 the current buffer).
 See also: `verb-text-content-type-handlers'."
   :type '(alist :key-type string :value-type function))
+
+(defcustom verb-export-functions
+  '((?h "human" verb--export-to-human)
+    (?v "verb" verb--export-to-verb))
+  "Alist of request specification export functions.
+Each element should have the form (CHAR NAME FN), where CHAR is the
+key associated with this function (which the user will press), NAME
+should be a user-friendly name for this function, and FN should be the
+function itself."
+  :type '(alist :key-type character :value-type (list string function)))
 
 (defcustom verb-inhibit-cookies nil
   "If non-nil, do not send or receive cookies when sending requests."
@@ -103,7 +113,6 @@ See also: `url-max-redirections'."
 
 (defcustom verb-show-headers-buffer nil
   "Automatically show headers buffer after receiving an HTTP response.
-
 Value nil means never show the headers buffer.
 Value `when-empty' means automatically show the headers buffer only
 when the response's body size is 0.
@@ -186,7 +195,7 @@ The body contents of the response are in the buffer itself.")
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-r") #'verb-execute-request-on-point-other-window)
     (define-key map (kbd "C-f") #'verb-execute-request-on-point)
-    (define-key map (kbd "C-p") #'verb-preview-request-on-point)
+    (define-key map (kbd "C-e") #'verb-export-request-on-point)
     map)
   "Prefix map for `verb-mode'.")
 
@@ -395,6 +404,24 @@ Return nil of the heading has no text contents."
 	  (verb--request-spec-from-text text)
 	(verb--empty-spec nil)))))
 
+(defun verb--request-spec-validate (rs)
+  "Run validations on request spec RS.
+If a validation does not pass, signal with `user-error'."
+  (unless (oref rs method)
+    (user-error "%s" (concat "No HTTP method specified\n"
+			     "Make sure you specify a concrete HTTP "
+			     "method (i.e. not " verb--template-keyword
+			     ") in the heading hierarchy")))
+  (let ((url (oref rs url)))
+    (unless url
+      (user-error "%s" (concat "No URL specified\nMake sure you specify "
+			       "a nonempty URL in the heading hierarchy")))
+    (unless (url-host url)
+      (user-error "%s" (concat "URL has no host defined\n"
+			       "Make sure you specify a host "
+			       "(e.g. \"https://github.com\") in the "
+			       "heading hierarchy")))))
+
 (defun verb--request-spec-from-hierarchy ()
   "Return a request spec generated from the headings hierarchy.
 To do this, use `verb--request-spec-from-heading' for the current
@@ -419,6 +446,7 @@ override them in inverse order according to the rules described in
 	      ;; 3, then with 4, etc.
 	      (setq final-spec (verb--request-spec-override final-spec
 							    spec))))
+	  (verb--request-spec-validate final-spec)
 	  final-spec)
       (user-error "%s" (concat "No request specification found\nTry "
 			       "writing: get https://<hostname>/<path>")))))
@@ -534,17 +562,57 @@ The contents of all parent headings are used as well; see
 `verb--request-spec-from-hierarchy' to see how this is done.
 
 If WHERE is `other-window', show the results of the request on another
-window.  If WHERE is `preview', only show information about the
-request, but don't actually send it.  If WHERE has any other value,
-show the results of the request in the current window."
+window.  If WHERE has any other value, show the results of the request
+in the current window."
   (interactive)
   (verb--request-spec-execute (verb--request-spec-from-hierarchy)
 			      where))
 
-(defun verb-preview-request-on-point ()
-  "Preview the request that would be sent using `verb-execute-request-on-point'."
+(defun verb-export-request-on-point ()
+  "Export the request specification on point.
+Do this by prompting the user for an export function, and calling that
+function with the request specification object.  See the
+`verb-export-functions' variable for more details.
+No HTTP request will be sent, unless the export function does this
+explicitly."
   (interactive)
-  (verb-execute-request-on-point 'preview))
+  (let* ((rs (verb--request-spec-from-hierarchy))
+	 (choices (mapcar (lambda (e)
+			    (list (car e) (nth 1 e)))
+			  verb-export-functions))
+	 (choice (car (read-multiple-choice "Export function:"
+					    choices)))
+	 (exporter (assoc choice verb-export-functions)))
+    (funcall (nth 2 exporter) rs)))
+
+(defun verb--export-to-human (rs)
+  "Export a request spec RS to a human-readable format."
+  (with-current-buffer (generate-new-buffer "*HTTP Request Spec*")
+    (text-mode)
+    (insert (propertize "HTTP Method: " 'font-lock-face 'bold)
+	    (oref rs method) "\n"
+	    (propertize "URL: " 'font-lock-face 'bold)
+	    (url-recreate-url (oref rs url)) "\n"
+	    (propertize "Headers:\n" 'font-lock-face 'bold))
+    (let ((headers (oref rs headers)))
+      (if headers
+	  (dolist (key-value headers)
+	    (insert "    " (car key-value) ": " (cdr key-value) "\n"))
+	(insert "    No headers defined.\n")))
+    (insert "\n")
+    (let ((body (oref rs body)))
+      (if body
+	  (insert (propertize "Body:" 'font-lock-face 'bold) "\n"
+		  body "\n")
+	(insert "No body defined.")))
+    (switch-to-buffer-other-window (current-buffer))))
+
+(defun verb--export-to-verb (rs)
+  "Export a request spec RS to Verb format."
+  (with-current-buffer (generate-new-buffer "*HTTP Request Spec*")
+    (verb-mode)
+    (insert (verb--request-spec-to-string rs))
+    (switch-to-buffer-other-window (current-buffer))))
 
 (cl-defmethod verb--response-header-line-string ((response verb--response))
   "Return a short description of an HTTP RESPONSE's properties."
@@ -801,15 +869,6 @@ If CHARSET is nil, use `verb-default-request-charset'."
 Show the results according to parameter WHERE (see
 `verb-execute-request-on-point'). Return the buffer the response will
 be loaded into."
-  (unless (oref rs method)
-    (user-error "%s" (concat "No HTTP method specified\n"
-			     "Make sure you specify a concrete HTTP "
-			     "method (i.e. not " verb--template-keyword
-			     ") in the heading hierarchy")))
-  (unless (oref rs url)
-    (user-error "%s" (concat "No URL specified\nMake sure you specify "
-			     "a nonempty URL in the heading hierarchy")))
-
   (let* ((url (oref rs url))
 	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers
@@ -820,47 +879,45 @@ be loaded into."
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
-	 (not-preview (not (eq where 'preview)))
-	 (response-buf (and not-preview
-			    (generate-new-buffer "*HTTP Response*")))
+	 (response-buf (generate-new-buffer "*HTTP Response*"))
 	 timeout-timer)
-    (unless (url-host url)
-      (user-error "%s" (concat "URL has no host defined\n"
-			       "Make sure you specify a host "
-			       "(e.g. \"github.com\") in the heading "
-			       "hierarchy")))
+    ;; Start the timeout warning timer
+    (when verb-show-timeout-warning
+      (setq timeout-timer (run-with-timer verb-show-timeout-warning nil
+					  #'verb--timeout-warn
+					  response-buf rs)))
 
-    (when not-preview
-      ;; Start the timeout warning timer
-      (when verb-show-timeout-warning
-	(setq timeout-timer (run-with-timer verb-show-timeout-warning nil
-					    #'verb--timeout-warn
-					    response-buf rs)))
+    ;; Send the request!
+    (funcall verb-url-retrieve-function
+	     url
+	     #'verb--request-spec-callback
+	     (list rs
+		   response-buf
+		   (time-to-seconds)
+		   timeout-timer
+		   where)
+	     t verb-inhibit-cookies)
 
-      ;; Send the request!
-      (funcall verb-url-retrieve-function
-	       url
-	       #'verb--request-spec-callback
-	       (list rs
-		     response-buf
-		     (time-to-seconds)
-		     timeout-timer
-		     where)
-	       t verb-inhibit-cookies))
-
-    ;; Show user some information
-    (message "%s request %ssent to %s%s"
+    ;; Show user some quick information
+    (message "%s request sent to %s"
 	     (oref rs method)
-	     (if not-preview "" "would be ")
-	     (verb--request-spec-url-string rs)
-	     (if not-preview ""
-	       (format (concat "\nUser headers count: %s"
-			       "\nBody present: %s")
-		       (length (oref rs headers))
-		       (if (oref rs body) "yes" "no"))))
+	     (verb--request-spec-url-string rs))
 
     ;;Return the response buffer
     response-buf))
+
+(cl-defmethod verb--request-spec-to-string ((rs verb--request-spec))
+  "Return request spec RS as a string.
+This string should be able to be used with
+`verb--request-spec-from-text', yielding the same request spec again."
+  (with-temp-buffer
+    (insert (oref rs method) " "
+	    (url-recreate-url (oref rs url)) "\n")
+    (dolist (key-value (oref rs headers))
+      (insert (car key-value) ": " (cdr key-value) "\n"))
+    (when-let ((body (oref rs body)))
+      (insert "\n" body))
+    (buffer-string)))
 
 (defun verb--timeout-warn (buffer rs)
   "Warn the user about a possible network timeout for request RS.
