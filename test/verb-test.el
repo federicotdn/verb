@@ -52,8 +52,8 @@
 (ert-deftest test-up-heading ()
   (setq outline-test
 	;; Test up-heading without level 1 heading
-	(join-lines "-- Level 2 heading"
-		    "--- Level 3 heading"
+	(join-lines "** Level 2 heading"
+		    "*** Level 3 heading"
 		    "get http://test.com"))
   (with-temp-buffer
     (verb-mode)
@@ -67,8 +67,8 @@
 	;; Test up-heading without level 1 heading, with empty space
 	(join-lines "test"
 		    ""
-		    "-- Level 2 heading"
-		    "--- Level 3 heading"
+		    "** Level 2 heading"
+		    "*** Level 3 heading"
 		    "get http://test.com"))
   (with-temp-buffer
     (verb-mode)
@@ -80,7 +80,7 @@
 
 (ert-deftest test-heading-contents ()
   (setq outline-test
-	(join-lines "- Heading"
+	(join-lines "* Heading"
 		    "get http://test.com"))
   (with-temp-buffer
     (verb-mode)
@@ -89,14 +89,14 @@
 		     "get http://test.com")))
 
   (setq outline-test
-	(join-lines "- Heading"))
+	(join-lines "* Heading"))
   (with-temp-buffer
     (verb-mode)
     (insert outline-test)
     (should-not (verb--heading-contents)))
 
   (setq outline-test
-	(join-lines "-- Heading level 2"
+	(join-lines "** Heading level 2"
 		    "get http://test.com"))
   (with-temp-buffer
     (verb-mode)
@@ -911,7 +911,7 @@
   `(progn
      (set-buffer test-buf)
      (goto-char (point-min))
-     (re-search-forward (concat "^-+ " ,test-name "$"))
+     (re-search-forward (concat "^\\*+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-execute-request-on-point)
 	 (sleep-for 0.3)

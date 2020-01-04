@@ -1,4 +1,4 @@
-- Testing Endpoints
+* Testing Endpoints
 # Make some requests against the test server (server.py) The requests
 # are executed programatically by loading this file, moving to a
 # heading and executing verb-execute-request-on-point. See verb-test.el
@@ -6,60 +6,60 @@
 
 template http://localhost:8000
 
--- basic
+** basic
 get /basic
 
--- basic-json
+** basic-json
 get /basic-json
 
--- error-400
+** error-400
 get /error-400
 
--- headers
+** headers
 get /headers-test
 
--- error-404
+** error-404
 get /this-endpoint-doesnt-exist
 
--- error-405
+** error-405
 put /basic-json
 
--- response-latin-1
+** response-latin-1
 get /response-latin-1
 
--- request-latin-1
+** request-latin-1
 post /request-latin-1
 Content-Type: text/plain; charset=latin1
 
 áéíóúñü
--- request-utf-8-default
+** request-utf-8-default
 # No not set charset=
 post /request-utf-8-default
 Content-Type: text/plain
 
 áéíóúñü
--- request-utf-8-default-2
+** request-utf-8-default-2
 # No not set Content-Type
 post /request-utf-8-default-2
 
 áéíóúñü
--- response-utf-8-default
+** response-utf-8-default
 get /response-utf-8-default
 
--- response-big5
+** response-big5
 get /response-big5
 
--- root-with-args
+** root-with-args
 get ?foo=bar
 
--- redirect-302
+** redirect-302
 get /redirect-302
 
--- redirect-301
+** redirect-301
 get /redirect-301
 
--- redirect-308
+** redirect-308
 post /redirect-308
 
-- connection-fail-test
+* connection-fail-test
 get http://localhost:1234/test
