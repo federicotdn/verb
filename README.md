@@ -28,7 +28,7 @@ Alternatively, you can just add [`verb.el`](verb.el) to your `load-path`.
 
 ## Quick Start
 
-Here's a quick example in case you want to get started without reading the Usage Guide. Place the following on an `example.verb` file:
+Here's a quick example in case you want to get started without reading the [Usage Guide](#usage-guide). Place the following on an `example.verb` file:
 ```
 * Quick Start for Verb
 # Comments start with '#' (must be placed right
@@ -92,7 +92,7 @@ The contents of the response body will be shown on the buffer. To choose how the
 3. **Text:** If the chosen handler is for text, decode the response body using the charset described in the `Content-Type` header. If no charset was specified, use the one specified by `verb-default-response-charset` (default: `utf-8`). After that is done, call the handler (e.g. `xml-mode`). **Binary:** If the chosen handler is for a binary type, call the handler directly after loading the raw bytes into the buffer (e.g. `doc-view-mode`).
 4. The handler will have set an appropiate major mode to display and/or edit the received content.
 
-To close the response buffer, you can use the `verb-kill-response-buffer-and-window`, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see next section).
+To close the response buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see next section).
 
 ### The Response Headers Buffer
 

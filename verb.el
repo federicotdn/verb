@@ -6,6 +6,7 @@
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: http
+;; Package-Version: 1.0.0
 ;; Package-Requires: ((emacs "26"))
 
 ;; verb is free software; you can redistribute it and/or modify it
