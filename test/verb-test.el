@@ -26,8 +26,6 @@
 
 (require 'verb)
 
-(setq verb-show-headers-buffer nil)
-
 (defun join-lines (&rest args)
   (mapconcat #'identity args "\n"))
 
@@ -983,9 +981,9 @@
     (should (string= (buffer-string) "Hello, World!"))
     (should (eq major-mode 'text-mode))
     (should verb-response-body-mode)
-    (should verb--http-response)
-    (should (oref verb--http-response request))
-    (should (string= (verb-request-spec-url-string (oref verb--http-response request))
+    (should verb-http-response)
+    (should (oref verb-http-response request))
+    (should (string= (verb-request-spec-url-string (oref verb-http-response request))
 		     "http://localhost:8000/basic"))))
 
 (ert-deftest test-server-basic-json ()
@@ -1043,7 +1041,7 @@
 (ert-deftest test-server-response-utf-8-default ()
   (server-test "response-utf-8-default"
 	       (should (string= (cdr (assoc-string "Content-Type"
-						   (oref verb--http-response headers)))
+						   (oref verb-http-response headers)))
 		     "text/plain"))
     (should (string= verb-default-response-charset "utf-8"))
     (should (coding-system-equal buffer-file-coding-system 'utf-8-unix))
@@ -1077,9 +1075,9 @@
   (server-test "headers"
     (should (string= (buffer-string) "HeadersTest"))
     (should (string= (cdr (assoc "x-test-1"
-				 (oref verb--http-response headers))) "foo"))
+				 (oref verb-http-response headers))) "foo"))
     (should (string= (cdr (assoc "OTHER-TEST"
-				 (oref verb--http-response headers))) "bar"))))
+				 (oref verb-http-response headers))) "bar"))))
 
 (ert-deftest test-connection-error ()
   (setq num-buffers (length (buffer-list)))

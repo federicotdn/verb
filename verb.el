@@ -183,10 +183,10 @@ If nil, never prettify JSON files automatically."
   "Keyword to use when defining request templates.
 Request templates are defined without HTTP methods, paths or hosts.")
 
-(defvar-local verb--http-response nil
+(defvar-local verb-http-response nil
   "HTTP response for this response buffer (`verb-response' object).
 The body contents of the response are in the buffer itself.")
-(put 'verb--http-response 'permanent-local t)
+(put 'verb-http-response 'permanent-local t)
 
 (defvar-local verb--response-headers-buffer nil
   "Buffer currently showing the HTTP response's headers.")
@@ -329,10 +329,10 @@ HEADER and VALUE must be nonempty strings."
   (if verb-response-body-mode
       (progn
 	(setq header-line-format
-	      (verb--response-header-line-string verb--http-response))
+	      (verb--response-header-line-string verb-http-response))
 	(when verb-show-headers-buffer
 	  (if (eq verb-show-headers-buffer 'when-empty)
-	      (when (zerop (oref verb--http-response body-bytes))
+	      (when (zerop (oref verb-http-response body-bytes))
 		(verb-toggle-show-headers))
 	    (verb-toggle-show-headers))))
     (setq header-line-format nil)))
@@ -545,7 +545,7 @@ If point is not on a heading, emulate a TAB key press."
 	(setq verb--response-headers-buffer nil))
     (setq verb--response-headers-buffer
 	  (generate-new-buffer "*HTTP Headers*"))
-    (let ((headers (oref verb--http-response headers)))
+    (let ((headers (oref verb-http-response headers)))
       (with-selected-window (verb--split-window)
 	(switch-to-buffer verb--response-headers-buffer)
 	(verb-response-headers-mode)
@@ -650,7 +650,7 @@ explicitly."
 (defun verb--handler-json ()
   "Handler for \"application/json\" content type."
   (js-mode)
-  (when (< (oref verb--http-response body-bytes)
+  (when (< (oref verb-http-response body-bytes)
 	   (or verb-json-max-pretty-print-size 0))
     (unwind-protect
 	(let ((json-pretty-print-max-secs 0))
@@ -768,9 +768,9 @@ view the HTTP response in a user-friendly way."
       (error "Expected a unibyte buffer for HTTP response"))
 
     ;; Store details of request and response
-    ;; `verb--http-response' is a permanent buffer local variable
+    ;; `verb-http-response' is a permanent buffer local variable
     (with-current-buffer response-buf
-      (setq verb--http-response
+      (setq verb-http-response
 	    (verb-response :headers (nreverse headers)
 			   :request rs
 			   :status status-line
@@ -854,7 +854,8 @@ Returns a new alist, does not modify HEADERS."
   "Encode content BODY using CHARSET.
 If CHARSET is nil, use `verb-default-request-charset'."
   (when body
-    (if-let ((coding-system (mm-charset-to-coding-system
+    (if-let ((inhibit-message t)
+	     (coding-system (mm-charset-to-coding-system
 			     (or charset verb-default-request-charset))))
 	(encode-coding-string body coding-system)
       (user-error (concat "No coding system found for charset \"%s\"\n"
