@@ -974,7 +974,7 @@
      (goto-char (point-min))
      (re-search-forward (concat "^\\*+ " ,test-name "$"))
      (let ((inhibit-message t))
-       (with-current-buffer (verb-execute-request-on-point)
+       (with-current-buffer (verb-send-request-on-point)
 	 (sleep-for 0.3)
 	 ,@body))))
 

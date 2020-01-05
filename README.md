@@ -71,7 +71,7 @@ This defines a minimal HTTP request specification, describing a method (`GET`) a
 
 ### Sending Requests
 
-To actually send the HTTP request, use the `verb-execute-request-on-point-other-window` command, which by default is bound to <kbd>C-c C-r C-r</kbd>. This command will send the HTTP request, and show the response on another window using `switch-to-buffer-other-window`. If you wish to view the response on the same window, use the `verb-execute-request-on-point` command, by default bound to <kbd>C-c C-r C-f</kbd>.
+To actually send the HTTP request, use the `verb-send-request-on-point-other-window` command, which by default is bound to <kbd>C-c C-r C-r</kbd>. This command will send the HTTP request, and show the response on another window using `switch-to-buffer-other-window`. If you wish to view the response on the same window, use the `verb-send-request-on-point` command, by default bound to <kbd>C-c C-r C-f</kbd>.
 
 ### The Response Body Buffer
 
@@ -314,7 +314,7 @@ The [`docs/`](docs) directory contains various `.verb` files which showcase diff
   - Verb does not support file uploads, `restclient` does.
   - Verb does not support exporting requests to `curl`, `restclient` does.
   - Licensing (GPLv3 vs. Public domain).
-- [http.el](https://github.com/emacs-pe/http.el)
+- [http.el](https://github.com/emacs-pe/http.el): I have not tested this package, so I can't provide a comparison.
 
 ## License
 

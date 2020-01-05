@@ -196,8 +196,8 @@ The body contents of the response are in the buffer itself.")
 
 (defvar verb-mode-prefix-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-r") #'verb-execute-request-on-point-other-window)
-    (define-key map (kbd "C-f") #'verb-execute-request-on-point)
+    (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window)
+    (define-key map (kbd "C-f") #'verb-send-request-on-point)
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
     map)
   "Prefix map for `verb-mode'.")
@@ -554,14 +554,14 @@ If point is not on a heading, emulate a TAB key press."
 	(verb--insert-header-contents headers)
 	(fit-window-to-buffer)))))
 
-(defun verb-execute-request-on-point-other-window ()
+(defun verb-send-request-on-point-other-window ()
   "Send the request specified by the selected heading's text contents.
 Show the results on another window (use
-`verb-execute-request-on-point')."
+`verb-send-request-on-point')."
   (interactive)
-  (verb-execute-request-on-point 'other-window))
+  (verb-send-request-on-point 'other-window))
 
-(defun verb-execute-request-on-point (&optional where)
+(defun verb-send-request-on-point (&optional where)
   "Send the request specified by the selected heading's text contents.
 The contents of all parent headings are used as well; see
 `verb--request-spec-from-hierarchy' to see how this is done.
@@ -570,7 +570,7 @@ If WHERE is `other-window', show the results of the request on another
 window.  If WHERE has any other value, show the results of the request
 in the current window."
   (interactive)
-  (verb--request-spec-execute (verb--request-spec-from-hierarchy)
+  (verb--request-spec-send (verb--request-spec-from-hierarchy)
 			      where))
 
 (defun verb-export-request-on-point ()
@@ -686,7 +686,7 @@ CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
   (cdr (assoc-string (car content-type) handlers-list t)))
 
 (defun verb--request-spec-callback (status rs response-buf start timeout-timer where)
-  "Callback for `verb--request-spec-execute' for request RS.
+  "Callback for `verb--request-spec-send' for request RS.
 More response information can be read from STATUS.
 RESPONSE-BUF should point to a buffer where the response should be
 copied to, which the user can then use or edit freely.
@@ -695,7 +695,7 @@ at which the request was sent.
 TIMEOUT-TIMER should contain a timer set to call `verb--timeout-warn',
 or nil.
 WHERE describes where the results should be shown in (see
-`verb-execute-request-on-point').
+`verb-send-request-on-point').
 
 This function sets up the current buffer so that it can be used to
 view the HTTP response in a user-friendly way."
@@ -869,10 +869,10 @@ If CHARSET is nil, use `verb-default-request-charset'."
       (encode-coding-string s 'us-ascii)
     s))
 
-(cl-defmethod verb--request-spec-execute ((rs verb-request-spec) where)
-  "Execute the HTTP request described by RS.
+(cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
+  "Send the HTTP request described by RS.
 Show the results according to parameter WHERE (see
-`verb-execute-request-on-point'). Return the buffer the response will
+`verb-send-request-on-point'). Return the buffer the response will
 be loaded into."
   (let* ((url (oref rs url))
 	 (url-request-method (verb--to-ascii (oref rs method)))
