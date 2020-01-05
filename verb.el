@@ -5,7 +5,7 @@
 ;; Author: Federico Tedin <federicotedin@gmail.com>
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
 ;; Homepage: https://github.com/federicotdn/verb
-;; Keywords: http
+;; Keywords: tools
 ;; Package-Version: 0.1.0
 ;; Package-Requires: ((emacs "26"))
 
@@ -90,14 +90,13 @@ See also: `verb-text-content-type-handlers'."
   :type '(alist :key-type string :value-type function))
 
 (defcustom verb-export-functions
-  '((?h "human" verb--export-to-human)
-    (?v "verb" verb--export-to-verb))
+  '(("human" . verb--export-to-human)
+    ("verb" . verb--export-to-verb))
   "Alist of request specification export functions.
-Each element should have the form (CHAR NAME FN), where CHAR is the
-key associated with this function (which the user will press), NAME
-should be a user-friendly name for this function, and FN should be the
-function itself."
-  :type '(alist :key-type character :value-type (list string function)))
+Each element should have the form (NAME FN), where NAME should be a
+user-friendly name for this function, and FN should be the function
+itself."
+  :type '(alist :key-type string :value-type function))
 
 (defcustom verb-inhibit-cookies nil
   "If non-nil, do not send or receive cookies when sending requests."
@@ -474,7 +473,7 @@ delete any window displaying it."
 	(delete-window w)))
     (when (buffer-live-p verb--response-headers-buffer)
       (kill-buffer verb--response-headers-buffer)))
-  (kill-current-buffer)
+  (kill-buffer (current-buffer))
   (ignore-errors
     (delete-window)))
 
@@ -482,7 +481,7 @@ delete any window displaying it."
   "Delete selected window and kill its current buffer.
 Delete the window only if it isn't the only window in the frame."
   (interactive)
-  (kill-current-buffer)
+  (kill-buffer (current-buffer))
   (ignore-errors
     (delete-window)))
 
@@ -581,14 +580,10 @@ function with the request specification object.  See the
 No HTTP request will be sent, unless the export function does this
 explicitly."
   (interactive)
-  (let* ((rs (verb--request-spec-from-hierarchy))
-	 (choices (mapcar (lambda (e)
-			    (list (car e) (nth 1 e)))
-			  verb-export-functions))
-	 (choice (car (read-multiple-choice "Export function:"
-					    choices)))
-	 (exporter (assoc choice verb-export-functions)))
-    (funcall (nth 2 exporter) rs)))
+  (let ((rs (verb--request-spec-from-hierarchy))
+	(exporter (completing-read "Export function: " verb-export-functions nil t)))
+    (when-let ((fn (cdr (assoc exporter verb-export-functions))))
+      (funcall fn rs))))
 
 (defun verb--export-to-human (rs)
   "Export a request spec RS to a human-readable format."
@@ -667,12 +662,14 @@ explicitly."
 The value returned has the form (TYPE . CHARSET).  If the charset is
 not present, return (TYPE . nil).  If the header itself is not
 present, return (nil . nil)."
-  (if-let* ((value (cdr (assoc-string "Content-Type" headers t)))
-	    (type-subtype (string-trim (car (split-string value ";")))))
-      (cons type-subtype
-	    (when (string-match "charset=\\([[:alnum:]-.]+\\)" value)
-	      (match-string 1 value)))
-    (cons nil nil)))
+  (let* ((value (cdr (assoc-string "Content-Type" headers t)))
+	 (type-subtype (and value (string-trim (car (split-string
+						     value ";"))))))
+    (if (and value type-subtype)
+	(cons type-subtype
+	      (when (string-match "charset=\\([[:alnum:]-.]+\\)" value)
+		(match-string 1 value)))
+      (cons nil nil))))
 
 (defun verb--debug (&rest args)
   "Log ARGS in the debugging buffer using `format'."
@@ -710,7 +707,7 @@ view the HTTP response in a user-friendly way."
     ;; information, continue as normal
     (unless (numberp (and (eq (car error-info) 'http)
 			  (cadr error-info)))
-      (kill-current-buffer)
+      (kill-buffer (current-buffer))
       (kill-buffer response-buf)
       (verb--debug "Connection error (from status plist): %s" http-error)
       (user-error "Failed to connect to host %s (port: %s)"
@@ -947,7 +944,7 @@ alist."
 		   (not (member key processed)))
 	  ;; key in OTHER is in ORIGINAL, delete all entries using
 	  ;; this key in ORIGINAL
-	  (setq result (assoc-delete-all key result)))
+	  (setq result (cl-delete key result :key #'car :test #'equal)))
 	(push key-value result)
 	;; Remember we deleted this key from ORIGINAL so that we don't
 	;; do it again accidentally (this can happen if OTHER contains
