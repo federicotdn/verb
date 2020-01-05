@@ -32,16 +32,16 @@
   (mapconcat #'identity args "\n"))
 
 (defun text-as-spec (&rest args)
-  (verb--request-spec-from-string (mapconcat #'identity args "")))
+  (verb-request-spec-from-string (mapconcat #'identity args "")))
 
 (defun override-specs (s1 s2 &optional url method headers body)
-  (should (equal (verb--request-spec-override
-		  (verb--request-spec-from-string (mapconcat #'identity s1 ""))
-		  (verb--request-spec-from-string (mapconcat #'identity s2 "")))
-		 (verb--request-spec :url (verb--clean-url url)
-				     :method method
-				     :headers headers
-				     :body body))))
+  (should (equal (verb-request-spec-override
+		  (verb-request-spec-from-string (mapconcat #'identity s1 ""))
+		  (verb-request-spec-from-string (mapconcat #'identity s2 "")))
+		 (verb-request-spec :url (verb--clean-url url)
+				    :method method
+				    :headers headers
+				    :body body))))
 
 (ert-deftest test-outline-C-c-C-r-unbound ()
   (with-temp-buffer
@@ -123,9 +123,9 @@
     (verb-mode)
     (insert outline-test)
     (should (equal (verb--request-spec-from-hierarchy)
-		   (verb--request-spec :method "GET"
-				       :url (verb--clean-url
-					     "http://hello.com")))))
+		   (verb-request-spec :method "GET"
+				      :url (verb--clean-url
+					    "http://hello.com")))))
   (setq outline-test
 	(join-lines "* Test"
 		    "template http://hello.com"
@@ -135,9 +135,9 @@
     (verb-mode)
     (insert outline-test)
     (should (equal (verb--request-spec-from-hierarchy)
-		   (verb--request-spec :method "POST"
-				       :url (verb--clean-url
-					     "http://hello.com?a=b")))))
+		   (verb-request-spec :method "POST"
+				      :url (verb--clean-url
+					    "http://hello.com?a=b")))))
   (setq outline-test
 	(join-lines "* Test"))
   (with-temp-buffer
@@ -188,17 +188,17 @@
 
 (ert-deftest test-request-spec-from-text-comments-only ()
   (should-error (text-as-spec "# Hello\n" "# world")
-		:type 'verb--empty-spec)
+		:type 'verb-empty-spec)
 
   (should-error (text-as-spec "# Hello\n" "")
-		:type 'verb--empty-spec)
+		:type 'verb-empty-spec)
 
   (should-error (text-as-spec "")
-		:type 'verb--empty-spec))
+		:type 'verb-empty-spec))
 
 (ert-deftest test-response-header-line-string ()
   (should (string= (verb--response-header-line-string
-		    (verb--response
+		    (verb-response
 		     :status "test"
 		     :duration 1.123
 		     :headers '(("Content-Type" . "hello")
@@ -207,7 +207,7 @@
 		   "test | 1.123s | hello | 1 byte"))
 
   (should (string= (verb--response-header-line-string
-		    (verb--response
+		    (verb-response
 		     :status "test"
 		     :duration 1.123
 		     :headers '(("Content-Length" . "1"))
@@ -215,7 +215,7 @@
 		   "test | 1.123s | ? | 1 byte"))
 
   (should (string= (verb--response-header-line-string
-		    (verb--response
+		    (verb-response
 		     :status "test"
 		     :duration 1.123
 		     :headers '(("Content-Type" . "hello"))
@@ -223,7 +223,7 @@
 		   "test | 1.123s | hello | 999 bytes"))
 
   (should (string= (verb--response-header-line-string
-		    (verb--response
+		    (verb-response
 		     :status nil
 		     :duration 1.123
 		     :headers nil))
@@ -258,22 +258,22 @@
 
 (ert-deftest test-request-spec-from-text-simple ()
   (setq aux (text-as-spec "GET https://example.com"))
-  (should (string= (verb--request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-string aux)
 		   "https://example.com"))
   (should (string= (oref aux :method) "GET"))
 
   (setq aux (text-as-spec "GET https://example.com\n"))
-  (should (string= (verb--request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-string aux)
 		   "https://example.com"))
 
   (setq aux (text-as-spec "GET /some/path"))
-  (should (string= (verb--request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-string aux)
 		   "/some/path"))
 
   (setq aux (text-as-spec "# Comment\n"
 			  "\n"
 			  "GET https://example.com"))
-  (should (string= (verb--request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-string aux)
 		   "https://example.com"))
   (should (string= (oref aux :method) "GET"))
 
@@ -281,7 +281,7 @@
 			  "  # hello\n"
 			  "\n"
 			  "GET https://example.com"))
-  (should (string= (verb--request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-string aux)
 		   "https://example.com"))
   (should (string= (oref aux :method) "GET")))
 
@@ -345,7 +345,7 @@
 
 (ert-deftest test-request-spec-from-text-code-tags ()
   (setq aux (text-as-spec "GET http://example.com/users/{{(+ 1 1)}}\n"))
-  (should (string= (verb--request-spec-url-string aux) "http://example.com/users/2"))
+  (should (string= (verb-request-spec-url-string aux) "http://example.com/users/2"))
 
   (setq aux (text-as-spec "GET http://example.com\n"
 			  "Accept: {{(* 3 2)}}\n"
@@ -378,7 +378,7 @@
 			  " Referer   :host\n"
 			  "\n"
 			  "Content\n"))
-  (should (string= (verb--request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-string aux)
 		   "http://example.com/foobar"))
   (should (string= (oref aux :method) "POST"))
   (should (equal (oref aux :headers)
@@ -389,18 +389,18 @@
   (should (string= (oref aux :body) "Content\n")))
 
 (ert-deftest test-request-spec-override ()
-  (setq aux (verb--request-spec :url nil :method nil))
-  (should-error (verb--request-spec-override aux "test")))
+  (setq aux (verb-request-spec :url nil :method nil))
+  (should-error (verb-request-spec-override aux "test")))
 
 (ert-deftest test-request-spec-url-string ()
-  (setq aux (verb--request-spec-from-string
+  (setq aux (verb-request-spec-from-string
 	     "GET http://hello.com/test"))
-  (should (string= (verb--request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-string aux)
 		   "http://hello.com/test"))
 
-  (setq aux (verb--request-spec-from-string
+  (setq aux (verb-request-spec-from-string
 	     "GET hello/world"))
-  (should (string= (verb--request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-string aux)
 		   "hello/world")))
 
 (ert-deftest test-override-url ()
@@ -980,7 +980,7 @@
     (should verb-response-body-mode)
     (should verb--http-response)
     (should (oref verb--http-response request))
-    (should (string= (verb--request-spec-url-string (oref verb--http-response request))
+    (should (string= (verb-request-spec-url-string (oref verb--http-response request))
 		     "http://localhost:8000/basic"))))
 
 (ert-deftest test-server-basic-json ()

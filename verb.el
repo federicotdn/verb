@@ -182,7 +182,7 @@ If nil, never prettify JSON files automatically."
 Request templates are defined without HTTP methods, paths or hosts.")
 
 (defvar-local verb--http-response nil
-  "HTTP response for this response buffer (`verb--response' object).
+  "HTTP response for this response buffer (`verb-response' object).
 The body contents of the response are in the buffer itself.")
 (put 'verb--http-response 'permanent-local t)
 
@@ -278,7 +278,7 @@ HEADER and VALUE must be nonempty strings."
 	  (throw 'end nil)))
       t)))
 
-(defclass verb--request-spec ()
+(defclass verb-request-spec ()
   ((method :initarg :method
 	   :type (or null verb--http-method)
 	   :documentation "HTTP method.")
@@ -295,9 +295,9 @@ HEADER and VALUE must be nonempty strings."
 	 :documentation "Request body."))
   "Represents an HTTP request to be made.")
 
-(defclass verb--response ()
+(defclass verb-response ()
   ((request :initarg :request
-	    :type verb--request-spec
+	    :type verb-request-spec
 	    :documentation "Corresponding request.")
    (headers :initarg :headers
 	    :type (or null verb--http-headers)
@@ -402,10 +402,10 @@ Return nil of the heading has no text contents."
     (unless (or (null text)
 		(string-empty-p (string-trim text)))
       (condition-case nil
-	  (verb--request-spec-from-string text)
-	(verb--empty-spec nil)))))
+	  (verb-request-spec-from-string text)
+	(verb-empty-spec nil)))))
 
-(defun verb--request-spec-validate (rs)
+(defun verb-request-spec-validate (rs)
   "Run validations on request spec RS.
 If a validation does not pass, signal with `user-error'."
   (unless (oref rs method)
@@ -429,7 +429,7 @@ To do this, use `verb--request-spec-from-heading' for the current
 heading, for that heading's parent, and so on until the root of the
 hierarchy is reached.  Once all the request specs have been collected,
 override them in inverse order according to the rules described in
-`verb--request-spec-override'."
+`verb-request-spec-override'."
   (let (specs done final-spec)
     (save-excursion
       ;; Go up through the Outline tree taking a request specification
@@ -445,9 +445,9 @@ override them in inverse order according to the rules described in
 	    (dolist (spec (cdr specs))
 	      ;; Override spec 1 with spec 2, and the result with spec
 	      ;; 3, then with 4, etc.
-	      (setq final-spec (verb--request-spec-override final-spec
+	      (setq final-spec (verb-request-spec-override final-spec
 							    spec))))
-	  (verb--request-spec-validate final-spec)
+	  (verb-request-spec-validate final-spec)
 	  final-spec)
       (user-error "%s" (concat "No request specification found\nTry "
 			       "writing: get https://<hostname>/<path>")))))
@@ -612,10 +612,10 @@ explicitly."
   "Export a request spec RS to Verb format."
   (with-current-buffer (generate-new-buffer "*HTTP Request Spec*")
     (verb-mode)
-    (insert (verb--request-spec-to-string rs))
+    (insert (verb-request-spec-to-string rs))
     (switch-to-buffer-other-window (current-buffer))))
 
-(cl-defmethod verb--response-header-line-string ((response verb--response))
+(cl-defmethod verb--response-header-line-string ((response verb-response))
   "Return a short description of an HTTP RESPONSE's properties."
   (let ((status-line (oref response status))
 	(elapsed (oref response duration))
@@ -637,7 +637,7 @@ explicitly."
 	       value
 	       (if (= value 1) "" "s"))))))
 
-(cl-defmethod verb--request-spec-url-string ((rs verb--request-spec))
+(cl-defmethod verb-request-spec-url-string ((rs verb-request-spec))
   "Return RS's url member as a string if it is non-nil."
   (let ((url (oref rs url)))
     (when url
@@ -767,11 +767,11 @@ view the HTTP response in a user-friendly way."
     ;; `verb--http-response' is a permanent buffer local variable
     (with-current-buffer response-buf
       (setq verb--http-response
-	    (verb--response :headers (nreverse headers)
-			    :request rs
-			    :status status-line
-			    :duration elapsed
-			    :body-bytes bytes)))
+	    (verb-response :headers (nreverse headers)
+			   :request rs
+			   :status status-line
+			   :duration elapsed
+			   :body-bytes bytes)))
 
     (if binary-handler
 	;; Response content is a binary format:
@@ -865,7 +865,7 @@ If CHARSET is nil, use `verb-default-request-charset'."
       (encode-coding-string s 'us-ascii)
     s))
 
-(cl-defmethod verb--request-spec-execute ((rs verb--request-spec) where)
+(cl-defmethod verb--request-spec-execute ((rs verb-request-spec) where)
   "Execute the HTTP request described by RS.
 Show the results according to parameter WHERE (see
 `verb-execute-request-on-point'). Return the buffer the response will
@@ -902,15 +902,15 @@ be loaded into."
     ;; Show user some quick information
     (message "%s request sent to %s"
 	     (oref rs method)
-	     (verb--request-spec-url-string rs))
+	     (verb-request-spec-url-string rs))
 
     ;;Return the response buffer
     response-buf))
 
-(cl-defmethod verb--request-spec-to-string ((rs verb--request-spec))
+(cl-defmethod verb-request-spec-to-string ((rs verb-request-spec))
   "Return request spec RS as a string.
 This string should be able to be used with
-`verb--request-spec-from-string', yielding the same request spec again."
+`verb-request-spec-from-string', yielding the same request spec again."
   (with-temp-buffer
     (insert (oref rs method) " "
 	    (url-recreate-url (oref rs url)) "\n")
@@ -927,7 +927,7 @@ an HTTP request has been sent.  Show the warning only when response
 buffer BUFFER is live."
   (when (buffer-live-p buffer)
     (message "Request to %s is taking longer than expected"
-	     (verb--request-spec-url-string rs))))
+	     (verb-request-spec-url-string rs))))
 
 (defun verb--override-alist (original other)
   "Override alist ORIGINAL with OTHER.
@@ -953,12 +953,12 @@ alist."
 (defalias 'verb--override-url-queries #'verb--override-alist
   "Override query string alist ORIGINAL with OTHER.
 Return the results in a new alist.  Work using the rules described in
-`verb--request-spec-override'.")
+`verb-request-spec-override'.")
 
 (defalias 'verb--override-headers #'verb--override-alist
   "Override headers alist ORIGINAL with OTHER.
 Return the results in a new alist.  Work using the rules described in
-`verb--request-spec-override'.")
+`verb-request-spec-override'.")
 
 (defun verb--url-query-string-to-alist (query)
   "Return an alist of (KEY . VALUE) from query string QUERY.
@@ -994,7 +994,7 @@ as:
 (defun verb--override-url-paths (original other)
   "Override URL path (and query string) ORIGINAL with OTHER.
 ORIGINAL and OTHER have the form (PATH . QUERY).  Work using the rules
-described in `verb--request-spec-override'."
+described in `verb-request-spec-override'."
   (let* ((original-path (car original))
 	 (original-query (cdr original))
 	 (other-path (car other))
@@ -1030,7 +1030,7 @@ Return nil if the port can be inferred from the URL's schema."
 
 (defun verb--override-url (original other)
   "Override URL struct ORIGINAL with OTHER.
-Do this using the rules described in `verb--request-spec-override'."
+Do this using the rules described in `verb-request-spec-override'."
   ;; If either url is nil, return the other one
   (if (not (and original other))
       (or original other)
@@ -1049,7 +1049,7 @@ Do this using the rules described in `verb--request-spec-override'."
 			     port path fragment
 			     attributes fullness))))
 
-(cl-defmethod verb--request-spec-override ((original verb--request-spec) other)
+(cl-defmethod verb-request-spec-override ((original verb-request-spec) other)
   "Override request spec ORIGINAL with OTHER, return the result.
 
 Each member of request ORIGINAL is overridden with the one from OTHER
@@ -1080,15 +1080,15 @@ body
   Use OTHER's body if it is non-nil, otherwise use ORIGINAL's.
 
 Neither request specification is modified, a new one is returned."
-  (unless (object-of-class-p other 'verb--request-spec)
-    (error "%s" "Argument OTHER must be a `verb--request-spec'."))
-  (verb--request-spec :method (or (oref other method)
-				  (oref original method))
-		      :url (verb--override-url (oref original url)
-					       (oref other url))
-		      :headers (verb--override-headers (oref original headers)
-						       (oref other headers))
-		      :body (or (oref other body) (oref original body))))
+  (unless (object-of-class-p other 'verb-request-spec)
+    (error "%s" "Argument OTHER must be a `verb-request-spec'."))
+  (verb-request-spec :method (or (oref other method)
+				 (oref original method))
+		     :url (verb--override-url (oref original url)
+					      (oref other url))
+		     :headers (verb--override-headers (oref original headers)
+						      (oref other headers))
+		     :body (or (oref other body) (oref original body))))
 
 (defun verb--http-methods-regexp ()
   "Return a regexp to match an HTTP method.
@@ -1156,10 +1156,10 @@ and fragment component of a URL with no host or schema defined."
 	(setf (url-filename url-obj) (concat "/" path))))
     url-obj))
 
-(define-error 'verb--empty-spec
+(define-error 'verb-empty-spec
   "Request specification has no contents.")
 
-(defun verb--request-spec-from-string (text)
+(defun verb-request-spec-from-string (text)
   "Create a request spec from a string representation, TEXT.
 
 The text format for defining requests is:
@@ -1183,7 +1183,7 @@ ignored.  Each line of HEADERS must be in the form of KEY: VALUE.
 
 As a special case, if the text specification consists exclusively of
 comments and/or whitespace, or is the empty string, signal
-`verb--empty-spec'.
+`verb-empty-spec'.
 
 If METHOD could not be matched with `verb--http-methods-regexp',
 signal an error."
@@ -1201,8 +1201,8 @@ signal an error."
       ;; Check if the entire specification was just comments or empty
       (when (string-empty-p (string-trim (buffer-substring (point)
 							   (point-max))))
-	;; Signal `verb--empty-spec' if so
-	(signal 'verb--empty-spec nil))
+	;; Signal `verb-empty-spec' if so
+	(signal 'verb-empty-spec nil))
       ;; Read HTTP method and URL
       (let ((case-fold-search t))
 	(when (re-search-forward (concat "^\\s-*\\("
@@ -1242,13 +1242,13 @@ signal an error."
 	  ;; whitespace, but if it's not and has leading/trailing
 	  ;; whitespace, include it
 	  (setq body rest)))
-      ;; Return a `verb--request-spec'
-      (verb--request-spec :method method
-			  :url (unless (string-empty-p url)
-				 (verb--clean-url
-				  (verb--eval-lisp-code-in url)))
-			  :headers headers
-			  :body (verb--eval-lisp-code-in body)))))
+      ;; Return a `verb-request-spec'
+      (verb-request-spec :method method
+			 :url (unless (string-empty-p url)
+				(verb--clean-url
+				 (verb--eval-lisp-code-in url)))
+			 :headers headers
+			 :body (verb--eval-lisp-code-in body)))))
 
 (provide 'verb)
 ;;; verb.el ends here
