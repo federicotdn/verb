@@ -901,6 +901,11 @@
   (should-not (verb--get-handler (cons "application/foobar" nil)
 				 verb-binary-content-type-handlers)))
 
+(ert-deftest test-encode-http-body ()
+  (should (string= (verb--encode-http-body "hello" "utf-8") "hello"))
+  (should (string= (verb--encode-http-body "hello" nil) "hello"))
+  (should-error (verb--encode-http-body "hello" "foobar")))
+
 (ert-deftest test-headers-content-type ()
   (should (equal (verb--headers-content-type
 		  '(("A" . "a")
