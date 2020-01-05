@@ -1,4 +1,4 @@
-;;; verb.el --- A new HTTP client for Emacs  -*- lexical-binding: t -*-
+;;; verb.el --- Organize and send HTTP requests  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2020  Federico Tedin
 
@@ -24,7 +24,9 @@
 
 ;;; Commentary:
 
-;; Main module for verb.
+;; Verb is a package that allows you to organize and send HTTP
+;; requests from Emacs.  See the project's README.md file for more
+;; details.
 
 ;;; Code:
 (require 'outline)
@@ -240,7 +242,9 @@ The body contents of the response are in the buffer itself.")
 
 ;;;###autoload
 (define-derived-mode verb-mode outline-mode "Verb"
-  "Major mode for making HTTP requests from Emacs."
+  "Major mode for organizing and making HTTP requests from Emacs.
+See the documentation in URL `https://github.com/federicotdn/verb' for
+more details on how to use it."
   (setq-local comment-start verb--comment-character)
   (setq imenu-generic-expression
 	(list (list nil (concat "^" outline-regexp "\\s-+\\(.+\\)$") 1)))

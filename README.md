@@ -56,7 +56,7 @@ Content-Type: application/json
 get /status/{{(read-number "Status: " 200)}}
 ```
 
-Then, move the point to one of the level 2 headers marked with `**`), and press <kbd>C-c C-r C-r</kbd> to send an HTTP request.
+Then, move the point to one of the level 2 headers (marked with `**`), and press <kbd>C-c C-r C-r</kbd> to send an HTTP request.
 
 ## Usage Guide
 
@@ -305,7 +305,15 @@ The [`docs/`](docs) directory contains various `.verb` files which showcase diff
 
 ## Related Packages
 
-- [restclient.el](https://github.com/pashky/restclient.el)
+- [restclient](https://github.com/pashky/restclient.el): Verb is an attempt to improve upon the core idea of the `restclient` package: writing request specifications on a buffer, and receiving the responses on another. The most important differences between the two packages are:
+  - Verb uses a tree-like structure to organize request specifications, `restclient` uses a flat one.
+  - Verb displays HTTP response headers on a separate buffer, `restclient` includes them commented out in the main response buffer.
+  - Verb correctly handles URLs such as https://api.ipify.org?format=json (400 when using `restclient`, 200 when using Verb and `curl`).
+  - Verb has only been tested on Emacs 26+, `restclient` was tested on those and older versions as well (which is important if you're using an older Emacs version).
+  - In Verb, lines starting with `#` can be included in a request body (and `*` as well).
+  - Verb does not support file uploads, `restclient` does.
+  - Verb does not support exporting requests to `curl`, `restclient` does.
+  - Licensing (GPLv3 vs. Public domain).
 - [http.el](https://github.com/emacs-pe/http.el)
 
 ## License
