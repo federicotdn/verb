@@ -6,7 +6,7 @@
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: http
-;; Package-Version: 1.0.0
+;; Package-Version: 0.1.0
 ;; Package-Requires: ((emacs "26"))
 
 ;; verb is free software; you can redistribute it and/or modify it
@@ -402,7 +402,7 @@ Return nil of the heading has no text contents."
     (unless (or (null text)
 		(string-empty-p (string-trim text)))
       (condition-case nil
-	  (verb--request-spec-from-text text)
+	  (verb--request-spec-from-string text)
 	(verb--empty-spec nil)))))
 
 (defun verb--request-spec-validate (rs)
@@ -910,7 +910,7 @@ be loaded into."
 (cl-defmethod verb--request-spec-to-string ((rs verb--request-spec))
   "Return request spec RS as a string.
 This string should be able to be used with
-`verb--request-spec-from-text', yielding the same request spec again."
+`verb--request-spec-from-string', yielding the same request spec again."
   (with-temp-buffer
     (insert (oref rs method) " "
 	    (url-recreate-url (oref rs url)) "\n")
@@ -1159,8 +1159,8 @@ and fragment component of a URL with no host or schema defined."
 (define-error 'verb--empty-spec
   "Request specification has no contents.")
 
-(defun verb--request-spec-from-text (text)
-  "Create a request spec from a text specification, TEXT.
+(defun verb--request-spec-from-string (text)
+  "Create a request spec from a string representation, TEXT.
 
 The text format for defining requests is:
 
@@ -1174,7 +1174,7 @@ COMMENTS must be lines starting with `verb--comment-character'.
 Adding comments is optional.
 METHOD must be a method matched by `verb--http-methods-regexp' (that
 is, an HTTP method or the value of `verb--template-keyword').
-URL can be the empty string, or a URL with a \"http\" or \"https\"
+URL can be the empty string, or a URL with an \"http\" or \"https\"
 schema.
 PARTIAL-URL can be the empty string, or the path + query string +
 fragment part of a URL.
@@ -1182,7 +1182,11 @@ HEADERS and BODY can be separated by a blank line, which will be
 ignored.  Each line of HEADERS must be in the form of KEY: VALUE.
 
 As a special case, if the text specification consists exclusively of
-comments or is the empty string, signal `verb--empty-spec'."
+comments and/or whitespace, or is the empty string, signal
+`verb--empty-spec'.
+
+If METHOD could not be matched with `verb--http-methods-regexp',
+signal an error."
   (let (method url headers body)
     (with-temp-buffer
       (insert text)

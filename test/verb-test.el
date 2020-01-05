@@ -32,12 +32,12 @@
   (mapconcat #'identity args "\n"))
 
 (defun text-as-spec (&rest args)
-  (verb--request-spec-from-text (mapconcat #'identity args "")))
+  (verb--request-spec-from-string (mapconcat #'identity args "")))
 
 (defun override-specs (s1 s2 &optional url method headers body)
   (should (equal (verb--request-spec-override
-		  (verb--request-spec-from-text (mapconcat #'identity s1 ""))
-		  (verb--request-spec-from-text (mapconcat #'identity s2 "")))
+		  (verb--request-spec-from-string (mapconcat #'identity s1 ""))
+		  (verb--request-spec-from-string (mapconcat #'identity s2 "")))
 		 (verb--request-spec :url (verb--clean-url url)
 				     :method method
 				     :headers headers
@@ -393,12 +393,12 @@
   (should-error (verb--request-spec-override aux "test")))
 
 (ert-deftest test-request-spec-url-string ()
-  (setq aux (verb--request-spec-from-text
+  (setq aux (verb--request-spec-from-string
 	     "GET http://hello.com/test"))
   (should (string= (verb--request-spec-url-string aux)
 		   "http://hello.com/test"))
 
-  (setq aux (verb--request-spec-from-text
+  (setq aux (verb--request-spec-from-string
 	     "GET hello/world"))
   (should (string= (verb--request-spec-url-string aux)
 		   "hello/world")))
