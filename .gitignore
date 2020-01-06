@@ -19,3 +19,6 @@ test/server.pid
 
 # Test run results
 tests.log
+
+# package-lint installation directory
+/package-lint

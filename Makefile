@@ -1,8 +1,9 @@
 SHELL = bash
 EMACS = emacs
 NOOUTPUT = { ! grep '^'; }
+PACKAGE_LINT = package-lint
 
-.PHONY: test
+.PHONY: test package-lint
 
 setup-tests:
 	python3 -m venv env
@@ -24,13 +25,21 @@ test:
 	cat tests.log
 	! grep FAILED tests.log > /dev/null
 
-# TODO:
-# package-lint (https://github.com/purcell/package-lint)
+setup-check:
+	git clone https://github.com/purcell/package-lint.git $(PACKAGE_LINT)
 
-check:
+byte-compile:
 	$(EMACS) -Q --batch --eval '(byte-compile-file "verb.el")' 2>&1 | $(NOOUTPUT)
+
+checkdoc:
 	yes n | $(EMACS) -Q --batch --eval '(find-file "verb.el")' \
 		      	    	    --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
+
+package-lint:
+	$(EMACS) --batch -l $(PACKAGE_LINT)/package-lint.el \
+			 -f package-lint-batch-and-exit verb.el
+
+check: byte-compile checkdoc package-lint
 
 load-examples:
 	$(EMACS) -l verb.el \
