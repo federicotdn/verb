@@ -303,6 +303,28 @@ All variables, functions and classes starting with `verb-` but not starting with
 
 The [`docs/`](docs) directory contains various `.verb` files which showcase different features of the package.
 
+## Contributing
+
+PRs and suggestions are welcome. Ideally, new features and functions should include tests, see file `test/verb-test.el`. To run the tests locally, you will need to have a Python 3.6+ interpreter installed, and then run the following command (needed only once):
+```bash
+$ make setup-tests
+```
+
+Then, you can run the tests:
+```bash
+$ make test
+```
+
+You can also check for byte-compilation warnings and documentation/package issues. First, run (needed only once):
+```bash
+$ make setup-check
+```
+
+After that, run the checks:
+```bash
+$ make check
+```
+
 ## Related Packages
 
 - [restclient](https://github.com/pashky/restclient.el): Verb is an attempt to improve upon the core idea of the `restclient` package: writing request specifications on a buffer, and receiving the responses on another. The most important differences between the two packages are:
