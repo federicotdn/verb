@@ -35,7 +35,7 @@ Here's a quick example in case you want to get started without reading the [Usag
 ```
 * Quick Start for Verb
 # Comments start with '#' (must be placed right
-# after headers, which start with '*')
+# after headings, which start with '*')
 
 # Verb file for https://docs.postman-echo.com/
 template https://postman-echo.com
@@ -59,7 +59,7 @@ Content-Type: application/json
 get /status/{{(read-number "Status: " 200)}}
 ```
 
-Then, move the point to one of the level 2 headers (marked with `**`), and press <kbd>C-c C-r C-r</kbd> to send an HTTP request.
+Then, move the point to one of the level 2 heading (marked with `**`), and press <kbd>C-c C-r C-r</kbd> to send an HTTP request.
 
 ## Usage Guide
 
@@ -70,7 +70,7 @@ After installing Verb, get started by creating a new `guide.verb` file. The `.ve
 get https://reqres.in/api/users
 ```
 
-This defines a minimal HTTP request specification, describing a method (`GET`) and a URL (`https://reqres.in/api/users`). The request is contained under a level 1 header (marked with `*`).
+This defines a minimal HTTP request specification, describing a method (`GET`) and a URL (`https://reqres.in/api/users`). The request is contained under a heading marked with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level.
 
 ### Sending Requests
 
@@ -128,6 +128,8 @@ Content-Language: de-DE
 
 All headers must be written immediately after the method + URL line, without any blank lines in between.
 
+**Note:** "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements used to separate sections of text.
+
 ### Adding a Body
 
 To add a body to your HTTP request, simply insert it below the method, URL and headers. Continuing with our previous example, add the following contents at the end of the file:
@@ -169,7 +171,7 @@ Content-Type: application/json
 }
 ```
 
-Notice that the two request specifications share many things in common: the URL host, path and one header. In order to avoid repeating all this information, we can actually define a `template` request, establishing all the common attributes among requests, and then extend this template request with different values. To to this, let's create a new level 1 header, and move the already existing headers below it, making them level 2 headers:
+Notice that the two request specifications share many things in common: the URL host, path and one header. In order to avoid repeating all this information, we can actually define a `template` request, establishing all the common attributes among requests, and then extend this template request with different values. To to this, let's create a new level 1 heading, and move the already existing headings below it, making them level 2 headings:
 
 ```
 * User management
@@ -190,7 +192,7 @@ Content-Type: application/json
 }
 ```
 
-Now, when we send the request under "Get a user", Verb will collect all the properties defined in the parent headings (in this case, a URL and one header), and then extend/override them with the attributes under this specific header. This is how each attribute of an HTTP request specification is extended/overridden:
+Now, when we send the request under "Get a user", Verb will collect all the properties defined in the parent headings (in this case, a URL and one header), and then extend/override them with the attributes under this specific heading. This is how each attribute of an HTTP request specification is extended/overridden:
 
 - **Method:** The last heading's (i.e. the one with the highest level) method will be used. The value `template` does not count as a method and will be ignored.
 - **URL:**
