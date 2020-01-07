@@ -170,6 +170,9 @@ If nil, never prettify JSON files automatically."
 (defface verb-code-tag '((t :inherit italic))
   "Face for highlighting Lisp code tags.")
 
+(defface verb-json-key '((t :inherit font-lock-doc-face))
+  "Face for highlighting JSON keys.")
+
 (defconst verb--comment-character "#"
   "Character to use to mark commented lines.")
 
@@ -224,7 +227,10 @@ The body contents of the response are in the buffer itself.")
      ;; # This is a comment
      (,(concat "^\\s-*" verb--comment-character ".*$")
       (0 'verb-comment))
-     ;; Lisp code tags
+     ;; "something": 123
+     ("^\\s-+\\(\"[[:alnum:]-_]+\"\\):.+$"
+      (1 'verb-json-key))
+     ;; {{(format "%s" "Lisp code tag")}}
      (,(concat "^.*?\\("
 	       (car verb-code-tag-delimiters)
 	       ".*?"
