@@ -210,7 +210,7 @@
 		     :duration 1.123
 		     :headers '(("Content-Length" . "1"))
 		     :body-bytes 999))
-		   "test | 1.123s | ? | 1 byte"))
+		   "test | 1.123s | - | 1 byte"))
 
   (should (string= (verb--response-header-line-string
 		    (verb-response
@@ -225,7 +225,7 @@
 		     :status nil
 		     :duration 1.123
 		     :headers nil))
-		   "No Response | 1.123s | ? | 0 bytes")))
+		   "No Response | 1.123s | - | 0 bytes")))
 
 (ert-deftest test-request-spec-from-text-error ()
   (should-error (text-as-spec "foobar example.com")))
