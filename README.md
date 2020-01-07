@@ -9,6 +9,9 @@ The package introduces a new major mode, **Verb mode**, which is based on [Outli
 
 Verb has been tested on Emacs 26 and 27.
 
+[![Build Status](https://travis-ci.org/federicotdn/verb.svg?branch=master)](https://travis-ci.org/federicotdn/verb)
+![License](https://img.shields.io/github/license/federicotdn/verb.svg)
+
 ## Features
 
 - Send requests from Emacs using HTTP and HTTPS.
