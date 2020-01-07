@@ -228,7 +228,7 @@ The body contents of the response are in the buffer itself.")
      (,(concat "^\\s-*" verb--comment-character ".*$")
       (0 'verb-comment))
      ;; "something": 123
-     ("^\\s-+\\(\"[[:alnum:]-_]+\"\\):.+$"
+     ("\\s-\\(\"[[:graph:]]+?\"\\)\\s-*:."
       (1 'verb-json-key))
      ;; {{(format "%s" "Lisp code tag")}}
      (,(concat "^.*?\\("
