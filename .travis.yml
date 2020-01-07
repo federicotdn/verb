@@ -14,7 +14,7 @@ env:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get -y python3-venv
+  - sudo apt-get -y install python3-venv
 
 install:
   - curl -LO https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
