@@ -1,5 +1,5 @@
 SHELL = bash
-EMACS = emacs
+EMACS ?= emacs
 NOOUTPUT = { ! grep '^'; }
 PACKAGE_LINT = package-lint
 

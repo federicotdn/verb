@@ -13,7 +13,7 @@ Verb has been tested on Emacs 26 and 27.
 
 - Send requests from Emacs using HTTP and HTTPS.
 - Organize request specifications using Outline mode (the precursor to [Org mode](https://orgmode.org/)).
-- Easily define common attributes (URLs, arguments, headers, etc.) for many requests.
+- Easily define common attributes (URLs, query string, headers, etc.) for many requests.
 - Correctly handle text encodings (charsets) for requests and responses.
 - View PDF, PNG, JPEG, BMP, GIF and SVG responses inside Emacs.
 - Evaluate and substitute Emacs Lisp expressions in specifications text.

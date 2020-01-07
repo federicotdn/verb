@@ -870,7 +870,7 @@ If CHARSET is nil, use `verb-default-request-charset'."
 (cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
   "Send the HTTP request described by RS.
 Show the results according to parameter WHERE (see
-`verb-send-request-on-point'). Return the buffer the response will
+`verb-send-request-on-point').  Return the buffer the response will
 be loaded into."
   (let* ((url (oref rs url))
 	 (url-request-method (verb--to-ascii (oref rs method)))
