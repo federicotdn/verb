@@ -625,7 +625,7 @@ explicitly."
      " | "
      (format "%.4gs" elapsed)
      (let ((content-type (or (car (verb--headers-content-type headers))
-			     "?")))
+			     "-")))
        (format " | %s" content-type))
      (let* ((content-length (cdr (assoc-string "Content-Length"
 					       headers t)))

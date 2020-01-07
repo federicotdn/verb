@@ -86,7 +86,7 @@ The buffer will have an active [header line](https://www.gnu.org/software/emacs/
 HTTP/1.1 200 OK | 0.754s | application/json | 1020 bytes
 ```
 
-This text indicates the status of the HTTP response, the time in seconds it took for it to be completed, the type of the contents received (or `?` if the content type is unknown), and the number of bytes in the response body (read from the `Content-Length` header, when possible, otherwise from the local buffer size).
+This text indicates the status of the HTTP response, the time in seconds it took for it to be completed, the type of the contents received (or `-` if the content type is unknown), and the number of bytes in the response body (read from the `Content-Length` header, when possible, otherwise from the local buffer size).
 
 The contents of the response body will be shown on the buffer. To choose how they will be actually shown, the following steps are followed:
 
