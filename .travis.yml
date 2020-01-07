@@ -12,6 +12,10 @@ env:
   allow_failures:
     - env: EMACS_VERSION=master
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y python3-venv
+
 install:
   - curl -LO https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
   - tar -xaf emacs-bin-${EMACS_VERSION}.tar.gz -C /
