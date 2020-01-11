@@ -269,6 +269,19 @@ Authentication: {{token}}
 
 The example assumes that you've defined a global `token` variable with a proper value.
 
+### File Uploads
+
+To upload a file, you can use the included `verb-read-file` function. This function reads a file and returns its contents as a string. Use it from inside code tags to insert the contents of a local file in a request. Here's an example:
+
+```
+post https://some-example-api.com/api/upload
+Content-Type: text/plain
+
+{{(verb-read-file "documents/myfile.txt")}}
+```
+
+Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this for you. This will let the server know how to interpret the contents of the request.
+
 ### Body Lines starting with `*`
 
 You may have noticed that because headings start with `*`, you cannot include lines starting with `*` in your request bodies, because Verb will interpret them as a new heading. To get around this, you can prefix request body lines starting with `*` with an empty code tag, `{{}}`. The empty code tag will evaluate to the empty string, so it won't modify the content of your request body. Here's an example of this:
@@ -351,7 +364,6 @@ $ make check
   - Verb correctly handles URLs such as https://api.ipify.org?format=json (400 when using `restclient`, 200 when using Verb and `curl`).
   - Verb has only been tested on Emacs 26+, `restclient` was tested on those and older versions as well (which is important if you're using an older Emacs version).
   - In Verb, lines starting with `#` can be included in a request body (and `*` as well).
-  - Verb does not support file uploads, `restclient` does.
   - Verb does not support exporting requests to `curl`, `restclient` does.
   - Licensing (GPLv3 vs. Public domain).
 - [http.el](https://github.com/emacs-pe/http.el): I have not tested this package, so I can't provide a comparison.

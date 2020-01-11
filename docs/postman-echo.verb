@@ -31,6 +31,13 @@ Content-Type: application/json
   "hello": 1, "bye": {}
 }
 
+*** Post (raw text)
+# Send some plain text instead of JSON. Get the text itself from a
+# local file.
+template
+Content-Type: text/plain
+
+{{(verb-read-file "../test/test.txt")}}
 ** Status code
 # This endpoint allows one to instruct the server which status code to
 # respond with.

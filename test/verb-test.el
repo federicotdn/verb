@@ -479,6 +479,9 @@
   (should (string= (verb--eval-lisp-code-in "{{\"{{\"}}")
   		   "{{"))
 
+  (should (string= (verb--eval-lisp-code-in "{{(verb-read-file \"test/test.txt\")}}")
+  		   "Example text!\n"))
+
   (should (string= (verb--eval-lisp-code-in "{{\"}\"}}{{\"}\"}}")
   		   "}}"))
 

@@ -520,6 +520,12 @@ If point is not on a heading, emulate a TAB key press."
 	  (outline-hide-subtree))))
     (call-interactively (global-key-binding "\t"))))
 
+(defun verb-read-file (file)
+  "Return the contents of FILE as a string."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (buffer-string)))
+
 (defun verb--insert-header-contents (headers)
   "Insert the contents of HTTP HEADERS into the current buffer."
   (let ((inhibit-read-only t))
@@ -1116,7 +1122,9 @@ As a special case, if S is the empty string, return the empty string."
       (save-match-data
 	(let ((result
 	       (eval (car (read-from-string (format "(progn %s)" s))) t)))
-	  (format "%s" result))))))
+	  (if (stringp result)
+	      result
+	    (format "%s" result)))))))
 
 (defun verb--eval-lisp-code-in (s)
   "Evalue and replace Lisp code within code tags in S.
