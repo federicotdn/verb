@@ -330,6 +330,10 @@ These are the hooks currently available for use in Verb:
 
 All variables, functions and classes starting with `verb-` but not starting with `verb--` are part of the package's public API.
 
+There are two [EIEIO](https://www.gnu.org/software/emacs/manual/html_node/eieio/) classes which are very central to Verb's internal and external design:
+- `verb-request-spec` represents an HTTP request specification. It includes all the slots that have been mentioned previously: `method`, `url`, `headers` and `body`.
+- `verb-response` represents an HTTP response. Its slots include: `request`, which points back to the `verb-request-spec` instance that requested this response, an alist of HTTP headers `headers`, the numerical status code `status`, the time it took in seconds to receive the response `duration`, and the number of bytes in the response body `body-bytes`.
+
 ## Examples
 
 The [`docs/`](docs) directory contains various `.verb` files which showcase different features of the package.
