@@ -27,7 +27,14 @@ You can install Verb by using the `package-install` command (make sure [MELPA](h
 
 <kbd>M-x</kbd> `package-install` <kbd>RET</kbd> `verb` <kbd>RET</kbd>
 
-Alternatively, you can just add [`verb.el`](verb.el) to your `load-path`.
+If you're using [use-package](https://github.com/jwiegley/use-package), you can add the following to your `init.el`:
+
+```elisp
+(use-package verb
+  :mode ("\\.verb\\'" . verb-mode))
+```
+
+Alternatively, you can just add [`verb.el`](verb.el) to your `load-path` instead of installing it as a package.
 
 ## Quick Start
 
@@ -60,6 +67,12 @@ get /status/{{(read-number "Status: " 200)}}
 ```
 
 Then, move the point to one of the level 2 heading (marked with `**`), and press <kbd>C-c C-r C-r</kbd> to send an HTTP request.
+
+## Screenshots
+
+![Screenshot from 2020-01-11 21-52-28](https://user-images.githubusercontent.com/6868935/72210619-5b650880-34be-11ea-8916-f03d151ccc9e.png)
+
+![Screenshot from 2020-01-11 21-55-10](https://user-images.githubusercontent.com/6868935/72210620-5bfd9f00-34be-11ea-9f4a-6e3339a84d40.png)
 
 ## Usage Guide
 
