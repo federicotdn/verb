@@ -44,7 +44,7 @@
   :group 'tools)
 
 (defcustom verb-default-response-charset "utf-8"
-  "Default charset to use when reading HTP responses.
+  "Default charset to use when reading HTTP responses.
 This variable is only used when the charset isn't specified in the
 \"Content-Type\" header value (\"charset=utf-8\")."
   :type 'string)
@@ -137,14 +137,14 @@ Any other value means always show the headers buffer."
 
 (defcustom verb-show-timeout-warning 10.0
   "Reasonable max duration (s) for an HTTP request.
-Indicates the nunmber of seconds to wait after an HTTP request is sent
+Indicates the number of seconds to wait after an HTTP request is sent
 to warn the user about a possible network timeout.  When set to nil,
 don't show any warnings."
   :type '(choice (float :tag "Time in seconds")
 		 (const :tag "Off" nil)))
 
 (defcustom verb-code-tag-delimiters '("{{" . "}}")
-  "Lisp code tag delimeters for HTTP request specifications.
+  "Lisp code tag delimiters for HTTP request specifications.
 The delimiters (left and right) are used to specify, evaluate and then
 substitute Lisp code tags inside HTTP request specifications.
 If different parts of your HTTP request specifications need to include
@@ -801,7 +801,7 @@ view the HTTP response in a user-friendly way."
 	    (value (match-string 2)))
 	;; Save header to alist
 	(push (cons key value) headers)
-	(when (not (eobp)) (forward-char))))
+	(unless (eobp) (forward-char))))
 
     ;; Read Content-Type and charset
     (setq content-type (verb--headers-content-type headers))
@@ -999,7 +999,7 @@ be loaded into."
 			   where)
 		     t verb-inhibit-cookies)
 	    (setq err nil))
-	;; If an error occured while sending the request, do some
+	;; If an error occurred while sending the request, do some
 	;; cleanup as the callback won't be called
 	(when err
 	  ;; Cancel timer
@@ -1312,7 +1312,7 @@ signal an error."
     (with-temp-buffer
       (insert text)
       (goto-char (point-min))
-      ;; Skip initial blank lines and commments
+      ;; Skip initial blank lines and comments
       (while (and (re-search-forward (concat "^\\(\\s-*"
 					     verb--comment-character
 					     ".*\\)?$")
@@ -1342,7 +1342,7 @@ signal an error."
 		    (mapconcat #'identity verb--http-methods ", ")
 		    verb--template-keyword))
       ;; Skip newline after URL line
-      (when (not (eobp)) (forward-char))
+      (unless (eobp) (forward-char))
       ;; Search for HTTP headers
       ;; Stop as soon as we find a blank line or a non-matching line
       (while (re-search-forward "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
@@ -1350,12 +1350,12 @@ signal an error."
 	(push (cons (verb--eval-lisp-code-in (match-string 1))
 		    (verb--eval-lisp-code-in (match-string 2)))
 	      headers)
-	(when (not (eobp)) (forward-char)))
+	(unless (eobp) (forward-char)))
       (setq headers (nreverse headers))
       ;; Allow a blank like to separate headers and body (not
       ;; required)
       (when (re-search-forward "^$" (line-end-position) t)
-	(when (not (eobp)) (forward-char)))
+	(unless (eobp) (forward-char)))
       ;; The rest of the buffer is the request body
       (let ((rest (buffer-substring (point) (point-max))))
 	(unless (string-empty-p (string-trim rest))
