@@ -936,15 +936,24 @@ be loaded into."
 					  response-buf rs)))
 
     ;; Send the request!
-    (funcall verb-url-retrieve-function
-	     url
-	     #'verb--request-spec-callback
-	     (list rs
-		   response-buf
-		   (time-to-seconds)
-		   timeout-timer
-		   where)
-	     t verb-inhibit-cookies)
+    (let ((err t))
+      (unwind-protect
+	  (progn
+	    (funcall verb-url-retrieve-function
+		     url
+		     #'verb--request-spec-callback
+		     (list rs
+			   response-buf
+			   (time-to-seconds)
+			   timeout-timer
+			   where)
+		     t verb-inhibit-cookies)
+	    (setq err nil))
+	;; If an error occured while sending the request, cancel the
+	;; timer
+	(when (and err timeout-timer)
+	  (cancel-timer timeout-timer)
+	  (setq timeout-timer nil))))
 
     ;; Show user some quick information
     (message "%s request sent to %s"
