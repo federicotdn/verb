@@ -565,6 +565,13 @@ If point is not on a heading, emulate a TAB key press."
 	  (outline-hide-subtree))))
     (call-interactively (global-key-binding "\t"))))
 
+(defmacro verb-var (&optional var)
+  "Ensure VAR has a value and return it.
+If VAR is unbound, use `read-string' to set its value first."
+  (unless (boundp var)
+    (set var (read-string (format "Set value for %s: " var))))
+  (symbol-value var))
+
 (defun verb-read-file (file)
   "Return a buffer with the contents of FILE.
 Set the buffer's `verb-kill-this-buffer' variable to t."

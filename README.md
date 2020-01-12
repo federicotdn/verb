@@ -266,7 +266,7 @@ Here's an example that uses code tags:
 
 ```
 post https://some-example-api.com/api/users
-Authentication: {{token}}
+Authentication: {{(verb-var token)}}
 
 {
     "username": "{{(user-full-name)}}",
@@ -274,7 +274,7 @@ Authentication: {{token}}
 }
 ```
 
-The example assumes that you've defined a global `token` variable with a proper value.
+The example uses the `verb-var` function. This function returns the value of the symbol being passed to it, unless the symbol does not have a value, in which case its value is set using `read-string`.
 
 ### File Uploads
 
