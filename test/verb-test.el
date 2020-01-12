@@ -487,6 +487,11 @@
 
   (should (string= (verb--eval-string "") "")))
 
+(ert-deftest test-verb-var ()
+  (setq test-var-1 "xyz")
+  (should (string= (verb--eval-lisp-code-in "{{(verb-var test-var-1)}}")
+		   "xyz")))
+
 (ert-deftest test-eval-lisp-code-in ()
   (should (string= (verb--eval-lisp-code-in "1 {{1}}")
 		   "1 1"))
