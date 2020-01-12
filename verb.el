@@ -214,6 +214,7 @@ buffer, Verb will kill it after it has finished reading its contents.")
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r") verb-mode-prefix-map)
     (define-key map (kbd "TAB") #'verb-cycle)
+    (define-key map (kbd "<C-return>") #'verb-insert-heading)
     map)
   "Keymap for `verb-mode'.")
 
@@ -395,6 +396,23 @@ Level zero indicates that no headings exist."
 	    (> (line-number-at-pos) line))
 	;; Buffer has no headings
 	(< 0 (buffer-size))))))
+
+(defun verb-insert-heading ()
+  "Insert a new heading under the current one.
+The new heading will have the same level as the current heading on
+point.  If not currently on a heading, signal an error."
+  (interactive)
+  (unless (outline-on-heading-p)
+    (user-error "%s" "Not currently on a heading"))
+  (let ((line (buffer-substring (line-beginning-position)
+				(line-end-position))))
+    (if (outline-next-heading)
+	(progn
+	  (newline)
+	  (backward-char))
+      (unless (zerop (current-column))
+	(newline)))
+    (insert (car (split-string line)) " ")))
 
 (defun verb--heading-contents ()
   "Return the heading's text contents.

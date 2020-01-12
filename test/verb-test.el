@@ -111,6 +111,34 @@
     (should (string= (verb--heading-contents)
 		     "get http://test.com"))))
 
+(ert-deftest test-insert-heading ()
+  (setq outline-test
+	(join-lines "* Heading"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (verb-insert-heading)
+    (insert "test")
+    (should (string= (buffer-string)
+		     (join-lines "* Heading"
+				 "* test"))))
+
+  (setq outline-test
+	(join-lines "*** Heading"
+		    "some content"
+		    "other content"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (goto-char (point-min))
+    (verb-insert-heading)
+    (insert "test")
+    (should (string= (buffer-string)
+		     (join-lines "*** Heading"
+				 "some content"
+				 "other content"
+				 "*** test")))))
+
 (ert-deftest test-request-spec-from-hierarchy ()
   (setq outline-test
 	(join-lines "* Test"
