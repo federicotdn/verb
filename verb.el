@@ -405,14 +405,23 @@ point.  If not currently on a heading, signal an error."
   (unless (outline-on-heading-p)
     (user-error "%s" "Not currently on a heading"))
   (let ((line (buffer-substring (line-beginning-position)
-				(line-end-position))))
-    (if (outline-next-heading)
+				(line-end-position)))
+	(level (verb--outline-level))
+	(searching t))
+    (while (and searching (outline-next-heading))
+      (when (<= (verb--outline-level) level)
+	(setq searching nil)))
+    (if (and (outline-on-heading-p)
+	     (zerop (current-column)))
 	(progn
 	  (newline)
 	  (backward-char))
       (unless (zerop (current-column))
 	(newline)))
-    (insert (car (split-string line)) " ")))
+    (insert (progn
+	      (string-match outline-regexp line)
+	      (match-string 0 line))
+	    " ")))
 
 (defun verb--heading-contents ()
   "Return the heading's text contents.

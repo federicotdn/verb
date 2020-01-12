@@ -315,8 +315,8 @@ Because Verb mode is based on Outline mode, all the commands available in Outlin
 (Use <kbd>C-h f</kbd> `outline-mode` <kbd>RET</kbd> for the full commands list)
 
 Additionally, Verb adds the following commands:
-- `verb-cycle`, which is bound to <kbd>TAB</kbd> by default. This commands attempts to imitate the `org-cycle` command found in Org mode.
-- `verb-insert-heading`, which is bound to <kbd>C-RET</kbd> by default. This command inserts below a new heading with the same level as the one on point.
+- <kbd>TAB</kbd>: `verb-cycle` - Imitates the `org-cycle` command found in Org mode.
+- <kbd>C-RET></kbd>: `verb-insert-heading` - Inserts below a new heading with the same level as the one on point.
 
 ### Customization
 

@@ -124,9 +124,11 @@
 				 "* test"))))
 
   (setq outline-test
-	(join-lines "*** Heading"
+	(join-lines "***Heading"
 		    "some content"
-		    "other content"))
+		    "**** subheading"
+		    "other content"
+		    "*** h3"))
   (with-temp-buffer
     (verb-mode)
     (insert outline-test)
@@ -134,10 +136,12 @@
     (verb-insert-heading)
     (insert "test")
     (should (string= (buffer-string)
-		     (join-lines "*** Heading"
+		     (join-lines "***Heading"
 				 "some content"
+				 "**** subheading"
 				 "other content"
-				 "*** test")))))
+				 "*** test"
+				 "*** h3")))))
 
 (ert-deftest test-request-spec-from-hierarchy ()
   (setq outline-test
