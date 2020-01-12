@@ -949,11 +949,15 @@ be loaded into."
 			   where)
 		     t verb-inhibit-cookies)
 	    (setq err nil))
-	;; If an error occured while sending the request, cancel the
-	;; timer
-	(when (and err timeout-timer)
-	  (cancel-timer timeout-timer)
-	  (setq timeout-timer nil))))
+	;; If an error occured while sending the request, do some
+	;; cleanup
+	(when err
+	  ;; Cancel timer
+	  (when timeout-timer
+	    (cancel-timer timeout-timer)
+	    (setq timeout-timer nil))
+	  ;; Kill response buffer
+	  (kill-buffer response-buf))))
 
     ;; Show user some quick information
     (message "%s request sent to %s"
