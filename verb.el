@@ -214,9 +214,6 @@ buffer, Verb will kill it after it has finished reading its contents.")
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
 
-(defvar verb--url-initialized nil
-  "If non-nil, means `verb--initialize-url' has been called already.")
-
 (defvar verb-mode-prefix-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window)
@@ -766,6 +763,9 @@ view the HTTP response in a user-friendly way."
   (when timeout-timer
     (cancel-timer timeout-timer))
 
+  ;; Remove url.el advice
+  (verb--unadvice-url)
+
   ;; Handle errors first
   (when-let ((http-error (plist-get status :error))
 	     (error-info (cdr http-error))
@@ -942,27 +942,28 @@ If CHARSET is nil, use `verb-default-request-charset'."
   "Replacement function for `url-http-user-agent-string'."
   nil)
 
-(defun verb--initialize-url ()
-  "Advice some url.el functions before sending a request.
-This function should be called before the first request is made.  The
-functions will be adviced only if `verb-advice-url' is non-nil."
+(defun verb--advice-url ()
+  "Advice some url.el functions.
+For more information, see `verb-advice-url'."
   (when verb-advice-url
     (advice-add 'url-http-user-agent-string :override
 		#'verb--http-user-agent-string)
     (advice-add 'url-http-handle-authentication :override
-		#'verb--http-handle-authentication)
-    (verb--debug "Added advice around url.el functions."))
-  (setq verb--url-initialized t))
+		#'verb--http-handle-authentication)))
+
+(defun verb--unadvice-url ()
+  "Undo advice from `verb--advice-url'."
+  (when verb-advice-url
+    (advice-remove 'url-http-user-agent-string
+		   #'verb--http-user-agent-string)
+    (advice-remove 'url-http-handle-authentication
+		   #'verb--http-handle-authentication)))
 
 (cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
   "Send the HTTP request described by RS.
 Show the results according to parameter WHERE (see
 `verb-send-request-on-point').  Return the buffer the response will
 be loaded into."
-  ;; This setup should be done only once
-  (unless verb--url-initialized
-    (verb--initialize-url))
-
   (let* ((url (oref rs url))
 	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers
@@ -981,6 +982,9 @@ be loaded into."
 					  #'verb--timeout-warn
 					  response-buf rs)))
 
+    ;; Advice url.el functions
+    (verb--advice-url)
+
     ;; Send the request!
     (let ((err t))
       (unwind-protect
@@ -996,14 +1000,16 @@ be loaded into."
 		     t verb-inhibit-cookies)
 	    (setq err nil))
 	;; If an error occured while sending the request, do some
-	;; cleanup
+	;; cleanup as the callback won't be called
 	(when err
 	  ;; Cancel timer
 	  (when timeout-timer
 	    (cancel-timer timeout-timer)
 	    (setq timeout-timer nil))
 	  ;; Kill response buffer
-	  (kill-buffer response-buf))))
+	  (kill-buffer response-buf)
+	  ;; Undo advice
+	  (verb--unadvice-url))))
 
     ;; Show user some quick information
     (message "%s request sent to %s"
