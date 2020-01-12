@@ -257,8 +257,6 @@ buffer, Verb will kill it after it has finished reading its contents.")
 See the documentation in URL `https://github.com/federicotdn/verb' for
 more details on how to use it."
   (setq-local comment-start verb--comment-character)
-  (setq imenu-generic-expression
-	(list (list nil (concat "^" outline-regexp "\\s-+\\(.+\\)$") 1)))
   (verb--setup-font-lock-keywords))
 
 ;;;###autoload

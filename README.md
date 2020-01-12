@@ -20,7 +20,9 @@ Verb has been tested on Emacs 26 and 27.
 - Correctly handle text encodings (charsets) for requests and responses.
 - View PDF, PNG, JPEG, BMP, GIF and SVG responses inside Emacs.
 - Evaluate and substitute Emacs Lisp expressions in specifications text.
-- Easy to use! (hopefully)
+- Supports uploading files on requests.
+- Optionally uses `url-queue.el` backend.
+- Easy to use! (hopefully).
 
 ## Installation
 You can install Verb by using the `package-install` command (make sure [MELPA](https://melpa.org/) is included in your package sources):
