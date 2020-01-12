@@ -193,6 +193,12 @@ The body contents of the response are in the buffer itself.")
 (defvar-local verb--response-headers-buffer nil
   "Buffer currently showing the HTTP response's headers.")
 
+(defvar-local verb-kill-this-buffer nil
+  "If non-nil, kill this buffer after readings its contents.
+When Verb evaluates Lisp code tags, a tag may produce a buffer as a
+result. If the buffer-local value of this variable is non-nil for that
+buffer, Verb will kill it after it has finished reading its contents.")
+
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
 
@@ -521,10 +527,13 @@ If point is not on a heading, emulate a TAB key press."
     (call-interactively (global-key-binding "\t"))))
 
 (defun verb-read-file (file)
-  "Return the contents of FILE as a string."
-  (with-temp-buffer
+  "Return a buffer with the contents of FILE.
+Set the buffer's `verb-kill-this-buffer' variable to t."
+  (with-current-buffer (generate-new-buffer " *verb-temp*")
+    (buffer-disable-undo)
     (insert-file-contents file)
-    (buffer-string)))
+    (setq verb-kill-this-buffer t)
+    (current-buffer)))
 
 (defun verb--insert-header-contents (headers)
   "Insert the contents of HTTP HEADERS into the current buffer."
@@ -1114,17 +1123,13 @@ Additionally, allow matching `verb--template-keyword'."
 	     "\\|"))
 
 (defun verb--eval-string (s)
-  "Eval S as Lisp code, return the result as a string.
+  "Eval S as Lisp code and return the result.
 As a special case, if S is the empty string, return the empty string."
   (if (string-empty-p s)
       ""
     (save-mark-and-excursion
       (save-match-data
-	(let ((result
-	       (eval (car (read-from-string (format "(progn %s)" s))) t)))
-	  (if (stringp result)
-	      result
-	    (format "%s" result)))))))
+	(eval (car (read-from-string (format "(progn %s)" s))) t)))))
 
 (defun verb--eval-lisp-code-in (s)
   "Evalue and replace Lisp code within code tags in S.
@@ -1137,7 +1142,18 @@ Code tags are delimited with `verb-code-tag-delimiters'."
 					"\\(.*?\\)"
 					(cdr verb-code-tag-delimiters))
 				nil t)
-	(replace-match (verb--eval-string (match-string 1))))
+	(let ((result (verb--eval-string (match-string 1))))
+	  (cond
+	   ((stringp result)
+	    (replace-match result))
+	   ((bufferp result)
+	    (goto-char (match-beginning 0))
+	    (delete-region (match-beginning 0) (match-end 0))
+	    (insert-buffer-substring result)
+	    (when (buffer-local-value 'verb-kill-this-buffer result)
+	      (kill-buffer result)))
+	   (t
+	    (replace-match (format "%s" result))))))
       (buffer-string))))
 
 (defun verb--clean-url (url)

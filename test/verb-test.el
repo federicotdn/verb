@@ -440,27 +440,20 @@
 		   "A: B\nC: D")))
 
 (ert-deftest test-eval-string ()
-  (should (string= (verb--eval-string "1")
-		   "1"))
+  (should (= (verb--eval-string "1") 1))
 
   (setq hello 1)
-  (should (string= (verb--eval-string "(+ 1 hello)")
-		   "2"))
+  (should (= (verb--eval-string "(+ 1 hello)") 2))
 
-  (should (string= (verb--eval-string "\"test\"")
-		   "test"))
+  (should (string= (verb--eval-string "\"test\"") "test"))
 
-  (should (string= (verb--eval-string "'test")
-		   "test"))
+  (should (eq (verb--eval-string "'test") 'test))
 
-  (should (string= (verb--eval-string "nil")
-		   "nil"))
+  (should (null (verb--eval-string "nil")))
 
-  (should (string= (verb--eval-string "t")
-		   "t"))
+  (should (eq (verb--eval-string "t") t))
 
-  (should (string= (verb--eval-string "")
-		   "")))
+  (should (string= (verb--eval-string "") "")))
 
 (ert-deftest test-eval-lisp-code-in ()
   (should (string= (verb--eval-lisp-code-in "1 {{1}}")
@@ -479,8 +472,21 @@
   (should (string= (verb--eval-lisp-code-in "{{\"{{\"}}")
   		   "{{"))
 
+  (setq num-buffers (length (buffer-list)))
   (should (string= (verb--eval-lisp-code-in "{{(verb-read-file \"test/test.txt\")}}")
   		   "Example text!\n"))
+  (should (= (length (buffer-list)) num-buffers))
+
+  (setq testbuf (generate-new-buffer "testbuffer"))
+  (should-not (buffer-local-value 'verb-kill-this-buffer testbuf))
+  (with-current-buffer testbuf
+    (insert "TEST"))
+
+  (should (string= (verb--eval-lisp-code-in "this is a {{(get-buffer \"testbuffer\")}}")
+  		   "this is a TEST"))
+
+  (should (buffer-live-p testbuf))
+  (kill-buffer testbuf)
 
   (should (string= (verb--eval-lisp-code-in "{{\"}\"}}{{\"}\"}}")
   		   "}}"))

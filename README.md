@@ -253,9 +253,14 @@ get ?text=example
 
 ### Emacs Lisp Code Tags
 
-You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. The resulting values are converted to strings using `(format "%s" <value>)`. Code tags may appear anywhere on the request specification: the URL, headers and body.
+You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere on the request specification: the URL, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
 
-By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`). Here's an example that uses them:
+Depending on the type of the resulting value for a code tag, Verb will do the following:
+- `string`: The value will be inserted as-is into the request contents.
+- `buffer`: The buffer's contents will be inserted into the request using `insert-buffer-substring`. If the buffer's `verb-kill-this-buffer` variable is set to non-nil, the buffer will be killed after its contents have been read. The variable's default value is `nil`.
+- Other types: The value will be converted to a string using `(format "%s" result)` and inserted into the request contents.
+
+Here's an example that uses code tags:
 
 ```
 post https://some-example-api.com/api/users
@@ -271,7 +276,7 @@ The example assumes that you've defined a global `token` variable with a proper 
 
 ### File Uploads
 
-To upload a file, you can use the included `verb-read-file` function. This function reads a file and returns its contents as a string. Use it from inside code tags to insert the contents of a local file in a request. Here's an example:
+To upload a file, you can use the included `verb-read-file` function. This function reads a file into a buffer and sets its `verb-kill-this-buffer` variable to `t`, and then returns the buffer. Use it from inside code tags to insert the contents of a local file in a request. Here's an example:
 
 ```
 post https://some-example-api.com/api/upload
