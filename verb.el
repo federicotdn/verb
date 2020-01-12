@@ -937,7 +937,7 @@ If CHARSET is nil, use `verb-default-request-charset'."
 
 (defun verb--initialize-url ()
   "Advice some url.el functions before sending a request.
-This function should be called before the first request is made. The
+This function should be called before the first request is made.  The
 functions will be adviced only if `verb-advice-url' is non-nil."
   (when verb-advice-url
     (advice-add 'url-http-user-agent-string :override
