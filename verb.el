@@ -108,6 +108,18 @@ See also: `url-using-proxy'."
   :type '(choice (string :tag "Proxy URL")
 		 (const :tag "No proxy" nil)))
 
+(defcustom verb-advice-url t
+  "Whether to advice url.el functions or not.
+If non-nil, the following url.el functions will be adviced in order to
+make Verb more flexible and user-friendly:
+- `url-http-user-agent-string': Adviced to allow the user to set their
+  own \"User-Agent\" headers.
+- `url-http-handle-authentication': Adviced to disable annoying user
+  prompt on 401 responses.
+Note that the functions will be adviced lazily before the first HTTP
+request is made."
+  :type 'boolean)
+
 (defcustom verb-max-redirections url-max-redirections
   "Max number of redirection requests to honor in an HTTP connection.
 See also: `url-max-redirections'."
@@ -201,6 +213,9 @@ buffer, Verb will kill it after it has finished reading its contents.")
 
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
+
+(defvar verb--url-initialized nil
+  "If non-nil, means `verb--initialize-url' has been called already.")
 
 (defvar verb-mode-prefix-map
   (let ((map (make-sparse-keymap)))
@@ -912,11 +927,35 @@ If CHARSET is nil, use `verb-default-request-charset'."
       (encode-coding-string s 'us-ascii)
     s))
 
+(defun verb--http-handle-authentication (_proxy)
+  "Replacement function for `url-http-handle-authentication'."
+  t)
+
+(defun verb--http-user-agent-string ()
+  "Replacement function for `url-http-user-agent-string'."
+  nil)
+
+(defun verb--initialize-url ()
+  "Advice some url.el functions before sending a request.
+This function should be called before the first request is made. The
+functions will be adviced only if `verb-advice-url' is non-nil."
+  (when verb-advice-url
+    (advice-add 'url-http-user-agent-string :override
+		#'verb--http-user-agent-string)
+    (advice-add 'url-http-handle-authentication :override
+		#'verb--http-handle-authentication)
+    (verb--debug "Added advice around url.el functions."))
+  (setq verb--url-initialized t))
+
 (cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
   "Send the HTTP request described by RS.
 Show the results according to parameter WHERE (see
 `verb-send-request-on-point').  Return the buffer the response will
 be loaded into."
+  ;; This setup should be done only once
+  (unless verb--url-initialized
+    (verb--initialize-url))
+
   (let* ((url (oref rs url))
 	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers

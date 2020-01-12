@@ -15,6 +15,9 @@ get /basic-json
 ** error-400
 get /error-400
 
+** error-401
+get /error-401
+
 ** headers
 get /headers-test
 
@@ -60,6 +63,9 @@ get /redirect-301
 
 ** redirect-308
 post /redirect-308
+
+** no-user-agent
+get /no-user-agent
 
 * connection-fail-test
 get http://localhost:1234/test

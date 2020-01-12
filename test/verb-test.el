@@ -1045,6 +1045,11 @@
   (server-test "error-400"
     (should (string-match "400" header-line-format))))
 
+(ert-deftest test-server-error-401 ()
+  ;; url.el should not handle 401 in any way
+  (server-test "error-401"
+    (should (string-match "401" header-line-format))))
+
 (ert-deftest test-server-error-404 ()
   (server-test "error-404"
     (should (string-match "404" header-line-format))))
@@ -1099,6 +1104,11 @@
 (ert-deftest test-redirect-308 ()
   (server-test "redirect-308"
     (should (string= (buffer-string) "Redirect successful"))))
+
+(ert-deftest test-no-user-agent ()
+  ;; default user agent from url.el should not be included
+  (server-test "no-user-agent"
+    (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-buffers-created ()
   (setq num-buffers (length (buffer-list)))
