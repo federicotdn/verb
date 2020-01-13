@@ -27,7 +27,7 @@ Verb has been tested on Emacs 26 and 27.
 - Easy to use! (hopefully).
 
 ## Installation
-You can install Verb by using the `package-install` command (make sure [MELPA](https://melpa.org/) is included in your package sources):
+You can install Verb by using the `package-install` command (make sure either [MELPA](https://melpa.org/) or [MELPA Stable](https://stable.melpa.org/) are included in your package sources):
 
 <kbd>M-x</kbd> `package-install` <kbd>RET</kbd> `verb` <kbd>RET</kbd>
 
