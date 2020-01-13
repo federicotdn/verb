@@ -1127,6 +1127,15 @@
   (verb-kill-buffer-and-window)
   (should (= num-buffers (length (buffer-list)))))
 
+(ert-deftest test-auto-kill-buffers ()
+  (setq num-buffers (length (buffer-list)))
+  (setq verb-auto-kill-response-buffers t)
+  (server-test "basic")
+  (server-test "basic-json")
+  (server-test "no-user-agent")
+  (should (= (1+ num-buffers) (length (buffer-list))))
+  (setq verb-auto-kill-response-buffers nil))
+
 (ert-deftest test-headers ()
   (server-test "headers"
     (should (string= (buffer-string) "HeadersTest"))

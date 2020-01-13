@@ -2,6 +2,7 @@ SHELL = bash
 EMACS ?= emacs
 NOOUTPUT = { ! grep '^'; }
 PACKAGE_LINT = package-lint
+FONT_SIZE ?= 180
 
 .PHONY: test package-lint
 
@@ -42,10 +43,12 @@ package-lint:
 check: byte-compile checkdoc package-lint
 
 load-examples:
-	$(EMACS) -l verb.el \
+	$(EMACS) -Q -l verb.el \
+		 --eval "(add-to-list 'default-frame-alist '(fullscreen . maximized))" \
+		 --eval "(set-face-attribute 'default nil :height $(FONT_SIZE))" \
+		 --eval "(setq initial-scratch-message nil)" \
 		 --eval "(with-current-buffer (get-buffer \"*scratch*\") (verb-mode))" \
 		 --eval "(setq verb--debug-enable t)" \
-		 --eval "(setq confirm-kill-emacs nil)" \
 		 --eval "(setq url-debug t)" \
 		 --eval "(toggle-debug-on-error)" \
 		 --eval "(dired \"docs\")" \

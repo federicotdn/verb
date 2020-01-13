@@ -98,6 +98,13 @@ user-friendly name for this function, and FN should be the function
 itself."
   :type '(alist :key-type string :value-type function))
 
+(defcustom verb-auto-kill-response-buffers nil
+  "If non-nil, kill all response buffers before sending a request.
+Set this variable to t if you wish to have old response buffers (named
+*HTTP Response*) automatically killed when sending a new HTTP
+request."
+  :type 'boolean)
+
 (defcustom verb-inhibit-cookies nil
   "If non-nil, do not send or receive cookies when sending requests."
   :type 'boolean)
@@ -116,8 +123,8 @@ make Verb more flexible and user-friendly:
   own \"User-Agent\" headers.
 - `url-http-handle-authentication': Adviced to disable annoying user
   prompt on 401 responses.
-Note that the functions will be adviced lazily before the first HTTP
-request is made."
+Note that the functions will be adviced only during the duration of
+the HTTP requests made."
   :type 'boolean)
 
 (defcustom verb-max-redirections url-max-redirections
@@ -203,13 +210,19 @@ The body contents of the response are in the buffer itself.")
 (put 'verb-http-response 'permanent-local t)
 
 (defvar-local verb--response-headers-buffer nil
-  "Buffer currently showing the HTTP response's headers.")
+  "Buffer currently showing the HTTP response's headers.
+This variable is only set on buffers showing HTTP response bodies.")
 
 (defvar-local verb-kill-this-buffer nil
   "If non-nil, kill this buffer after readings its contents.
 When Verb evaluates Lisp code tags, a tag may produce a buffer as a
 result. If the buffer-local value of this variable is non-nil for that
 buffer, Verb will kill it after it has finished reading its contents.")
+
+(defvar verb--response-buffers nil
+  "List of currently live HTTP response buffers.
+This variable is used by `verb--auto-kill-response-buffers' to
+automatically kill all response buffers.")
 
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
@@ -510,8 +523,10 @@ override them in inverse order according to the rules described in
 			    'right
 			  'below)))
 
-(defun verb-kill-response-buffer-and-window ()
+(defun verb-kill-response-buffer-and-window (&optional keep-window)
   "Delete response window and kill its buffer.
+If KEEP-WINDOW is non-nil, kill the buffer but do not delete the
+window.
 If the response buffer has a corresponding headers buffer, kill it and
 delete any window displaying it."
   (interactive)
@@ -522,8 +537,9 @@ delete any window displaying it."
     (when (buffer-live-p verb--response-headers-buffer)
       (kill-buffer verb--response-headers-buffer)))
   (kill-buffer (current-buffer))
-  (ignore-errors
-    (delete-window)))
+  (unless keep-window
+    (ignore-errors
+      (delete-window))))
 
 (defun verb-kill-buffer-and-window ()
   "Delete selected window and kill its current buffer.
@@ -566,7 +582,8 @@ If point is not on a heading, emulate a TAB key press."
   "Ensure VAR has a value and return it.
 If VAR is unbound, use `read-string' to set its value first."
   (unless (boundp var)
-    (set var (read-string (format "Set value for %s: " var))))
+    (set var (read-string (format "(verb-var) Set value for %s: "
+				  var))))
   (symbol-value var))
 
 (defun verb-read-file (file)
@@ -959,11 +976,25 @@ For more information, see `verb-advice-url'."
     (advice-remove 'url-http-handle-authentication
 		   #'verb--http-handle-authentication)))
 
+(defun verb--auto-kill-response-buffers ()
+  "Kill all live HTTP response buffers.
+If the response buffers have response headers buffers, kill those as well."
+  (dolist (buf verb--response-buffers)
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+	(verb-kill-response-buffer-and-window t))))
+  (setq verb--response-buffers nil))
+
 (cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
   "Send the HTTP request described by RS.
 Show the results according to parameter WHERE (see
 `verb-send-request-on-point').  Return the buffer the response will
 be loaded into."
+  ;; If auto kill buffers is enabled, kill all previous response
+  ;; buffers now
+  (when verb-auto-kill-response-buffers
+    (verb--auto-kill-response-buffers))
+
   (let* ((url (oref rs url))
 	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers
@@ -976,6 +1007,10 @@ be loaded into."
 						   (cdr content-type)))
 	 (response-buf (generate-new-buffer "*HTTP Response*"))
 	 timeout-timer)
+    ;; Add response buffer to global list
+    (when verb-auto-kill-response-buffers
+      (push response-buf verb--response-buffers))
+
     ;; Start the timeout warning timer
     (when verb-show-timeout-warning
       (setq timeout-timer (run-with-timer verb-show-timeout-warning nil
