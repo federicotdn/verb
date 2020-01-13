@@ -113,6 +113,8 @@ The contents of the response body will be shown on the buffer. To choose how the
 
 To close the response buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see next section).
 
+As you send more HTTP requests, more response buffers will be created, with `<N>` at the end of their name to distinguish between them. If you wish to automatically have old response buffers killed when making a new request, set the `verb-auto-kill-response-buffers` variable to `t`.
+
 ### The Response Headers Buffer
 
 If you wish to see the HTTP response headers, use the `verb-toggle-show-headers` command while the response body buffer is selected. By default, it is bound to <kbd>C-c C-r C-r</kbd>.
