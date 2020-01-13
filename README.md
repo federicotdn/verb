@@ -383,6 +383,7 @@ $ make check
   - In Verb, lines starting with `#` can be included in a request body (and `*` as well).
   - Verb does not support exporting requests to `curl`, `restclient` does.
   - Licensing (GPLv3 vs. Public domain).
+- [walkman](https://github.com/abrochard/walkman): Write HTTP requests in Org mode and send them using `curl`.
 - [http.el](https://github.com/emacs-pe/http.el): I have not tested this package, so I can't provide a comparison.
 
 ## License
