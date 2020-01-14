@@ -345,32 +345,9 @@ The available export functions are:
 
 Note: code tags will be evaluated when exporting a request.
 
-## API and Hooks
+## Hooks, Variables, Functions
 
-These are the hooks currently available for use in Verb:
-- `verb-mode-hook`
-- `verb-response-body-mode-hook`
-- `verb-response-headers-mode-hook`
-
-All variables, functions and classes starting with `verb-` but not starting with `verb--` are part of the package's public API.
-
-There are two [EIEIO](https://www.gnu.org/software/emacs/manual/html_node/eieio/) classes which are central to Verb's internal and external design:
-
-### `verb-request-spec`
-Represents an HTTP request specification. Its slots are:
-- `method` (`string`): HTTP method to use.
-- `url` (`url` struct): URL where to request.
-- `headers` (`alist`): Request headers.
-- `body` (`string`): Request body.
-
-### `verb-response`
-Represents an HTTP response. Its slots are:
-- `request` (`verb-request-spec`): Points back to the `verb-request-spec` instance that requested this response.
-- `headers` (`alist`): Response headers.
-- `status` (`string`): First line of response content (includes status code).
-- `duration` (`float`): The time it took in seconds to receive the response.
-- `body` (`string`): Response body. If response was handled using a binary handler, the string will be unibyte.
-- `body-bytes` (`integer`): Number of bytes in the response body.
+To see a listing of Verb's public symbols (hooks, functions, variables, classes, etc.), see the [verb-api.md](docs/verb-api.md) file.
 
 ## Examples
 
