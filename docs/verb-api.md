@@ -2,11 +2,11 @@
 
 All hooks, variables, functions and classes starting with `verb-` but not starting with `verb--` are part of the package's public API. They are listed below. Make sure to check each symbol's documentation for more information.
 
-- Hook: **verb-mode-hook**
+- Hook: **verb-mode-hook** \
   Run when Verb mode is activated (e.g. when opening a `.verb` file).
-- Hook: **verb-response-body-mode-hook**
+- Hook: **verb-response-body-mode-hook** \
   Run after deciding what major mode to use on a response buffer.
-- Hook: **verb-response-headers-mode-hook**
+- Hook: **verb-response-headers-mode-hook** \
   Run after opening the response headers buffer.
 - Variable: **verb-last**
 - Variable: **verb-http-response**
@@ -28,29 +28,29 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-cycle**
 - Command: **verb-toggle-show-headers**
 - Macro: **verb-var** *var*
-- Class: **verb-request-spec**
+- Class: **verb-request-spec** \
   Represents an HTTP request specification.
-  - Slot: **method**
+  - Slot: **method** \
     HTTP method to use (string).
-  - Slot: **url**
+  - Slot: **url** \
     URL where to request (url struct)
-  - Slot: **headers**
+  - Slot: **headers** \
     Request headers (alist).
-  - Slot: **body**
+  - Slot: **body** \
     Request body (string).
-- Class: **verb-response**
+- Class: **verb-response** \
   Represents an HTTP response.
-  - Slot: **request**
+  - Slot: **request** \
     Points back to the verb-request-spec instance that requested this response (verb-request-spec).
-  - Slot: **headers**
+  - Slot: **headers** \
     Response headers (alist).
-  - Slot: **status**
+  - Slot: **status** \
     First line of response content, includes status code (string).
-  - Slot: **duration**
+  - Slot: **duration** \
     The time it took in seconds to receive the response (float).
-  - Slot: **body**
+  - Slot: **body** \
     Response body. If response was handled using a binary handler, the string will be unibyte (string).
-  - Slot: **body-bytes**
+  - Slot: **body-bytes** \
     Number of bytes in the response body (integer).
 - User Option: **verb-default-response-charset**
 - User Option: **verb-default-request-charset**
