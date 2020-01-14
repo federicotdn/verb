@@ -259,7 +259,7 @@ get ?text=example
 
 ### Emacs Lisp Code Tags
 
-You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere on the request specification: the URL, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
+You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere on the request specification: the URL, method, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
 
 Depending on the type of the resulting value for a code tag, Verb will do the following:
 - `string`: The value will be inserted as-is into the request contents.
@@ -350,6 +350,10 @@ There are two [EIEIO](https://www.gnu.org/software/emacs/manual/html_node/eieio/
 ## Examples
 
 The [`docs/`](docs) directory contains various `.verb` files which showcase different features of the package.
+
+## Changelog
+
+The changelog for this project can be found in [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

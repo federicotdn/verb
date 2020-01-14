@@ -17,8 +17,7 @@ test:
 	rm -f verb.elc
 	source env/bin/activate && python3 test/server.py &
 	sleep 0.5
-	$(EMACS) -Q \
-		 --batch \
+	$(EMACS) --batch \
 		 -L . \
 		 -l test/verb-test.el \
 		 -f ert-run-tests-batch-and-exit 2> tests.log || true

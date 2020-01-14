@@ -1345,7 +1345,9 @@ If METHOD could not be matched with `verb--http-methods-regexp',
 signal an error."
   (let (method url headers body)
     (with-temp-buffer
-      (insert text)
+      ;; Expand Lisp code tags before parsing request
+      ;; After that, insert it into the buffer
+      (insert (verb--eval-lisp-code-in text))
       (goto-char (point-min))
       ;; Skip initial blank lines and comments
       (while (and (re-search-forward (concat "^\\(\\s-*"
@@ -1382,8 +1384,8 @@ signal an error."
       ;; Stop as soon as we find a blank line or a non-matching line
       (while (re-search-forward "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
 				(line-end-position) t)
-	(push (cons (verb--eval-lisp-code-in (match-string 1))
-		    (verb--eval-lisp-code-in (match-string 2)))
+	(push (cons (match-string 1)
+		    (match-string 2))
 	      headers)
 	(unless (eobp) (forward-char)))
       (setq headers (nreverse headers))
@@ -1401,10 +1403,9 @@ signal an error."
       ;; Return a `verb-request-spec'
       (verb-request-spec :method method
 			 :url (unless (string-empty-p url)
-				(verb--clean-url
-				 (verb--eval-lisp-code-in url)))
+				(verb--clean-url url))
 			 :headers headers
-			 :body (verb--eval-lisp-code-in body)))))
+			 :body body))))
 
 (provide 'verb)
 ;;; verb.el ends here

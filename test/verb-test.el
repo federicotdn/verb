@@ -391,6 +391,15 @@
 			  "# A markdown list.\n"
 			  "{{}}- Hello\n"
 			  "{{}}- World"))
+  (should (string= (oref aux :body) "# A markdown list.\n- Hello\n- World"))
+
+  (setq test-header "Content-Type: text/markdown")
+  (setq aux (text-as-spec "{{(concat \"g\" \"et\")}} http://example.com\n"
+			  "{{test-header}}"
+			  "\n"
+			  "# A markdown list.\n"
+			  "{{}}- Hello\n"
+			  "{{}}- World"))
   (should (string= (oref aux :body) "# A markdown list.\n- Hello\n- World")))
 
 (ert-deftest test-request-spec-from-text-complete ()
