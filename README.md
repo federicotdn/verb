@@ -280,6 +280,15 @@ Authentication: {{(verb-var token)}}
 
 The example uses the `verb-var` function. This function returns the value of the symbol being passed to it, unless the symbol does not have a value, in which case its value is set using `read-string`.
 
+If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). For example, here's a request that sends the previous response's headers to an endpoint:
+
+```
+post https://some-example-api.com/api/example
+Content-Type: text/plain
+
+{{(verb-headers-to-string (oref verb-last headers))}}
+```
+
 ### File Uploads
 
 To upload a file, you can use the included `verb-read-file` function. This function reads a file into a buffer and sets its `verb-kill-this-buffer` variable to `t`, and then returns the buffer. Use it from inside code tags to insert the contents of a local file in a request. Here's an example:
@@ -345,9 +354,23 @@ These are the hooks currently available for use in Verb:
 
 All variables, functions and classes starting with `verb-` but not starting with `verb--` are part of the package's public API.
 
-There are two [EIEIO](https://www.gnu.org/software/emacs/manual/html_node/eieio/) classes which are very central to Verb's internal and external design:
-- `verb-request-spec` represents an HTTP request specification. It includes all the slots that have been mentioned previously: `method`, `url`, `headers` and `body`.
-- `verb-response` represents an HTTP response. Its slots include: `request`, which points back to the `verb-request-spec` instance that requested this response, an alist of HTTP headers `headers`, the numerical status code `status`, the time it took in seconds to receive the response `duration`, and the number of bytes in the response body `body-bytes`.
+There are two [EIEIO](https://www.gnu.org/software/emacs/manual/html_node/eieio/) classes which are central to Verb's internal and external design:
+
+### `verb-request-spec`
+Represents an HTTP request specification. Its slots are:
+- `method` (`string`): HTTP method to use.
+- `url` (`url` struct): URL where to request.
+- `headers` (`alist`): Request headers.
+- `body` (`string`): Request body.
+
+### `verb-response`
+Represents an HTTP response. Its slots are:
+- `request` (`verb-request-spec`): Points back to the `verb-request-spec` instance that requested this response.
+- `headers` (`alist`): Response headers.
+- `status` (`string`): First line of response content (includes status code).
+- `duration` (`float`): The time it took in seconds to receive the response.
+- `body` (`string`): Response body. If response was handled using a binary handler, the string will be unibyte.
+- `body-bytes` (`integer`): Number of bytes in the response body.
 
 ## Examples
 

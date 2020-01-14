@@ -33,6 +33,7 @@ async def test1(request: Request):
 async def test2(request: Request):
     return response.text("", 400)
 
+
 @app.route("/error-401")
 async def test_401(request: Request):
     return response.text("", 401)
@@ -117,12 +118,19 @@ async def test_redirect_308_2(request: Request):
 async def test_redirect_308(request: Request):
     return response.redirect("/redirect-308-2", status=308)
 
+
 @app.route("/no-user-agent")
 async def no_user_agent(request: Request):
     if "User-Agent" in request.headers:
         return response.text("FAIL")
 
     return response.text("OK")
+
+
+@app.route("/echo", methods=["POST"])
+async def echo(request: Request):
+    return response.text(request.body.decode("utf-8"))
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, access_log=False)

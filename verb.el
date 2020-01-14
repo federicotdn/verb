@@ -206,7 +206,8 @@ Request templates are defined without HTTP methods, paths or hosts.")
 
 (defvar-local verb-http-response nil
   "HTTP response for this response buffer (`verb-response' object).
-The body contents of the response are in the buffer itself.")
+The decoded body contents of the response are included in the buffer
+itself.")
 (put 'verb-http-response 'permanent-local t)
 
 (defvar-local verb--response-headers-buffer nil
@@ -218,6 +219,12 @@ This variable is only set on buffers showing HTTP response bodies.")
 When Verb evaluates Lisp code tags, a tag may produce a buffer as a
 result. If the buffer-local value of this variable is non-nil for that
 buffer, Verb will kill it after it has finished reading its contents.")
+
+(defvar verb-last nil
+  "Stores the last received HTTP response (`verb-response' object).
+This variable is shared across any buffers using Verb mode.  Consider
+using this variable inside code tags if you wish to use results from
+previous requests on new requests.")
 
 (defvar verb--response-buffers nil
   "List of currently live HTTP response buffers.
@@ -348,11 +355,15 @@ HEADER and VALUE must be nonempty strings."
 	     :type float
 	     :documentation
 	     "Time taken for response to be received, in seconds.")
+   (body :initarg :body
+	 :initform nil
+	 :type (or null string)
+	 :documentation "Response body.")
    (body-bytes :initarg :body-bytes
 	       :initform 0
 	       :type integer
 	       :documentation
-	       "Number of bytes in response buffer, without headers."))
+	       "Number of bytes in response body."))
   "Represents an HTTP response to a request.")
 
 (define-minor-mode verb-response-body-mode
@@ -605,6 +616,13 @@ Set the buffer's `verb-kill-this-buffer' variable to t."
     (unless (zerop (buffer-size))
       (backward-delete-char 1))))
 
+(defun verb-headers-to-string (headers)
+  "Return HTTP HEADERS as a multiline string.
+HEADERS must be a (KEY . VALUE) alist."
+  (with-temp-buffer
+    (verb--insert-header-contents headers)
+    (buffer-string)))
+
 (defun verb-toggle-show-headers ()
   "Show or hide the HTTP response's headers on a separate buffer."
   (interactive)
@@ -800,7 +818,7 @@ view the HTTP response in a user-friendly way."
   ;; No errors, continue to read response
   (let ((elapsed (- (time-to-seconds) start))
 	(original-buffer (current-buffer))
-	status-line headers content-type charset coding-system bytes
+	status-line headers content-type charset coding-system body-bytes
 	binary-handler text-handler)
 
     (widen)
@@ -842,7 +860,7 @@ view the HTTP response in a user-friendly way."
     (delete-region (point-min) (point))
 
     ;; Record body size in bytes
-    (setq bytes (buffer-size))
+    (setq body-bytes (buffer-size))
 
     ;; Current buffer should be unibyte
     (when enable-multibyte-characters
@@ -856,7 +874,9 @@ view the HTTP response in a user-friendly way."
 			   :request rs
 			   :status status-line
 			   :duration elapsed
-			   :body-bytes bytes)))
+			   :body-bytes body-bytes))
+      ;; Update global last response variable
+      (setq verb-last verb-http-response))
 
     (if binary-handler
 	;; Response content is a binary format:
@@ -890,6 +910,13 @@ view the HTTP response in a user-friendly way."
     (kill-buffer original-buffer)
 
     (with-current-buffer response-buf
+      ;; Now that the response content has been processed, update
+      ;; `verb-http-response's body slot
+      (oset verb-http-response
+	    body
+	    (unless (zerop (oref verb-http-response body-bytes))
+	      (buffer-string)))
+
       (when text-handler
 	(set-buffer-file-coding-system coding-system)
 

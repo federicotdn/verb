@@ -480,6 +480,14 @@
 		     (buffer-string))
 		   "A: B\nC: D")))
 
+(ert-deftest test-headers-to-string ()
+  (should (string= (verb-headers-to-string nil)
+		   ""))
+
+  (should (string= (verb-headers-to-string '(("A" . "B")
+					     ("C" . "D")))
+		   "A: B\nC: D")))
+
 (ert-deftest test-eval-string ()
   (should (= (verb--eval-string "1") 1))
 
@@ -1152,6 +1160,13 @@
 				 (oref verb-http-response headers))) "foo"))
     (should (string= (cdr (assoc "OTHER-TEST"
 				 (oref verb-http-response headers))) "bar"))))
+
+(ert-deftest test-verb-last ()
+  (server-test "basic")
+  (should (string= (oref verb-last body) "Hello, World!"))
+
+  (server-test "error-400")
+  (should (null (oref verb-last body))))
 
 (ert-deftest test-connection-error ()
   (setq num-buffers (length (buffer-list)))
