@@ -132,7 +132,7 @@ the HTTP requests made."
 See also: `url-max-redirections'."
   :type 'integer)
 
-(defcustom verb-show-headers-buffer nil
+(defcustom verb-auto-show-headers-buffer nil
   "Automatically show headers buffer after receiving an HTTP response.
 Value nil means never show the headers buffer.
 Value `when-empty' means automatically show the headers buffer only
@@ -365,8 +365,8 @@ HEADER and VALUE must be nonempty strings."
       (progn
 	(setq header-line-format
 	      (verb--response-header-line-string verb-http-response))
-	(when verb-show-headers-buffer
-	  (if (eq verb-show-headers-buffer 'when-empty)
+	(when verb-auto-show-headers-buffer
+	  (if (eq verb-auto-show-headers-buffer 'when-empty)
 	      (when (zerop (oref verb-http-response body-bytes))
 		(verb-toggle-show-headers))
 	    (verb-toggle-show-headers))))
