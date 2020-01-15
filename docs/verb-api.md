@@ -10,9 +10,19 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
   Run after opening the response headers buffer.
 - Hook: **verb-post-response-hook** \
   Hook run after receiving an HTTP response, processing its contents, and setting up the response buffer. Use this hook to add custom behaviour after receiving a response.
+- Major Mode: **verb-mode**
+- Major Mode: **verb-response-headers-mode**
+- Minor Mode: **verb-response-body-mode**
+- Face: **verb-http-keyword**
+- Face: **verb-header**
+- Face: **verb-comment**
+- Face: **verb-code-tag**
+- Face: **verb-json-key**
 - Variable: **verb-last**
 - Variable: **verb-http-response**
 - Variable: **verb-kill-this-buffer**
+- Variable: **verb-mode-prefix-map**
+- Variable: **verb-response-headers-mode-map**
 - Function: **verb-headers-to-string** *headers*
 - Function: **verb-read-file** *file*
 - Function: **verb-request-spec-url-string** *rs*
