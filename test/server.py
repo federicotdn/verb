@@ -127,6 +127,17 @@ async def no_user_agent(request: Request):
     return response.text("OK")
 
 
+@app.route("/content-length", methods=["POST"])
+async def content_length(request: Request):
+    if "Content-Length" not in request.headers:
+        return response.text("FAIL")
+
+    if len(request.body) != int(request.headers["Content-Length"]):
+        return response.text("FAIL")
+
+    return response.text("OK")
+
+
 @app.route("/echo", methods=["POST"])
 async def echo(request: Request):
     return response.text(request.body.decode("utf-8"))

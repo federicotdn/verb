@@ -91,7 +91,8 @@ See also: `verb-text-content-type-handlers'."
 
 (defcustom verb-export-functions
   '(("human" . verb--export-to-human)
-    ("verb" . verb--export-to-verb))
+    ("verb" . verb--export-to-verb)
+    ("curl" . verb--export-to-curl))
   "Alist of request specification export functions.
 Each element should have the form (NAME FN), where NAME should be a
 user-friendly name for this function, and FN should be the function
@@ -703,6 +704,39 @@ explicitly."
     (verb-mode)
     (insert (verb-request-spec-to-string rs))
     (switch-to-buffer-other-window (current-buffer))))
+
+(defun verb--export-to-curl (rs)
+  "Export a request spec RS to curl format.
+Add the generated command to the kill ring and return it.  For more
+information about curl see URL `https://curl.haxx.se/'."
+  (with-temp-buffer
+    (insert "curl ")
+    (dolist (key-value (oref rs headers))
+      (insert "-H '" (car key-value) ": " (cdr key-value) "' "))
+    (pcase (oref rs method)
+      ("GET"
+       (insert "-G"))
+      ((or "PATCH" "PUT" "POST")
+       (insert "-X "
+	       (oref rs method)
+	       " --data-raw '"
+	       (or (oref rs body) "")
+	       "'"))
+      ("DELETE"
+       (insert "-X DELETE"))
+      ("OPTIONS"
+       (insert "-X OPTIONS -i"))
+      ("HEAD"
+       (insert "-I"))
+      ("TRACE"
+       (insert "-X TRACE"))
+      ("CONNECT"
+       (user-error "%s" "CONNECT method not supported in curl format")))
+    (insert " '" (verb-request-spec-url-string rs) "'")
+    (kill-new (buffer-string))
+    (message "Curl command copied to the kill ring")
+    ;; Return the generated command
+    (car kill-ring)))
 
 (cl-defmethod verb--response-header-line-string ((response verb-response))
   "Return a short description of an HTTP RESPONSE's properties."

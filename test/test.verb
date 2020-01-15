@@ -67,5 +67,14 @@ post /redirect-308
 ** no-user-agent
 get /no-user-agent
 
+** content-length-1
+post /content-length
+
+hello
+** content-length-2
+post /content-length
+
+áéíóú
+test
 * connection-fail-test
 get http://localhost:1234/test

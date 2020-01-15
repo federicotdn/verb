@@ -1036,7 +1036,7 @@
      (re-search-forward (concat "^\\*+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-send-request-on-point)
-	 (sleep-for 0.3)
+	 (sleep-for 0.25)
 	 ,@body))))
 
 (ert-deftest test-server-basic ()
@@ -1145,6 +1145,12 @@
   (server-test "no-user-agent"
     (should (string= (buffer-string) "OK"))))
 
+(ert-deftest test-content-length-request ()
+  (server-test "content-length-1"
+    (should (string= (buffer-string) "OK")))
+  (server-test "content-length-2"
+    (should (string= (buffer-string) "OK"))))
+
 (ert-deftest test-buffers-created ()
   (setq num-buffers (length (buffer-list)))
   (server-test "basic")
@@ -1186,6 +1192,59 @@
   (ignore-errors
     (server-test "connection-fail-test"))
   (should (= num-buffers (length (buffer-list)))))
+
+(defun should-curl (rs-text &rest lines)
+  (let ((inhibit-message t))
+    (should (string= (verb--export-to-curl
+		      (verb-request-spec-from-string rs-text))
+		     (apply #'join-lines lines)))))
+
+(ert-deftest test-curl-export ()
+  (should-curl (join-lines "GET http://example.com")
+	       "curl -G 'http://example.com'")
+
+  (should-curl (join-lines
+		"GET http://example.com"
+		"Header1: Val1")
+	       "curl -H 'Header1: Val1' -G 'http://example.com'")
+
+  (should-curl (join-lines "DELETE http://example.com")
+	       "curl -X DELETE 'http://example.com'")
+
+  (should-curl (join-lines "TRACE http://example.com")
+	       "curl -X TRACE 'http://example.com'")
+
+  (should-curl (join-lines "POST http://example.com")
+	       "curl -X POST --data-raw '' 'http://example.com'")
+
+  (should-curl (join-lines
+		"POST http://example.com"
+		""
+		"Some content")
+	       "curl -X POST --data-raw 'Some content' 'http://example.com'")
+
+  (should-curl (join-lines
+		"PUT http://example.com"
+		""
+		"Some content"
+		"Multiple lines")
+	       "curl -X PUT --data-raw 'Some content\nMultiple lines' 'http://example.com'")
+
+  (should-curl (join-lines
+		"PATCH http://example.com"
+		""
+		"ñáéíóúß")
+	       "curl -X PATCH --data-raw 'ñáéíóúß' 'http://example.com'")
+
+  (should-curl (join-lines "OPTIONS http://example.com")
+	       "curl -X OPTIONS -i 'http://example.com'")
+
+  (should-curl (join-lines "HEAD http://example.com")
+	       "curl -I 'http://example.com'")
+
+  (should-error (verb--export-to-curl
+		 (verb-request-spec-from-string
+		  "CONNECT http://abc.com"))))
 
 (provide 'verb-test)
 ;;; verb-test.el ends here

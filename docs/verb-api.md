@@ -29,7 +29,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Function: **verb-request-spec-validate** *rs*
 - Function: **verb-request-spec-to-string** *rs*
 - Function: **verb-request-spec-from-string** *text*
-- Function: **verb-request-spec-override** *rs*
+- Function: **verb-request-spec-override** *original* *other*
 - Error: **verb-empty-spec**
 - Command: **verb-send-request-on-point** *where*
 - Command: **verb-send-request-on-point-other-window**
