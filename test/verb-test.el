@@ -1056,6 +1056,12 @@
 				  "{\"foo\":true,\"hello\":\"world\"}"))
 		 (should (eq major-mode 'js-mode)))))
 
+(ert-deftest test-body-bytes ()
+  (server-test "basic"
+    (should (= 13 (oref verb-http-response body-bytes)))
+    (should (= 13 (length (oref verb-http-response body))))
+    (should (= 13 (buffer-size)))))
+
 (ert-deftest test-server-basic-json-pretty ()
   (let ((verb-json-max-pretty-print-size 99999))
     (server-test "basic-json"
@@ -1105,6 +1111,13 @@
   (server-test "response-big5"
     (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))
     (should (string-match "常用字" (buffer-string)))))
+
+(ert-deftest test-server-response-big5-size ()
+  (server-test "response-big5"
+    ;; Six bytes, but three "characters"
+    (should (= 6 (oref verb-http-response body-bytes)))
+    (should (= 3 (buffer-size)))
+    (should (= 3 (length (oref verb-http-response body))))))
 
 (ert-deftest test-server-response-utf-8-default ()
   (server-test "response-utf-8-default"
