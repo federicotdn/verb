@@ -278,7 +278,7 @@ Authentication: {{(verb-var token)}}
 }
 ```
 
-The example uses the `verb-var` function. This function returns the value of the symbol being passed to it, unless the symbol does not have a value, in which case its value is set using `read-string`.
+The example uses the `verb-var` function. This function returns the value of the symbol being passed to it, unless the symbol does not have a value, in which case its value is set using `read-string` and then returned. It is useful for creating request specifications that require external (potentially secret) values, that only need to be set once.
 
 If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). For example, here's a request that sends the previous response's headers to an endpoint:
 
