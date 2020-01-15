@@ -8,6 +8,8 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
   Run after deciding what major mode to use on a response buffer.
 - Hook: **verb-response-headers-mode-hook** \
   Run after opening the response headers buffer.
+- Hook: **verb-post-response-hook** \
+  Hook run after receiving an HTTP response, processing its contents, and setting up the response buffer. Use this hook to add custom behaviour after receiving a response.
 - Variable: **verb-last**
 - Variable: **verb-http-response**
 - Variable: **verb-kill-this-buffer**

@@ -176,6 +176,15 @@ If nil, never prettify JSON files automatically."
   :type '(choice (integer :tag "Max bytes")
 		 (const :tag "Off" nil)))
 
+(defcustom verb-post-response-hook nil
+  "Hook run after receiving an HTTP response.
+The hook is run with the response body buffer as the current buffer.
+The appropiate major mode will have already been activated, and
+`verb-response-body-mode' as well.  The buffer will contain the
+response's decoded contents.  The buffer-local `verb-http-response'
+variable will be set to the corresponding `verb-response' object."
+  :type 'hook)
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
   "Face for highlighting HTTP methods.")
@@ -928,7 +937,10 @@ view the HTTP response in a user-friendly way."
 	  (switch-to-buffer-other-window (current-buffer))
 	(switch-to-buffer (current-buffer)))
 
-      (verb-response-body-mode))))
+      (verb-response-body-mode)
+
+      ;; Run post response hook
+      (run-hooks 'verb-post-response-hook))))
 
 (defun verb--prepare-http-headers (headers)
   "Prepare alist HEADERS of HTTP headers to use them on a request.
