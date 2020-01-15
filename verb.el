@@ -489,24 +489,6 @@ Return nil of the heading has no text contents."
 	  (verb-request-spec-from-string text)
 	(verb-empty-spec nil)))))
 
-(defun verb-request-spec-validate (rs)
-  "Run validations on request spec RS.
-If a validation does not pass, signal with `user-error'."
-  (unless (oref rs method)
-    (user-error "%s" (concat "No HTTP method specified\n"
-			     "Make sure you specify a concrete HTTP "
-			     "method (i.e. not " verb--template-keyword
-			     ") in the heading hierarchy")))
-  (let ((url (oref rs url)))
-    (unless url
-      (user-error "%s" (concat "No URL specified\nMake sure you specify "
-			       "a nonempty URL in the heading hierarchy")))
-    (unless (url-host url)
-      (user-error "%s" (concat "URL has no host defined\n"
-			       "Make sure you specify a host "
-			       "(e.g. \"https://github.com\") in the "
-			       "heading hierarchy")))))
-
 (defun verb--request-spec-from-hierarchy ()
   "Return a request spec generated from the headings hierarchy.
 To do this, use `verb--request-spec-from-heading' for the current
@@ -1023,6 +1005,24 @@ If the response buffers have response headers buffers, kill those as well."
       (with-current-buffer buf
 	(verb-kill-response-buffer-and-window t))))
   (setq verb--response-buffers nil))
+
+(cl-defmethod verb-request-spec-validate ((rs verb-request-spec))
+  "Run validations on request spec RS.
+If a validation does not pass, signal with `user-error'."
+  (unless (oref rs method)
+    (user-error "%s" (concat "No HTTP method specified\n"
+			     "Make sure you specify a concrete HTTP "
+			     "method (i.e. not " verb--template-keyword
+			     ") in the heading hierarchy")))
+  (let ((url (oref rs url)))
+    (unless url
+      (user-error "%s" (concat "No URL specified\nMake sure you specify "
+			       "a nonempty URL in the heading hierarchy")))
+    (unless (url-host url)
+      (user-error "%s" (concat "URL has no host defined\n"
+			       "Make sure you specify a host "
+			       "(e.g. \"https://github.com\") in the "
+			       "heading hierarchy")))))
 
 (cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
   "Send the HTTP request described by RS.
