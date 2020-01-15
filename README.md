@@ -351,7 +351,7 @@ To see a listing of Verb's public symbols (hooks, functions, variables, classes,
 
 ## Examples
 
-The [`docs/`](docs) directory contains various `.verb` files which showcase different features of the package.
+The [docs/](docs) directory contains various `.verb` files which showcase different features of the package.
 
 ## Changelog
 
