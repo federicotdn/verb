@@ -94,9 +94,10 @@ See also: `verb-text-content-type-handlers'."
     ("verb" . verb--export-to-verb)
     ("curl" . verb--export-to-curl))
   "Alist of request specification export functions.
-Each element should have the form (NAME FN), where NAME should be a
+Each element should have the form (NAME . FN), where NAME should be a
 user-friendly name for this function, and FN should be the function
-itself."
+itself.  FN should take a `verb-request-spec' object as its only
+argument."
   :type '(alist :key-type string :value-type function))
 
 (defcustom verb-auto-kill-response-buffers nil
@@ -249,6 +250,7 @@ automatically kill all response buffers.")
     (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window)
     (define-key map (kbd "C-f") #'verb-send-request-on-point)
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
+    (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
     map)
   "Prefix map for `verb-mode'.")
 
@@ -663,18 +665,41 @@ in the current window."
   (verb--request-spec-send (verb--request-spec-from-hierarchy)
 			      where))
 
-(defun verb-export-request-on-point ()
+(defun verb-export-request-on-point (&optional name)
   "Export the request specification on point.
-Do this by prompting the user for an export function, and calling that
+Interactively, prompt the user for an export function, and call that
 function with the request specification object.  See the
-`verb-export-functions' variable for more details.
+`verb-export-functions' variable for more details.  If called from
+Lisp, use the export function under NAME.
+
 No HTTP request will be sent, unless the export function does this
-explicitly."
+explicitly.  Lisp code tags will be evaluated before exporting."
   (interactive)
   (let ((rs (verb--request-spec-from-hierarchy))
-	(exporter (completing-read "Export function: " verb-export-functions nil t)))
+	(exporter (or name
+		      (completing-read "Export function: "
+				       verb-export-functions
+				       nil t))))
     (when-let ((fn (cdr (assoc exporter verb-export-functions))))
       (funcall fn rs))))
+
+(defun verb-export-request-on-point-verb ()
+  "Export request on point to verb format.
+See `verb--export-to-verb' for more information."
+  (interactive)
+  (verb-export-request-on-point "verb"))
+
+(defun verb-export-request-on-point-human ()
+  "Export request on point to a human-readable format.
+See `verb--export-to-human' for more information."
+  (interactive)
+  (verb-export-request-on-point "human"))
+
+(defun verb-export-request-on-point-curl ()
+  "Export request on point to curl format.
+See `verb--export-to-curl' for more information."
+  (interactive)
+  (verb-export-request-on-point "curl"))
 
 (defun verb--export-to-human (rs)
   "Export a request spec RS to a human-readable format."

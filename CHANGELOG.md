@@ -5,6 +5,8 @@
 - Changed `curl` export format slightly:
   - URL is now the first argument.
   - Arguments are now separated by (escaped) newlines.
+- Added `verb-export-request-on-point-curl`, `verb-export-request-on-point-verb` and `verb-export-request-on-point-human` commands.
+- Bind <kbd>C-c C-r C-u</kbd> to `verb-export-request-on-point-curl` in Verb mode.
 
 ## **1.2.0** - 2020-01-16
 - Request specifications can now be exported to `curl`.
