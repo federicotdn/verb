@@ -446,6 +446,13 @@
 		 '(("Accept" . "text"))))
   (should (string= (oref aux :body) "Content\n"))
 
+  (setq aux (text-as-spec "post http://example.com/foobar\n"
+			  "# Content-Type: application/json\n"
+			  "\n"
+			  "Content\n"))
+  (should-not (oref aux :headers))
+  (should (string= (oref aux :body) "Content\n"))
+
   (setq aux (text-as-spec "get http://example.com/foobar\n"
 			  "Accept: text\n"
 			  "#Foo: bar\n"
