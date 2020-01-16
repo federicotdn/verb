@@ -2,6 +2,9 @@
 ## master
 - Request headers can now be commented out using `#`.
 - Surrounding whitespace is now automatically removed from header names and values.
+- Changed `curl` export format slightly:
+  - URL is now the first argument.
+  - Arguments are now separated by (escaped) newlines.
 
 ## **1.2.0** - 2020-01-16
 - Request specifications can now be exported to `curl`.

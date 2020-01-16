@@ -705,21 +705,24 @@ explicitly."
     (insert (verb-request-spec-to-string rs))
     (switch-to-buffer-other-window (current-buffer))))
 
-(defun verb--export-to-curl (rs)
+(defun verb--export-to-curl (rs &optional no-message)
   "Export a request spec RS to curl format.
 Add the generated command to the kill ring and return it.  For more
-information about curl see URL `https://curl.haxx.se/'."
+information about curl see URL `https://curl.haxx.se/'.  If NO-MESSAGE
+is non-nil, do not display a message on the minibuffer."
   (with-temp-buffer
-    (insert "curl ")
+    (insert "curl '" (verb-request-spec-url-string rs) "'")
     (dolist (key-value (oref rs headers))
-      (insert "-H '" (car key-value) ": " (cdr key-value) "' "))
+      (insert " \\\n")
+      (insert "-H '" (car key-value) ": " (cdr key-value) "'"))
+    (unless (string= (oref rs method) "GET")
+      (insert (if (oref rs headers) " \\\n" " ")))
     (pcase (oref rs method)
-      ("GET"
-       (insert "-G"))
+      ;; GET: no argument needed
       ((or "PATCH" "PUT" "POST")
        (insert "-X "
 	       (oref rs method)
-	       " --data-raw '"
+	       " \\\n--data-raw '"
 	       (or (oref rs body) "")
 	       "'"))
       ("DELETE"
@@ -732,9 +735,9 @@ information about curl see URL `https://curl.haxx.se/'."
        (insert "-X TRACE"))
       ("CONNECT"
        (user-error "%s" "CONNECT method not supported in curl format")))
-    (insert " '" (verb-request-spec-url-string rs) "'")
     (kill-new (buffer-string))
-    (message "Curl command copied to the kill ring")
+    (unless no-message
+      (message "Curl command copied to the kill ring"))
     ;; Return the generated command
     (car kill-ring)))
 

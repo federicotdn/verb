@@ -1262,53 +1262,65 @@
   (should (= num-buffers (length (buffer-list)))))
 
 (defun should-curl (rs-text &rest lines)
-  (let ((inhibit-message t))
-    (should (string= (verb--export-to-curl
-		      (verb-request-spec-from-string rs-text))
-		     (apply #'join-lines lines)))))
+  (should (string= (verb--export-to-curl
+		    (verb-request-spec-from-string rs-text) t)
+		   (apply #'join-lines lines))))
 
 (ert-deftest test-curl-export ()
   (should-curl (join-lines "GET http://example.com")
-	       "curl -G 'http://example.com'")
+	       "curl 'http://example.com'")
 
   (should-curl (join-lines
 		"GET http://example.com"
 		"Header1: Val1")
-	       "curl -H 'Header1: Val1' -G 'http://example.com'")
+	       "curl 'http://example.com' \\\n-H 'Header1: Val1'")
+
+  (should-curl (join-lines
+		"POST http://example.com"
+		"Header1: Val1")
+	       "curl 'http://example.com' \\\n-H 'Header1: Val1' \\\n-X POST \\\n--data-raw ''")
 
   (should-curl (join-lines "DELETE http://example.com")
-	       "curl -X DELETE 'http://example.com'")
+	       "curl 'http://example.com' -X DELETE")
 
   (should-curl (join-lines "TRACE http://example.com")
-	       "curl -X TRACE 'http://example.com'")
+	       "curl 'http://example.com' -X TRACE")
 
   (should-curl (join-lines "POST http://example.com")
-	       "curl -X POST --data-raw '' 'http://example.com'")
+	       "curl 'http://example.com' -X POST \\\n--data-raw ''")
 
   (should-curl (join-lines
 		"POST http://example.com"
 		""
 		"Some content")
-	       "curl -X POST --data-raw 'Some content' 'http://example.com'")
+	       "curl 'http://example.com' -X POST \\\n--data-raw 'Some content'")
 
   (should-curl (join-lines
 		"PUT http://example.com"
 		""
 		"Some content"
 		"Multiple lines")
-	       "curl -X PUT --data-raw 'Some content\nMultiple lines' 'http://example.com'")
+	       "curl 'http://example.com' -X PUT \\\n--data-raw 'Some content\nMultiple lines'")
+
+  (should-curl (join-lines
+		"PUT http://example.com"
+		"A: B"
+		""
+		"Some content"
+		"Multiple lines")
+	       "curl 'http://example.com' \\\n-H 'A: B' \\\n-X PUT \\\n--data-raw 'Some content\nMultiple lines'")
 
   (should-curl (join-lines
 		"PATCH http://example.com"
 		""
 		"ñáéíóúß")
-	       "curl -X PATCH --data-raw 'ñáéíóúß' 'http://example.com'")
+	       "curl 'http://example.com' -X PATCH \\\n--data-raw 'ñáéíóúß'")
 
   (should-curl (join-lines "OPTIONS http://example.com")
-	       "curl -X OPTIONS -i 'http://example.com'")
+	       "curl 'http://example.com' -X OPTIONS -i")
 
   (should-curl (join-lines "HEAD http://example.com")
-	       "curl -I 'http://example.com'")
+	       "curl 'http://example.com' -I")
 
   (should-error (verb--export-to-curl
 		 (verb-request-spec-from-string
