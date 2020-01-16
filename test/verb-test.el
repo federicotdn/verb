@@ -402,6 +402,67 @@
 			  "{{}}- World"))
   (should (string= (oref aux :body) "# A markdown list.\n- Hello\n- World")))
 
+(ert-deftest test-request-spec-from-text-commented-headers ()
+  (setq aux (text-as-spec "get http://example.com/foobar\n"
+			  "Accept: text\n"
+			  "#Foo: bar\n"
+			  "\n"
+			  "Content\n"))
+  (should (equal (oref aux :headers)
+		 '(("Accept" . "text"))))
+  (should (string= (oref aux :body) "Content\n"))
+
+  (setq aux (text-as-spec "get http://example.com/foobar\n"
+			  "#Foo: bar\n"
+			  "#Foo: bar2\n"
+			  "\n"
+			  "Content\n"))
+  (should-not (oref aux :headers))
+  (should (string= (oref aux :body) "Content\n"))
+
+  (setq aux (text-as-spec "get http://example.com/foobar\n"
+			  "#Foo: bar\n"
+			  "#Foo: bar2\n"
+			  "Content\n"))
+  (should-not (oref aux :headers))
+  (should (string= (oref aux :body) "Content\n"))
+
+  (setq aux (text-as-spec "get http://example.com/foobar\n"
+			  "Accept: text\n"
+			  "#Foo: bar\n"
+			  "Abc: xyz\n"
+			  "\n"
+			  "Content\n"))
+  (should (equal (oref aux :headers)
+		 '(("Accept" . "text")
+		   ("Abc" . "xyz"))))
+  (should (string= (oref aux :body) "Content\n"))
+
+  (setq aux (text-as-spec "get http://example.com/foobar\n"
+			  "Accept: text\n"
+			  "#Foo: bar\n"
+			  "Content\n"))
+  (should (equal (oref aux :headers)
+		 '(("Accept" . "text"))))
+  (should (string= (oref aux :body) "Content\n"))
+
+  (setq aux (text-as-spec "get http://example.com/foobar\n"
+			  "Accept: text\n"
+			  "#Foo: bar\n"
+			  "#Content: content\n"))
+  (should (equal (oref aux :headers)
+		 '(("Accept" . "text"))))
+  (should-not (oref aux :body))
+
+  (setq aux (text-as-spec "get http://example.com/foobar\n"
+			  "Accept: text\n"
+			  "#Foo: bar\n"
+			  "\n"
+			  "# Contents\n"))
+  (should (equal (oref aux :headers)
+		 '(("Accept" . "text"))))
+  (should (string= (oref aux :body) "# Contents\n")))
+
 (ert-deftest test-request-spec-from-text-complete ()
   (setq aux (text-as-spec "# Comment\n"
 			  "  #\n"
@@ -413,7 +474,7 @@
 			  " Post   http://example.com/foobar\n"
 			  "Accept : text\n"
 			  "Foo:bar\n"
-			  "Quux: Quuz\n"
+			  "Quux:    Quuz\n"
 			  " Referer   :host\n"
 			  "\n"
 			  "Content\n"))

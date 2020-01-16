@@ -1422,6 +1422,7 @@ signal an error."
       ;; After that, insert it into the buffer
       (insert (verb--eval-lisp-code-in text))
       (goto-char (point-min))
+
       ;; Skip initial blank lines and comments
       (while (and (re-search-forward (concat "^\\(\\s-*"
 					     verb--comment-character
@@ -1434,6 +1435,7 @@ signal an error."
 							   (point-max))))
 	;; Signal `verb-empty-spec' if so
 	(signal 'verb-empty-spec nil))
+
       ;; Read HTTP method and URL
       (let ((case-fold-search t))
 	(when (re-search-forward (concat "^\\s-*\\("
@@ -1453,19 +1455,28 @@ signal an error."
 		    verb--template-keyword))
       ;; Skip newline after URL line
       (unless (eobp) (forward-char))
+
       ;; Search for HTTP headers
       ;; Stop as soon as we find a blank line or a non-matching line
-      (while (re-search-forward "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
+      ;; Accept lines starting with '#' and skip them
+      (while (re-search-forward (concat "^\\s-*"
+					verb--comment-character
+					"?\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-?\\(.*\\)$")
 				(line-end-position) t)
-	(push (cons (match-string 1)
-		    (match-string 2))
-	      headers)
+	(let ((line (match-string 0))
+	      (key (match-string 1))
+	      (value (match-string 2)))
+	  (unless (string-prefix-p verb--comment-character
+				   (string-trim-left line))
+	    (push (cons (string-trim key) (string-trim value)) headers)))
 	(unless (eobp) (forward-char)))
       (setq headers (nreverse headers))
+
       ;; Allow a blank like to separate headers and body (not
       ;; required)
       (when (re-search-forward "^$" (line-end-position) t)
 	(unless (eobp) (forward-char)))
+
       ;; The rest of the buffer is the request body
       (let ((rest (buffer-substring (point) (point-max))))
 	(unless (string-empty-p (string-trim rest))

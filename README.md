@@ -45,9 +45,8 @@ Alternatively, you can just add [`verb.el`](verb.el) to your `load-path` instead
 Here's a quick example in case you want to get started without reading the [Usage Guide](#usage-guide). Place the following on an `example.verb` file:
 ```
 * Quick Start for Verb
-# Comments start with '#' (must be placed right
-# after headings, which start with '*')
-
+# Comments start with '#'. You can only place
+# comments before the URL and in the headers.
 # Verb file for https://docs.postman-echo.com/
 template https://postman-echo.com
 Accept: application/json
@@ -88,6 +87,8 @@ get https://reqres.in/api/users
 ```
 
 This defines a minimal HTTP request specification, describing a method (`GET`) and a URL (`https://reqres.in/api/users`). The request is contained under a heading marked with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level.
+
+A file may contain zero headings, in which case the entire contents of the file are interpreted as a single request specification. This is useful for quick testing (on the `*scratch*` buffer, for example).
 
 ### Sending Requests
 
@@ -146,6 +147,20 @@ Content-Language: de-DE
 ```
 
 All headers must be written immediately after the method + URL line, without any blank lines in between.
+
+It is also possible to comment out headers. To do this, simply add `#` at the beginning of the line. If your request body starts with `#` as well, make sure to leave an empty line between the headers and the body, so that the body isn't parsed as a commented out header. Here's an example:
+
+```
+* Upload markdown file
+# Two headers are commented out.
+post https://example-api.com/api/upload
+Content-Type: text/markdown
+# Accept: application/json
+# User-Agent: Emacs 26
+
+# Title
+This is some text.
+```
 
 **Note:** "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements used to separate sections of text.
 
