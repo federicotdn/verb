@@ -264,14 +264,22 @@
 
 (ert-deftest test-request-spec-from-text-template ()
   (setq aux (text-as-spec "template example.com"))
-  (null (oref aux :method)))
+  (should-not (oref aux :method)))
 
 (ert-deftest test-request-spec-from-text-no-url ()
   (setq aux (text-as-spec "GET"))
-  (null (oref aux :method))
+  (should-not (oref aux url))
 
   (setq aux (text-as-spec "GET "))
-  (null (oref aux :method)))
+  (should-not (oref aux url))
+
+  (setq aux (text-as-spec "POST\n\n\n"))
+  (should-not (oref aux url))
+  (should (string= (oref aux method) "POST"))
+
+  (setq aux (text-as-spec "{{(concat \"PO\" \"ST\")}}\n"))
+  (should-not (oref aux url))
+  (should (string= (oref aux method) "POST")))
 
 (ert-deftest test-request-spec-from-text-case ()
   (setq aux (text-as-spec "post example.com"))
@@ -392,15 +400,49 @@
 			  "{{}}- Hello\n"
 			  "{{}}- World"))
   (should (string= (oref aux :body) "# A markdown list.\n- Hello\n- World"))
+  (should (equal (oref aux :headers)
+		 (list (cons "Content-Type" "text/markdown"))))
 
-  (setq test-header "Content-Type: text/markdown")
+  (setq test-header "text/markdown")
   (setq aux (text-as-spec "{{(concat \"g\" \"et\")}} http://example.com\n"
-			  "{{test-header}}"
+			  "Content-Type: {{test-header}}"
 			  "\n"
 			  "# A markdown list.\n"
 			  "{{}}- Hello\n"
 			  "{{}}- World"))
-  (should (string= (oref aux :body) "# A markdown list.\n- Hello\n- World")))
+  (should (string= (oref aux :body) "# A markdown list.\n- Hello\n- World"))
+  (should (equal (oref aux :headers)
+		 (list (cons "Content-Type" "text/markdown")))))
+
+(ert-deftest test-dont-evaluate-code-tags-in-comments ()
+  (setq counter 0)
+  (setq inc-counter (lambda () (setq counter (1+ counter))))
+
+  (text-as-spec "GET http://hello.com/{{(funcall inc-counter)}}")
+  (should (= counter 1))
+
+  (text-as-spec "GET http://hello.com/{{(funcall inc-counter)}}\n"
+		"Header: {{(funcall inc-counter)}}")
+  (should (= counter 3))
+
+  (text-as-spec "GET http://hello.com/api\n"
+		"Something: 123\n"
+		"# Header: {{(funcall inc-counter)}}")
+  (should (= counter 3))
+
+  (setq aux (text-as-spec "# Comment\n"
+			  "\n"
+			  "# Commented out {{(funcall inc-counter)}}\n"
+			  "# {{asdfsadfsadf}}\n"
+			  "GET http://hello.com/api\n"
+			  "Something: 123\n"
+			  "# Header: {{(funcall inc-counter)}}\n"
+			  "# Hello: World\n"
+			  "Uno: Dos\n"))
+  (should (= counter 3))
+  (should (equal (oref aux headers)
+		 '(("Something" . "123")
+		   ("Uno" . "Dos")))))
 
 (ert-deftest test-request-spec-from-text-commented-headers ()
   (setq aux (text-as-spec "get http://example.com/foobar\n"
@@ -574,34 +616,28 @@
 
 (ert-deftest test-verb-var ()
   (setq test-var-1 "xyz")
-  (should (string= (eval-lisp-code-in "{{(verb-var test-var-1)}}")
+  (should (string= (verb--eval-lisp-code-in-string "{{(verb-var test-var-1)}}")
 		   "xyz")))
 
-(defun eval-lisp-code-in (text)
-  (with-temp-buffer
-    (insert text)
-    (verb--eval-lisp-code-in (current-buffer))
-    (buffer-string)))
-
-(ert-deftest test-eval-lisp-code-in ()
-  (should (string= (eval-lisp-code-in "1 {{1}}")
+(ert-deftest test-verb-eval-lisp-code-in ()
+  (should (string= (verb--eval-lisp-code-in-string "1 {{1}}")
 		   "1 1"))
 
-  (should (string= (eval-lisp-code-in "{{}}--")
+  (should (string= (verb--eval-lisp-code-in-string "{{}}--")
 		   "--"))
 
-  (should (string= (eval-lisp-code-in "1 {{(+ 1 1)}}")
+  (should (string= (verb--eval-lisp-code-in-string "1 {{(+ 1 1)}}")
 		   "1 2"))
 
   (setq hello 99)
-  (should (string= (eval-lisp-code-in "1 {{(+ 1 hello)}}")
+  (should (string= (verb--eval-lisp-code-in-string "1 {{(+ 1 hello)}}")
 		   "1 100"))
 
-  (should (string= (eval-lisp-code-in "{{\"{{\"}}")
+  (should (string= (verb--eval-lisp-code-in-string "{{\"{{\"}}")
   		   "{{"))
 
   (setq num-buffers (length (buffer-list)))
-  (should (string= (eval-lisp-code-in "{{(verb-read-file \"test/test.txt\")}}")
+  (should (string= (verb--eval-lisp-code-in-string "{{(verb-read-file \"test/test.txt\")}}")
   		   "Example text!\n"))
   (should (= (length (buffer-list)) num-buffers))
 
@@ -610,16 +646,16 @@
   (with-current-buffer testbuf
     (insert "TEST"))
 
-  (should (string= (eval-lisp-code-in "this is a {{(get-buffer \"testbuffer\")}}")
+  (should (string= (verb--eval-lisp-code-in-string "this is a {{(get-buffer \"testbuffer\")}}")
   		   "this is a TEST"))
 
   (should (buffer-live-p testbuf))
   (kill-buffer testbuf)
 
-  (should (string= (eval-lisp-code-in "{{\"}\"}}{{\"}\"}}")
+  (should (string= (verb--eval-lisp-code-in-string "{{\"}\"}}{{\"}\"}}")
   		   "}}"))
 
-  (should-error (eval-lisp-code-in "Hello {{asdfasdf}}")))
+  (should-error (verb--eval-lisp-code-in-string "Hello {{asdfasdf}}")))
 
 (ert-deftest test-url-port ()
   (should (null (verb--url-port (verb--clean-url "http://hello.com"))))

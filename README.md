@@ -69,7 +69,7 @@ Content-Type: application/json
 get /status/{{(read-number "Status: " 200)}}
 ```
 
-Then, move the point to one of the level 2 heading (marked with `**`), and press <kbd>C-c C-r C-r</kbd> to send an HTTP request.
+Then, move the point to one of the level 2 headings (marked with `**`), and press <kbd>C-c C-r C-r</kbd> to send the HTTP request.
 
 ## Screenshots
 
@@ -88,7 +88,7 @@ get https://reqres.in/api/users
 
 This defines a minimal HTTP request specification, describing a method (`GET`) and a URL (`https://reqres.in/api/users`). The request is contained under a heading marked with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level.
 
-A file may contain zero headings, in which case the entire contents of the file are interpreted as a single request specification. This is useful for quick testing (on the `*scratch*` buffer, for example).
+A buffer may contain zero headings, in which case the entire contents of the file are interpreted as a single request specification. This is useful for quick testing (on the `*scratch*` buffer, for example).
 
 ### Sending Requests
 
@@ -182,7 +182,7 @@ Content-Type: application/json; charset=utf-8
 
 The headers and body may be separated by a blank line, which will not be included in the request. If no blank line is present, the request body is considered to start from the first line not matching a `<Header>: <Value>` format.
 
-To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header. If the header is present but `charset` is not defined, the charset `verb-default-request-charset` will be used (default: `utf-8`) and added to the header value. If the header is not present, the charset `verb-default-request-charset` will be used, but no `Content-Type` header wil be sent.
+To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header. If the header is present but `charset` is not defined, the charset `verb-default-request-charset` will be used (default: `utf-8`) and added to the header value. If the header is not present, the charset `verb-default-request-charset` will be used, but no `Content-Type` header will be sent. Note that the current buffer's encoding has no effect on how the request body is encoded.
 
 ### Extend and Override Requests
 
@@ -274,7 +274,7 @@ get ?text=example
 
 ### Emacs Lisp Code Tags
 
-You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere on the request specification: the URL, method, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
+You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear almost anywhere in the request specification: the URL, method, header values and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`). Code tags are not allowed in header names.
 
 Depending on the type of the resulting value for a code tag, Verb will do the following:
 - `string`: The value will be inserted as-is into the request contents.

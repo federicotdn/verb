@@ -1,4 +1,7 @@
 # Verb Changelog
+## master
+- Fix Lisp code tags being evaluated in comments.
+
 ## **1.3.0** - 2020-01-17
 - Request headers can now be commented out using `#`.
 - Surrounding whitespace is now automatically removed from header names and values.
