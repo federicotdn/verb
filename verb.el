@@ -1370,12 +1370,11 @@ As a special case, if S is the empty string, return the empty string."
       (save-match-data
 	(eval (car (read-from-string (format "(progn %s)" s))) t)))))
 
-(defun verb--eval-lisp-code-in (s)
-  "Evalue and replace Lisp code within code tags in S.
+(defun verb--eval-lisp-code-in (buf)
+  "Evalue and replace Lisp code within code tags in buffer BUF.
 Code tags are delimited with `verb-code-tag-delimiters'."
-  (when s
-    (with-temp-buffer
-      (insert s)
+  (when buf
+    (with-current-buffer buf
       (goto-char (point-min))
       (while (re-search-forward (concat (car verb-code-tag-delimiters)
 					"\\(.*?\\)"
@@ -1392,8 +1391,7 @@ Code tags are delimited with `verb-code-tag-delimiters'."
 	    (when (buffer-local-value 'verb-kill-this-buffer result)
 	      (kill-buffer result)))
 	   (t
-	    (replace-match (format "%s" result))))))
-      (buffer-string))))
+	    (replace-match (format "%s" result)))))))))
 
 (defun verb--clean-url (url)
   "Return a correctly encoded URL struct to use with `url-retrieve'.
@@ -1461,8 +1459,8 @@ signal an error."
   (let (method url headers body)
     (with-temp-buffer
       ;; Expand Lisp code tags before parsing request
-      ;; After that, insert it into the buffer
-      (insert (verb--eval-lisp-code-in text))
+      (insert text)
+      (verb--eval-lisp-code-in (current-buffer))
       (goto-char (point-min))
 
       ;; Skip initial blank lines and comments

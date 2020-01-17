@@ -574,28 +574,34 @@
 
 (ert-deftest test-verb-var ()
   (setq test-var-1 "xyz")
-  (should (string= (verb--eval-lisp-code-in "{{(verb-var test-var-1)}}")
+  (should (string= (eval-lisp-code-in "{{(verb-var test-var-1)}}")
 		   "xyz")))
 
+(defun eval-lisp-code-in (text)
+  (with-temp-buffer
+    (insert text)
+    (verb--eval-lisp-code-in (current-buffer))
+    (buffer-string)))
+
 (ert-deftest test-eval-lisp-code-in ()
-  (should (string= (verb--eval-lisp-code-in "1 {{1}}")
+  (should (string= (eval-lisp-code-in "1 {{1}}")
 		   "1 1"))
 
-  (should (string= (verb--eval-lisp-code-in "{{}}--")
+  (should (string= (eval-lisp-code-in "{{}}--")
 		   "--"))
 
-  (should (string= (verb--eval-lisp-code-in "1 {{(+ 1 1)}}")
+  (should (string= (eval-lisp-code-in "1 {{(+ 1 1)}}")
 		   "1 2"))
 
   (setq hello 99)
-  (should (string= (verb--eval-lisp-code-in "1 {{(+ 1 hello)}}")
+  (should (string= (eval-lisp-code-in "1 {{(+ 1 hello)}}")
 		   "1 100"))
 
-  (should (string= (verb--eval-lisp-code-in "{{\"{{\"}}")
+  (should (string= (eval-lisp-code-in "{{\"{{\"}}")
   		   "{{"))
 
   (setq num-buffers (length (buffer-list)))
-  (should (string= (verb--eval-lisp-code-in "{{(verb-read-file \"test/test.txt\")}}")
+  (should (string= (eval-lisp-code-in "{{(verb-read-file \"test/test.txt\")}}")
   		   "Example text!\n"))
   (should (= (length (buffer-list)) num-buffers))
 
@@ -604,16 +610,16 @@
   (with-current-buffer testbuf
     (insert "TEST"))
 
-  (should (string= (verb--eval-lisp-code-in "this is a {{(get-buffer \"testbuffer\")}}")
+  (should (string= (eval-lisp-code-in "this is a {{(get-buffer \"testbuffer\")}}")
   		   "this is a TEST"))
 
   (should (buffer-live-p testbuf))
   (kill-buffer testbuf)
 
-  (should (string= (verb--eval-lisp-code-in "{{\"}\"}}{{\"}\"}}")
+  (should (string= (eval-lisp-code-in "{{\"}\"}}{{\"}\"}}")
   		   "}}"))
 
-  (should-error (verb--eval-lisp-code-in "Hello {{asdfasdf}}")))
+  (should-error (eval-lisp-code-in "Hello {{asdfasdf}}")))
 
 (ert-deftest test-url-port ()
   (should (null (verb--url-port (verb--clean-url "http://hello.com"))))
