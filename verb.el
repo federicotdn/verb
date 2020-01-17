@@ -237,6 +237,9 @@ This variable is shared across any buffers using Verb mode.  Consider
 using this variable inside code tags if you wish to use results from
 previous requests on new requests.")
 
+(defvar verb--vars nil
+  "List of variables set with `verb-var'.")
+
 (defvar verb--response-buffers nil
   "List of currently live HTTP response buffers.
 This variable is used by `verb--auto-kill-response-buffers' to
@@ -251,6 +254,7 @@ automatically kill all response buffers.")
     (define-key map (kbd "C-f") #'verb-send-request-on-point)
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
     (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
+    (define-key map (kbd "C-v") #'verb-set-var)
     map)
   "Prefix map for `verb-mode'.")
 
@@ -589,7 +593,17 @@ If VAR is unbound, use `read-string' to set its value first."
   (unless (boundp var)
     (set var (read-string (format "(verb-var) Set value for %s: "
 				  var))))
+  (add-to-list 'verb--vars var)
   (symbol-value var))
+
+(defun verb-set-var (var)
+  "Set new value for variable VAR previously set with `verb-var'.
+When called interactively, prompt the user for a variable that has
+been set once with `verb-var'."
+  (interactive (list (completing-read "Variable: "
+				      (mapcar #'symbol-name verb--vars)
+				      nil t)))
+  (set (intern var) (read-string (format "Set value for %s: " var))))
 
 (defun verb-read-file (file)
   "Return a buffer with the contents of FILE.

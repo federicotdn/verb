@@ -42,6 +42,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-kill-buffer-and-window**
 - Command: **verb-cycle**
 - Command: **verb-toggle-show-headers**
+- Command: **verb-set-var** *var*
 - Macro: **verb-var** *var*
 - Class: **verb-request-spec** \
   Represents an HTTP request specification.
