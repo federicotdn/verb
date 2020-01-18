@@ -1,5 +1,5 @@
 # Verb Changelog
-## master
+## **1.4.0** - 2020-01-18
 - Fixed Lisp code tags being evaluated in comments.
 - Rebound `verb-send-request-on-point-other-window` to <kbd>C-c C-r C-s</kbd> in Verb mode.
 - Added new command `verb-send-request-on-point-other-window-stay`, bound to <kbd>C-c C-r C-r</kbd> in Verb mode.
