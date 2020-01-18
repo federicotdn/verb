@@ -403,6 +403,11 @@ HEADER and VALUE must be nonempty strings."
       nil
     s))
 
+(defun verb--buffer-string-no-properties ()
+  "Return the contents of the current buffer as a string.
+Do not include text properties."
+  (buffer-substring-no-properties (point-min) (point-max)))
+
 (defun verb--back-to-heading ()
   "Move to the previous heading.
 Or, move to beggining of this line if it's a heading.  If there are no
@@ -797,7 +802,7 @@ is non-nil, do not display a message on the minibuffer."
        (insert "-X TRACE"))
       ("CONNECT"
        (user-error "%s" "CONNECT method not supported in curl format")))
-    (kill-new (buffer-string))
+    (kill-new (verb--buffer-string-no-properties))
     (unless no-message
       (message "Curl command copied to the kill ring"))
     ;; Return the generated command
@@ -1005,7 +1010,7 @@ view the HTTP response in a user-friendly way."
       (oset verb-http-response
 	    body
 	    (unless (zerop (oref verb-http-response body-bytes))
-	      (buffer-string)))
+	      (verb--buffer-string-no-properties)))
 
       (when text-handler
 	(set-buffer-file-coding-system coding-system)
@@ -1193,7 +1198,7 @@ This string should be able to be used with
       (insert (car key-value) ": " (cdr key-value) "\n"))
     (when-let ((body (oref rs body)))
       (insert "\n" body))
-    (buffer-string)))
+    (verb--buffer-string-no-properties)))
 
 (defun verb--timeout-warn (buffer rs)
   "Warn the user about a possible network timeout for request RS.
@@ -1412,7 +1417,7 @@ Return a modified string."
     (insert s)
     (goto-char (point-min))
     (verb--eval-lisp-code-in-buffer (current-buffer))
-    (buffer-string)))
+    (verb--buffer-string-no-properties)))
 
 (defun verb--clean-url (url)
   "Return a correctly encoded URL struct to use with `url-retrieve'.
