@@ -693,7 +693,10 @@ If WHERE is `other-window', show the results of the request on another
 window and select it.  If WHERE is `show-window', show the results of
 the request on another window, but keep the current one selected.  If
 WHERE has any other value, show the results of the request in the
-current window.  WHERE defaults to nil."
+current window.  WHERE defaults to nil.
+
+The `verb-post-response-hook' hook is called after a response has been
+received."
   (interactive)
   (verb--request-spec-send (verb--request-spec-from-hierarchy)
 			   where))
