@@ -240,18 +240,15 @@ previous requests on new requests.")
 (defvar verb--vars nil
   "List of variables set with `verb-var'.")
 
-(defvar verb--response-buffers nil
-  "List of currently live HTTP response buffers.
-This variable is used by `verb--auto-kill-response-buffers' to
-automatically kill all response buffers.")
-
 (defvar verb--debug-enable nil
   "If non-nil, enable logging debug messages with `verb--debug'.")
 
 (defvar verb-mode-prefix-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window)
+    (define-key map (kbd "C-s") #'verb-send-request-on-point-other-window)
+    (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window-stay)
     (define-key map (kbd "C-f") #'verb-send-request-on-point)
+    (define-key map (kbd "C-k") #'verb-kill-all-response-buffers)
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
     (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
     (define-key map (kbd "C-v") #'verb-set-var)
@@ -387,7 +384,8 @@ HEADER and VALUE must be nonempty strings."
   :lighter " Verb[Body]"
   :group 'verb
   :keymap `((,(kbd "C-c C-r C-r") . verb-toggle-show-headers)
-	    (,(kbd "C-c C-r C-k") . verb-kill-response-buffer-and-window))
+	    (,(kbd "C-c C-r C-k") . verb-kill-response-buffer-and-window)
+	    (,(kbd "C-c C-r C-f") . verb-re-send-request))
   (if verb-response-body-mode
       (progn
 	(setq header-line-format
@@ -539,16 +537,30 @@ window.
 If the response buffer has a corresponding headers buffer, kill it and
 delete any window displaying it."
   (interactive)
-  (when verb--response-headers-buffer
-    (when-let ((w (get-buffer-window verb--response-headers-buffer)))
-      (ignore-errors
-	(delete-window w)))
-    (when (buffer-live-p verb--response-headers-buffer)
-      (kill-buffer verb--response-headers-buffer)))
-  (kill-buffer (current-buffer))
-  (unless keep-window
-    (ignore-errors
-      (delete-window))))
+  (let ((response-buf (current-buffer)))
+    (when verb--response-headers-buffer
+      (when-let ((w (get-buffer-window verb--response-headers-buffer)))
+	(ignore-errors
+	  (delete-window w)))
+      (when (buffer-live-p verb--response-headers-buffer)
+	(kill-buffer verb--response-headers-buffer)))
+    (unless keep-window
+      (when-let ((w (get-buffer-window response-buf)))
+	(ignore-errors
+	  (delete-window))))
+    (kill-buffer response-buf)))
+
+(defun verb-re-send-request ()
+  "Re-send request for the response shown on current buffer.
+If the user chose to show the current response buffer on another
+window, show the new one on another window as well.  Return the buffer
+where the response will be loaded in.
+
+If you use this command frequently, consider setting
+`verb-auto-kill-response-buffers' to t.  This will help avoiding
+having many response buffers open."
+  (interactive)
+  (verb--request-spec-send (oref verb-http-response request) nil))
 
 (defun verb-kill-buffer-and-window ()
   "Delete selected window and kill its current buffer.
@@ -624,13 +636,6 @@ Set the buffer's `verb-kill-this-buffer' variable to t."
     (unless (zerop (buffer-size))
       (backward-delete-char 1))))
 
-(defun verb-headers-to-string (headers)
-  "Return HTTP HEADERS as a multiline string.
-HEADERS must be a (KEY . VALUE) alist."
-  (with-temp-buffer
-    (verb--insert-header-contents headers)
-    (buffer-string)))
-
 (defun verb-toggle-show-headers ()
   "Show or hide the HTTP response's headers on a separate buffer."
   (interactive)
@@ -662,10 +667,17 @@ HEADERS must be a (KEY . VALUE) alist."
 
 (defun verb-send-request-on-point-other-window ()
   "Send the request specified by the selected heading's text contents.
-Show the results on another window (use
+Show the results on another window and switch to it (use
 `verb-send-request-on-point')."
   (interactive)
   (verb-send-request-on-point 'other-window))
+
+(defun verb-send-request-on-point-other-window-stay ()
+  "Send the request specified by the selected heading's text contents.
+Show the results on another window, but don't switch to it (use
+`verb-send-request-on-point')."
+  (interactive)
+  (verb-send-request-on-point 'stay-window))
 
 (defun verb-send-request-on-point (&optional where)
   "Send the request specified by the selected heading's text contents.
@@ -673,11 +685,22 @@ The contents of all parent headings are used as well; see
 `verb--request-spec-from-hierarchy' to see how this is done.
 
 If WHERE is `other-window', show the results of the request on another
-window.  If WHERE has any other value, show the results of the request
-in the current window."
+window and select it.  If WHERE is `show-window', show the results of
+the request on another window, but keep the current one selected.  If
+WHERE has any other value, show the results of the request in the
+current window.  WHERE defaults to nil."
   (interactive)
   (verb--request-spec-send (verb--request-spec-from-hierarchy)
-			      where))
+			   where))
+
+(defun verb-kill-all-response-buffers (&optional keep-windows)
+  "Kill all response buffers, and delete their windows.
+If KEEP-WINDOWS is non-nil, do not delete their respective windows."
+  (interactive)
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when verb-http-response
+	(verb-kill-response-buffer-and-window keep-windows)))))
 
 (defun verb-export-request-on-point (&optional name)
   "Export the request specification on point.
@@ -991,10 +1014,13 @@ view the HTTP response in a user-friendly way."
 	(goto-char (point-min))
 	(funcall text-handler))
 
-      (if (eq where 'other-window)
-	  (switch-to-buffer-other-window (current-buffer))
-	(switch-to-buffer (current-buffer)))
+      (pcase where
+	('other-window (switch-to-buffer-other-window (current-buffer)))
+	('stay-window (save-selected-window
+			(switch-to-buffer-other-window (current-buffer))))
+	(_ (switch-to-buffer (current-buffer)))))
 
+    (with-current-buffer response-buf
       (verb-response-body-mode)
 
       ;; Run post response hook
@@ -1073,15 +1099,6 @@ For more information, see `verb-advice-url'."
     (advice-remove 'url-http-handle-authentication
 		   #'verb--http-handle-authentication)))
 
-(defun verb--auto-kill-response-buffers ()
-  "Kill all live HTTP response buffers.
-If the response buffers have response headers buffers, kill those as well."
-  (dolist (buf verb--response-buffers)
-    (when (buffer-live-p buf)
-      (with-current-buffer buf
-	(verb-kill-response-buffer-and-window t))))
-  (setq verb--response-buffers nil))
-
 (cl-defmethod verb-request-spec-validate ((rs verb-request-spec))
   "Run validations on request spec RS.
 If a validation does not pass, signal with `user-error'."
@@ -1108,7 +1125,7 @@ be loaded into."
   ;; If auto kill buffers is enabled, kill all previous response
   ;; buffers now
   (when verb-auto-kill-response-buffers
-    (verb--auto-kill-response-buffers))
+    (verb-kill-all-response-buffers t))
 
   (let* ((url (oref rs url))
 	 (url-request-method (verb--to-ascii (oref rs method)))
@@ -1122,10 +1139,6 @@ be loaded into."
 						   (cdr content-type)))
 	 (response-buf (generate-new-buffer "*HTTP Response*"))
 	 timeout-timer)
-    ;; Add response buffer to global list
-    (when verb-auto-kill-response-buffers
-      (push response-buf verb--response-buffers))
-
     ;; Start the timeout warning timer
     (when verb-show-timeout-warning
       (setq timeout-timer (run-with-timer verb-show-timeout-warning nil
@@ -1166,7 +1179,7 @@ be loaded into."
 	     (oref rs method)
 	     (verb-request-spec-url-string rs))
 
-    ;;Return the response buffer
+    ;; Return the response buffer
     response-buf))
 
 (cl-defmethod verb-request-spec-to-string ((rs verb-request-spec))

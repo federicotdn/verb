@@ -22,6 +22,7 @@ Verb has been tested on Emacs 26 and 27.
 - Correctly handle text encodings (charsets) for requests and responses.
 - View PDF, PNG, JPEG, BMP, GIF and SVG responses inside Emacs.
 - Evaluate and substitute Emacs Lisp expressions in specifications text.
+- Can export requests to `curl` format.
 - Supports uploading files on requests.
 - Optionally uses `url-queue.el` backend.
 - Easy to use! (hopefully).
@@ -82,17 +83,22 @@ Then, move the point to one of the level 2 headings (marked with `**`), and pres
 After installing Verb, get started by creating a new `guide.verb` file. The `.verb` extension is added to the `auto-mode-alist` as part of the package autoloads, so the `verb-mode` major mode will be activated automatically. In the example file, add the following contents:
 
 ```
-* Get a user
+* Get users list
 get https://reqres.in/api/users
 ```
 
-This defines a minimal HTTP request specification, describing a method (`GET`) and a URL (`https://reqres.in/api/users`). The request is contained under a heading marked with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level.
+This defines a minimal HTTP request specification, describing a method (`GET`) and a URL (`https://reqres.in/api/users`). The request is contained under a heading marked with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level. All the text under a heading (if any) corresponds to the HTTP request it is describing.
 
 A buffer may contain zero headings, in which case the entire contents of the file are interpreted as a single request specification. This is useful for quick testing (on the `*scratch*` buffer, for example).
 
 ### Sending Requests
 
-To actually send the HTTP request, use the `verb-send-request-on-point-other-window` command, which by default is bound to <kbd>C-c C-r C-r</kbd>. This command will send the HTTP request, and show the response on another window using `switch-to-buffer-other-window`. If you wish to view the response on the same window, use the `verb-send-request-on-point` command, by default bound to <kbd>C-c C-r C-f</kbd>.
+To actually send the HTTP request, use one of the `verb-send-request-on-point` commands. They are the following:
+- <kbd>C-c C-r C-r</kbd>: `verb-send-request-on-point-other-window-stay` sends the request and shows the response on a buffer in another window, but doesn't switch to that window.
+- <kbd>C-c C-r C-s</kbd>: `verb-send-request-on-point-other-window` sends the request, shows the response on a buffer in another window, and switches to it.
+- <kbd>C-c C-r C-f</kbd>: `verb-send-request-on-point-other-window-stay` sends the request, and shows the response on a buffer in the currently selected window.
+
+Request sending is asynchronous - you can do other stuff while Emacs waits for the server's response. If the response is taking too long to be received, a warning will be displayed in the minibuffer. You can modify this behaviour by modifying the `verb-show-timeout-warning` variable's value.
 
 ### The Response Body Buffer
 
@@ -113,9 +119,15 @@ The contents of the response body will be shown on the buffer. To choose how the
 3. **Text:** If the chosen handler is for text, decode the response body using the charset described in the `Content-Type` header. If no charset was specified, use the one specified by `verb-default-response-charset` (default: `utf-8`). After that is done, call the handler (e.g. `xml-mode`). **Binary:** If the chosen handler is for a binary type, call the handler directly after loading the raw bytes into the buffer (e.g. `doc-view-mode`).
 4. The handler will have set an appropiate major mode to display and/or edit the received content.
 
-To close the response buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see next section).
+There's two recommended ways of closing response buffers:
+- If the response buffer is the current buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see next section).
+- If the response buffer is not the current buffer (e.g. you are still on your `guide.verb` buffer), you can kill **all** response buffers by using the `verb-kill-all-response-buffers`, which is bound to <kbd>C-c C-r C-k</kbd> by default. Response headers buffers will also be killed automatically.
 
 As you send more HTTP requests, more response buffers will be created, with `<N>` at the end of their name to distinguish between them. If you wish to automatically have old response buffers killed when making a new request, set the `verb-auto-kill-response-buffers` variable to `t`.
+
+### Re-sending requests
+
+If you wish to re-send the request that generated the current response buffer, select the window showing it and use the `verb-re-send-request` command, which is bound to <kbd>C-c C-r C-f</kbd> by default. Note that the exact same request will be sent, even if the originating `.verb` file was modified.
 
 ### The Response Headers Buffer
 
@@ -140,27 +152,13 @@ To close the response headers buffer, use the `verb-toggle-show-headers` command
 
 You can add headers to your request specifications. To do this, simply write them below the request method and URL. Following from our first example:
 ```
-* Get a user
+* Get users list
 get https://reqres.in/api/users
 Accept: application/json
 Content-Language: de-DE
 ```
 
-All headers must be written immediately after the method + URL line, without any blank lines in between.
-
-It is also possible to comment out headers. To do this, simply add `#` at the beginning of the line. If your request body starts with `#` as well, make sure to leave an empty line between the headers and the body, so that the body isn't parsed as a commented out header. Here's an example:
-
-```
-* Upload markdown file
-# Two headers are commented out.
-post https://example-api.com/api/upload
-Content-Type: text/markdown
-# Accept: application/json
-# User-Agent: Emacs 26
-
-# Title
-This is some text.
-```
+All headers must be written immediately after the method + URL line, without any blank lines in between. It is also possible to comment out headers. To do this, simply add `#` at the beginning of the line.
 
 **Note:** "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements used to separate sections of text.
 
@@ -180,7 +178,7 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
-The headers and body may be separated by a blank line, which will not be included in the request. If no blank line is present, the request body is considered to start from the first line not matching a `<Header>: <Value>` format.
+The headers and body **may** be separated by a blank line, which will not be included in the request. If no blank line is present, the request body is considered to start from the first line not matching a `<Header>: <Value>` format. If your request body starts with a `#`, it is required that you add the blank line between the headers and the body, in order to avoid interpreting part of the body as commented out headers.
 
 To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header. If the header is present but `charset` is not defined, the charset `verb-default-request-charset` will be used (default: `utf-8`) and added to the header value. If the header is not present, the charset `verb-default-request-charset` will be used, but no `Content-Type` header will be sent. Note that the current buffer's encoding has no effect on how the request body is encoded.
 
@@ -189,7 +187,7 @@ To encode the request body, Verb will use the `charset` value defined in the `Co
 Our example file should now look like the following:
 
 ```
-* Get a user
+* Get users list
 get https://reqres.in/api/users
 Accept: application/json
 Content-Language: de-DE
@@ -212,7 +210,7 @@ Notice that the two request specifications share many things in common: the URL 
 template https://reqres.in/api/users
 Accept: application/json
 
-** Get a user
+** Get users list
 get
 Content-Language: de-DE
 
@@ -226,7 +224,7 @@ Content-Type: application/json
 }
 ```
 
-Now, when we send the request under "Get a user", Verb will collect all the properties defined in the parent headings (in this case, a URL and one header), and then extend/override them with the attributes under this specific heading. This is how each attribute of an HTTP request specification is extended/overridden:
+Now, when we send the request under "Get users list", Verb will collect all the properties defined in the parent headings (in this case, a URL and one header), and then extend/override them with the attributes under this specific heading. This is how each attribute of an HTTP request specification is extended/overridden:
 
 - **Method:** The last heading's (i.e. the one with the highest level) method will be used. The value `template` does not count as a method and will be ignored.
 - **URL:**
@@ -239,12 +237,11 @@ Now, when we send the request under "Get a user", Verb will collect all the prop
 - **Headers:**: All headers will be merged. Values from higher level headings take priority.
 - **Body**: The last request body present in a heading will be used (if no heading defines a body, none will be used).
 
-You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.verb` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL schema, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources, and the level 3 headings will specify actions to run on those resources. For example:
+You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.verb` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL schema, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources, and the level 3 headings will specify actions to run on those resources. For example (unrelated to `guide.verb`):
 
 ```
 * Foobar Blog API
 template https://foobar-blog-api.org/api/v1
-Authentication: username=john&password=foobar
 Accept: application/json
 
 ** Users
@@ -270,6 +267,9 @@ template /posts?lang=en
 
 *** Search posts
 get ?text=example
+
+*** Delete all posts
+delete
 ```
 
 ### Emacs Lisp Code Tags
@@ -281,50 +281,46 @@ Depending on the type of the resulting value for a code tag, Verb will do the fo
 - `buffer`: The buffer's contents will be inserted into the request using `insert-buffer-substring`. If the buffer's `verb-kill-this-buffer` variable is set to non-nil, the buffer will be killed after its contents have been read. The variable's default value is `nil`.
 - Other types: The value will be converted to a string using `(format "%s" result)` and inserted into the request contents.
 
-Here's an example that uses code tags:
-
+Let's extend the previous example so that it now uses code tags:
 ```
-post https://some-example-api.com/api/users
+* User management
+template https://reqres.in/api/users
 Authentication: {{(verb-var token)}}
+Accept: application/json
+
+** Get users list
+get
+Content-Language: de-DE
+
+** Create a user
+post
+Content-Type: application/json
 
 {
-    "username": "{{(user-full-name)}}",
-    "operating_system": "{{system-type}}"
+    "name": "{{(user-full-name)}}",
+    "age": "{{(read-string "Age: ")}}"
 }
 ```
 
-The example uses the `verb-var` function. This function returns the value of the symbol being passed to it, unless the symbol does not have a value, in which case its value is set using `read-string` and then returned. It is useful for creating request specifications that require external (potentially secret) values, that only need to be set once.
+The example uses the `verb-var` function in the first code tag. This function returns the value of the symbol being passed to it, unless the symbol does not have a value, in which case its value is set using `read-string` and then returned. It is useful for creating request specifications that require external (potentially secret) values, that only need to be set once.
 
-If you wish to quickly set the value of a variable previously set with `verb-var`, use the `verb-set-var` command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`.
+If you wish to quickly re-set the value of a variable previously set with `verb-var`, use the `verb-set-var` command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`.
 
-If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). For example, here's a request that sends the previous response's headers to an endpoint:
-
-```
-post https://some-example-api.com/api/example
-Content-Type: text/plain
-
-{{(verb-headers-to-string (oref verb-last headers))}}
-```
-
-### File Uploads
-
-To upload a file, you can use the included `verb-read-file` function. This function reads a file into a buffer and sets its `verb-kill-this-buffer` variable to `t`, and then returns the buffer. Use it from inside code tags to insert the contents of a local file in a request. Here's an example:
+If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). The following example does this; add it to the ending of your `guide.verb` file:
 
 ```
-post https://some-example-api.com/api/upload
-Content-Type: text/plain
-
-{{(verb-read-file "documents/myfile.txt")}}
+** Get last created user
+get /{{(cdr (assoc-string "id" (json-read-from-string (oref verb-last body))))}}
+Accept: application/json
 ```
-
-Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this for you. This will let the server know how to interpret the contents of the request.
 
 ### Body Lines starting with `*`
 
-You may have noticed that because headings start with `*`, you cannot include lines starting with `*` in your request bodies, because Verb will interpret them as a new heading. To get around this, you can prefix request body lines starting with `*` with an empty code tag, `{{}}`. The empty code tag will evaluate to the empty string, so it won't modify the content of your request body. Here's an example of this:
+You may have noticed that because headings start with `*`, you cannot include lines starting with `*` in your request bodies, because Verb will interpret them as a new heading. To get around this, you can prefix request body lines starting with `*` with an empty code tag, `{{}}`. The empty code tag will evaluate to the empty string, so it won't modify the content of your request body. Following from our previous example, we can add a new level 2 heading:
 
 ```
-post https://some-example-api.com/api/upload
+** Upload file to user storage
+post /{{(verb-var user-id)}}/upload
 Content-Type: text/markdown
 
 # Sample Markdown file
@@ -332,6 +328,20 @@ Content-Type: text/markdown
 {{}}**This text is bold.**
 {{}}*This text is italicized.*
 ```
+
+### File Uploads
+
+To upload a file, you can use the included `verb-read-file` function. This function reads a file into a buffer and sets its `verb-kill-this-buffer` variable to `t`, and then returns the buffer. Use it from inside code tags to insert the contents of a local file in a request. To test this, we can modify the previous example so that instead of manually writing a Markdown file, we now read one from disk:
+
+```
+** Upload file to user storage
+post /{{(verb-var user-id)}}/upload
+Content-Type: text/markdown
+
+{{(verb-read-file "documents/myfile.md")}}
+```
+
+Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this for you. This will let the server know how to interpret the contents of the request.
 
 ### Outline Mode Commands
 

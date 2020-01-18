@@ -590,14 +590,6 @@
 		     (buffer-string))
 		   "A: B\nC: D")))
 
-(ert-deftest test-headers-to-string ()
-  (should (string= (verb-headers-to-string nil)
-		   ""))
-
-  (should (string= (verb-headers-to-string '(("A" . "B")
-					     ("C" . "D")))
-		   "A: B\nC: D")))
-
 (ert-deftest test-eval-string ()
   (should (= (verb--eval-string "1") 1))
 
@@ -1148,6 +1140,27 @@
        (with-current-buffer (verb-send-request-on-point)
 	 (sleep-for 0.25)
 	 ,@body))))
+
+(defun get-response-buffers ()
+  (seq-filter (lambda (b) (buffer-local-value 'verb-http-response b))
+	      (buffer-list)))
+
+(ert-deftest test-kill-all-response-buffers ()
+  (let ((n (length (get-response-buffers))))
+    (server-test "basic")
+    (server-test "basic-json")
+    (should (= (length (get-response-buffers)) (+ n 2)))
+    (with-current-buffer test-buf
+      (verb-kill-all-response-buffers))
+    (should (zerop (length (get-response-buffers))))))
+
+(ert-deftest test-re-send-request ()
+  (server-test "basic"
+    (erase-buffer)
+    (should (string= (buffer-string) ""))
+    (with-current-buffer (verb-re-send-request)
+      (sleep-for 0.25)
+      (should (string= (buffer-string) "Hello, World!")))))
 
 (ert-deftest test-server-basic ()
   (server-test "basic"

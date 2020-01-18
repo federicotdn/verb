@@ -23,7 +23,6 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Variable: **verb-kill-this-buffer**
 - Variable: **verb-mode-prefix-map**
 - Variable: **verb-response-headers-mode-map**
-- Function: **verb-headers-to-string** *headers*
 - Function: **verb-read-file** *file*
 - Function: **verb-request-spec-url-string** *rs*
 - Function: **verb-request-spec-validate** *rs*
@@ -33,12 +32,15 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Error: **verb-empty-spec**
 - Command: **verb-send-request-on-point** *where*
 - Command: **verb-send-request-on-point-other-window**
+- Command: **verb-send-request-on-point-other-window-stay**
+- Command: **verb-re-send-request**
+- Command: **verb-kill-all-response-buffers** *keep-windows*
 - Command: **verb-export-request-on-point**
 - Command: **verb-export-request-on-point-verb**
 - Command: **verb-export-request-on-point-human**
 - Command: **verb-export-request-on-point-curl**
 - Command: **verb-insert-heading**
-- Command: **verb-kill-response-buffer-and-window**
+- Command: **verb-kill-response-buffer-and-window** *keep-window*
 - Command: **verb-kill-buffer-and-window**
 - Command: **verb-cycle**
 - Command: **verb-toggle-show-headers**
