@@ -374,11 +374,6 @@
 			  "Accept: text\n"
 			  "\n" ;; This line is ignored
 			  "hello world"))
-  (should (string= (oref aux :body) "hello world"))
-
-  (setq aux (text-as-spec "GET example.com\n"
-			  "Accept: text\n"
-			  "hello world"))
   (should (string= (oref aux :body) "hello world")))
 
 (ert-deftest test-request-spec-from-text-code-tags ()
@@ -394,7 +389,7 @@
   (should (string= (oref aux :body) "test body 30"))
 
   (setq aux (text-as-spec "GET http://example.com\n"
-			  "Content-Type: text/markdown"
+			  "Content-Type: text/markdown\n"
 			  "\n"
 			  "# A markdown list.\n"
 			  "{{}}- Hello\n"
@@ -403,9 +398,9 @@
   (should (equal (oref aux :headers)
 		 (list (cons "Content-Type" "text/markdown"))))
 
-  (setq test-header "text/markdown")
+  (setq test-header "Content-Type: text/markdown")
   (setq aux (text-as-spec "{{(concat \"g\" \"et\")}} http://example.com\n"
-			  "Content-Type: {{test-header}}"
+			  "{{test-header}}\n"
 			  "\n"
 			  "# A markdown list.\n"
 			  "{{}}- Hello\n"
@@ -413,6 +408,27 @@
   (should (string= (oref aux :body) "# A markdown list.\n- Hello\n- World"))
   (should (equal (oref aux :headers)
 		 (list (cons "Content-Type" "text/markdown")))))
+
+(ert-deftest test-blank-line-between-headers-and-body ()
+  (setq aux (text-as-spec "GET example.com\n"
+			  "Accept: text\n"
+			  "\n"
+			  "hello\n"))
+  (should (string= (oref aux :body) "hello\n"))
+
+  (should-error
+   (setq aux (text-as-spec "GET example.com\n"
+			   "Accept: text\n"
+			   "hello\n")))
+
+  (setq aux (text-as-spec "GET example.com\n"
+			  "Accept: text\n"
+			  "\n"))
+  (should-not (oref aux :body))
+
+  (setq aux (text-as-spec "GET example.com\n"
+			  "\n"))
+  (should-not (oref aux :body)))
 
 (ert-deftest test-dont-evaluate-code-tags-in-comments ()
   (setq counter 0)
@@ -457,17 +473,17 @@
   (setq aux (text-as-spec "get http://example.com/foobar\n"
 			  "#Foo: bar\n"
 			  "#Foo: bar2\n"
+			  "#kasdflkjasdlfjasdf\n"
 			  "\n"
 			  "Content\n"))
   (should-not (oref aux :headers))
   (should (string= (oref aux :body) "Content\n"))
 
-  (setq aux (text-as-spec "get http://example.com/foobar\n"
-			  "#Foo: bar\n"
-			  "#Foo: bar2\n"
-			  "Content\n"))
-  (should-not (oref aux :headers))
-  (should (string= (oref aux :body) "Content\n"))
+  (should-error
+   (setq aux (text-as-spec "get http://example.com/foobar\n"
+			   "#Foo: bar\n"
+			   "#Foo: bar2\n"
+			   "Content\n")))
 
   (setq aux (text-as-spec "get http://example.com/foobar\n"
 			  "Accept: text\n"
@@ -478,14 +494,6 @@
   (should (equal (oref aux :headers)
 		 '(("Accept" . "text")
 		   ("Abc" . "xyz"))))
-  (should (string= (oref aux :body) "Content\n"))
-
-  (setq aux (text-as-spec "get http://example.com/foobar\n"
-			  "Accept: text\n"
-			  "#Foo: bar\n"
-			  "Content\n"))
-  (should (equal (oref aux :headers)
-		 '(("Accept" . "text"))))
   (should (string= (oref aux :body) "Content\n"))
 
   (setq aux (text-as-spec "post http://example.com/foobar\n"

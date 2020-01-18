@@ -1454,9 +1454,9 @@ and fragment component of a URL with no host or schema defined."
 
 The text format for defining requests is:
 
-[COMMENTS]
+[COMMENTS]...
 METHOD [URL | PARTIAL-URL]
-[HEADERS]
+[HEADERS]...
 
 [BODY]
 
@@ -1468,8 +1468,9 @@ URL can be the empty string, or a URL with an \"http\" or \"https\"
 schema.
 PARTIAL-URL can be the empty string, or the path + query string +
 fragment part of a URL.
-HEADERS and BODY can be separated by a blank line, which will be
-ignored.  Each line of HEADERS must be in the form of KEY: VALUE.
+Each line of HEADERS must be in the form of KEY: VALUE.
+BODY can contain arbitrary text.  Note that there must be a blank
+line between HEADERS and BODY.
 
 As a special case, if the text specification consists exclusively of
 comments and/or whitespace, or is the empty string, signal
@@ -1524,21 +1525,25 @@ signal an error."
       ;; Skip newline after URL line
       (unless (eobp) (forward-char))
 
-      ;; Search for HTTP headers
-      ;; Stop as soon as we find a blank line or a non-matching line
-      ;; Accept lines starting with '#' and skip them
-      (while (re-search-forward (concat "^\\s-*"
-					verb--comment-character
-					"?\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-?\\(.*\\)$")
-				(line-end-position) t)
-	(let ((line (match-string 0))
-	      (key (match-string 1))
-	      (value (match-string 2)))
+      ;; Search for HTTP headers, stop as soon as we find a blank line
+      (while (re-search-forward "^\\(.+\\)$" (line-end-position) t)
+	(let ((line (match-string 1)))
+	  ;; Process line if it doesn't start with '#'
 	  (unless (string-prefix-p verb--comment-character
 				   (string-trim-left line))
-	    (push (cons (string-trim key)
-			(string-trim (verb--eval-lisp-code-in-string value)))
-		  headers)))
+	    ;; Check if line matches KEY: VALUE after evaluating any
+	    ;; present code tags
+	    (setq line (verb--eval-lisp-code-in-string line))
+	    (if (string-match "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
+			      line)
+		;; Line matches, trim KEY and VALUE and store them
+		(push (cons (string-trim (match-string 1 line))
+			    (string-trim (match-string 2 line)))
+		      headers)
+	      (user-error (concat "Invalid HTTP header: \"%s\"\n"
+				  "Make sure there's a blank line between"
+				  " the headers and the request body")
+			  line))))
 	(unless (eobp) (forward-char)))
       (setq headers (nreverse headers))
 
@@ -1546,10 +1551,8 @@ signal an error."
       (save-excursion
 	(verb--eval-lisp-code-in-buffer (current-buffer)))
 
-      ;; Allow a blank like to separate headers and body (not
-      ;; required)
-      (when (re-search-forward "^$" (line-end-position) t)
-	(unless (eobp) (forward-char)))
+      ;; Skip blank line after headers
+      (unless (eobp) (forward-char))
 
       ;; The rest of the buffer is the request body
       (let ((rest (buffer-substring (point) (point-max))))

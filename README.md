@@ -164,7 +164,7 @@ All headers must be written immediately after the method + URL line, without any
 
 ### Adding a Body
 
-To add a body to your HTTP request, simply insert it below the method, URL and headers. Continuing with our previous example, add the following contents at the end of the file:
+To add a body to your HTTP request, simply insert it below the method, URL and headers. A blank line **must** be left between the headers and the body. Continuing with our previous example, add the following contents at the end of the file:
 
 ```
 * Create a user
@@ -177,8 +177,6 @@ Content-Type: application/json; charset=utf-8
     "age": 42
 }
 ```
-
-The headers and body **may** be separated by a blank line, which will not be included in the request. If no blank line is present, the request body is considered to start from the first line not matching a `<Header>: <Value>` format. If your request body starts with a `#`, it is required that you add the blank line between the headers and the body, in order to avoid interpreting part of the body as commented out headers.
 
 To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header. If the header is present but `charset` is not defined, the charset `verb-default-request-charset` will be used (default: `utf-8`) and added to the header value. If the header is not present, the charset `verb-default-request-charset` will be used, but no `Content-Type` header will be sent. Note that the current buffer's encoding has no effect on how the request body is encoded.
 
@@ -274,7 +272,7 @@ delete
 
 ### Emacs Lisp Code Tags
 
-You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear almost anywhere in the request specification: the URL, method, header values and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`). Code tags are not allowed in header names.
+You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere in the request specification: the URL, method, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
 
 Depending on the type of the resulting value for a code tag, Verb will do the following:
 - `string`: The value will be inserted as-is into the request contents.

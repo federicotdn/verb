@@ -6,6 +6,9 @@
 - Added new command `verb-kill-all-response-buffers`, bound to <kbd>C-c C-r C-k</kbd> in Verb mode.
 - Added new command `verb-re-send-request`, bound to <kbd>C-c C-r C-f</kbd> in Verb response body mode.
 - Remove `verb-headers-to-string` function.
+- A blank line must now be present between request headers and body.
+- Added user error messages for invalid HTTP headers.
+- Allow using code tags in HTTP header names.
 
 ## **1.3.0** - 2020-01-17
 - Request headers can now be commented out using `#`.
