@@ -44,12 +44,6 @@
 ;; Create log buffer now
 (verb--log nil 'I "")
 
-(ert-deftest test-outline-C-c-C-r-unbound ()
-  (with-temp-buffer
-    (outline-mode)
-    (should (eq (key-binding (kbd "C-c C-a")) 'outline-show-all)) ; sanity check
-    (should-not (key-binding (kbd "C-c C-r")))))
-
 (ert-deftest test-up-heading ()
   (setq outline-test
 	;; Test up-heading without level 1 heading
