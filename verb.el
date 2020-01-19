@@ -1487,8 +1487,9 @@ METHOD [URL | PARTIAL-URL]
 
 [BODY]
 
-COMMENTS must be lines starting with `verb--comment-character'.
-Adding comments is optional.
+COMMENTS must be lines starting with `verb--comment-character' or
+\":\" (see Org headline property syntax).
+Adding comments is optional, if present they will be ignored.
 METHOD must be a method matched by `verb--http-methods-regexp' (that
 is, an HTTP method or the value of `verb--template-keyword').
 URL can be the empty string, or a URL with an \"http\" or \"https\"
@@ -1496,6 +1497,7 @@ schema.
 PARTIAL-URL can be the empty string, or the path + query string +
 fragment part of a URL.
 Each line of HEADERS must be in the form of KEY: VALUE.
+Adding headers is optional.
 BODY can contain arbitrary text.  Note that there must be a blank
 line between HEADERS and BODY.
 
@@ -1510,11 +1512,16 @@ signal an error."
       (insert text)
       (goto-char (point-min))
 
-      ;; Skip initial blank lines and comments
-      (while (and (re-search-forward (concat "^\\(\\s-*"
-					     verb--comment-character
-					     ".*\\)?$")
-				     (line-end-position) t)
+      ;; Skip initial blank lines, comments and properties
+      (while (and (re-search-forward
+		   (concat "^\\s-*\\(\\("
+			   ;; Headline properties
+			   ":"
+			   "\\|"
+			   ;; Comments
+			   verb--comment-character
+			   "\\).*\\)?$")
+		   (line-end-position) t)
 		  (not (eobp)))
 	(forward-char))
       ;; Check if the entire specification was just comments or empty

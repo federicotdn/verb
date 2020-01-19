@@ -457,6 +457,13 @@
 		 '(("Something" . "123")
 		   ("Uno" . "Dos")))))
 
+(ert-deftest test-request-spec-from-text-headline-properties ()
+  (setq aux (text-as-spec ":PROPERTIES:\n"
+			  ":Something: hello\n"
+			  ":END:\n"
+			  "get http://example.com"))
+  (should (string= (oref aux :method) "GET")))
+
 (ert-deftest test-request-spec-from-text-commented-headers ()
   (setq aux (text-as-spec "get http://example.com/foobar\n"
 			  "Accept: text\n"
