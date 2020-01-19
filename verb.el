@@ -240,9 +240,6 @@ previous requests on new requests.")
 (defvar verb--vars nil
   "List of variables set with `verb-var'.")
 
-(defvar verb--debug-enable nil
-  "If non-nil, enable logging debug messages with `verb--debug'.")
-
 (defvar verb-mode-prefix-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") #'verb-send-request-on-point-other-window)
@@ -868,12 +865,6 @@ present, return (nil . nil)."
 		(match-string 1 value)))
       (cons nil nil))))
 
-(defun verb--debug (&rest args)
-  "Log ARGS in the debugging buffer using `format'."
-  (when verb--debug-enable
-    (with-current-buffer (get-buffer-create "*verb-debug*")
-      (insert (apply #'format args) "\n"))))
-
 (defun verb--get-handler (content-type handlers-list)
   "Get a handler from HANDLERS-LIST for a specific CONTENT-TYPE.
 CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
@@ -909,7 +900,6 @@ view the HTTP response in a user-friendly way."
 			  (cadr error-info)))
       (kill-buffer (current-buffer))
       (kill-buffer response-buf)
-      (verb--debug "Connection error (from status plist): %s" http-error)
       (user-error "Failed to connect to host %s (port: %s)"
 		  (url-host url) (url-port url))))
 
@@ -938,7 +928,6 @@ view the HTTP response in a user-friendly way."
 
     ;; Read Content-Type and charset
     (setq content-type (verb--headers-content-type headers))
-    (verb--debug "Content-Type: %s" content-type)
 
     ;; Try to get a buffer handler function for this content type
     ;; Binary handlers have priority over text handlers
