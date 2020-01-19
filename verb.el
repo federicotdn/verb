@@ -503,12 +503,6 @@ Return t if there was a heading to move towards to and nil otherwise."
       (org-up-heading-all 1)
       (not (= p (point))))))
 
-(defun verb--next-heading ()
-  "Move to the next heading."
-  ;; Implemented as in `org-next-visible-heading'
-  (org-with-limited-levels
-   (outline-next-heading)))
-
 (defun verb--heading-contents ()
   "Return the heading's text contents.
 If no headings exist, return the contents of the entire buffer."
@@ -518,7 +512,7 @@ If no headings exist, return the contents of the entire buffer."
 		     (unless (eobp) (forward-char))
 		     (point)))
 	    (end (save-excursion
-		   (verb--next-heading)
+		   (goto-char (org-entry-end-position))
 		   (when (and (org-at-heading-p)
 			      (not (eobp)))
 		     (backward-char))
