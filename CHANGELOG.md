@@ -1,5 +1,5 @@
 # Verb Changelog
-## master
+## **1.4.1** - 2020-01-19
 - Added new logging system, logs will be shown in the `*Verb Log*` buffer.
 - Added a `verb-enable-log` customizable option.
 
