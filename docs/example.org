@@ -1,0 +1,17 @@
+# -*- mode: verb -*-
+
+* Example .org file
+# Although this file has a .org extension, you can still load it with
+# Verb mode by specifying the 'mode' file local variable. See first
+# line of the file.
+
+** Ipify API
+:PROPERTIES:
+:Author: John Smith
+:END:
+
+get https://api.ipify.org?format=json
+
+** Tasks
+- [ ] Find my IPv4 address
+- [ ] Find my IPv6 address
