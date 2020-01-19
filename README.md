@@ -276,7 +276,7 @@ You can embed Lisp code inside request specifications. When sending the request,
 
 Depending on the type of the resulting value for a code tag, Verb will do the following:
 - `string`: The value will be inserted as-is into the request contents.
-- `buffer`: The buffer's contents will be inserted into the request using `insert-buffer-substring`. If the buffer's `verb-kill-this-buffer` variable is set to non-nil, the buffer will be killed after its contents have been read. The variable's default value is `nil`.
+- `buffer`: The buffer's contents will be inserted into the request using `insert-buffer-substring`. If the buffer's `verb-kill-this-buffer` variable is set to non-`nil`, the buffer will be killed after its contents have been read. The variable's default value is `nil`.
 - Other types: The value will be converted to a string using `(format "%s" result)` and inserted into the request contents.
 
 Let's extend the previous example so that it now uses code tags:
@@ -370,6 +370,10 @@ You can export request specifications to other formats by using the `verb-export
 You can export directly to `curl` by using the `verb-export-request-on-point-curl` command, bound by default to <kbd>C-c C-r C-u</kbd>.
 
 Note: code tags will be evaluated when exporting a request.
+
+### Verb Log
+
+When you send a request or receive a response, some information is logged in the `*Verb Log*` buffer. You can use this log to get some more details on any errors that might have happened and other internal stuff. You can disable logging by setting the `verb-enable-log` variable to `nil`.
 
 ## Hooks, Variables, Functions
 

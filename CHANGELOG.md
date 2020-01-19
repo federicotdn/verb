@@ -1,4 +1,8 @@
 # Verb Changelog
+## master
+- Added new logging system, logs will be shown in the `*Verb Log*` buffer.
+- Added a `verb-enable-log` customizable option.
+
 ## **1.4.0** - 2020-01-18
 - Fixed Lisp code tags being evaluated in comments.
 - Rebound `verb-send-request-on-point-other-window` to <kbd>C-c C-r C-s</kbd> in Verb mode.

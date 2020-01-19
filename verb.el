@@ -178,6 +178,10 @@ If nil, never prettify JSON files automatically."
   :type '(choice (integer :tag "Max bytes")
 		 (const :tag "Off" nil)))
 
+(defcustom verb-enable-log t
+  "When non-nil, log different events in the *Verb Log* buffer."
+  :type 'boolean)
+
 (defcustom verb-post-response-hook nil
   "Hook run after receiving an HTTP response.
 The hook is run with the response body buffer as the current buffer.
@@ -203,6 +207,15 @@ variable will be set to the corresponding `verb-response' object."
 (defface verb-json-key '((t :inherit font-lock-doc-face))
   "Face for highlighting JSON keys.")
 
+(defface verb-log-info '((t :inherit homoglyph))
+  "Face for highlighting I entries in the log buffer.")
+
+(defface verb-log-warning '((t :inherit warning))
+  "Face for highlighting W entries in the log buffer.")
+
+(defface verb-log-error '((t :inherit error))
+  "Face for highlighting E entries in the log buffer.")
+
 (defconst verb--comment-character "#"
   "Character to use to mark commented lines.")
 
@@ -214,6 +227,12 @@ variable will be set to the corresponding `verb-response' object."
 (defconst verb--template-keyword "TEMPLATE"
   "Keyword to use when defining request templates.
 Request templates are defined without HTTP methods, paths or hosts.")
+
+(defconst verb--log-levels '(I W E)
+  "Log levels for the log buffer.
+I = Information.
+W = Warning.
+E = Error.")
 
 (defvar-local verb-http-response nil
   "HTTP response for this response buffer (`verb-response' object).
@@ -239,6 +258,9 @@ previous requests on new requests.")
 
 (defvar verb--vars nil
   "List of variables set with `verb-var'.")
+
+(defvar verb--requests-count 0
+  "Number of HTTP requests sent in the past.")
 
 (defvar verb-mode-prefix-map
   (let ((map (make-sparse-keymap)))
@@ -314,7 +336,42 @@ more details on how to use it."
 (define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
   "Major mode for displaying an HTTP response's headers."
   (font-lock-add-keywords
-   nil '(("^\\([[:alnum:]-]+:\\)\\s-.+$" (1 'verb-header)))))
+   nil '(;; Key: Value
+	 ("^\\([[:alnum:]-]+:\\)\\s-.+$"
+	  (1 'verb-header)))))
+
+(define-derived-mode verb-log-mode special-mode "Verb[Log]"
+  "Major mode for displaying Verb logs.
+
+Each line contains a short message representing an event that has been
+logged:
+
+  The first part of each line is a number that represents what
+  request has generated this event (the number identifies the request).
+  If an event does not correspond to any request, \"-\" is used instead.
+  If the first part of the line is empty, then the event corresponds to
+  the same request from the previous line.
+
+  The second part of each line represents the level at which this event
+  has been logged, I for information, W for warnings and E for errors.
+
+  The third part of each line is the message itself.
+
+If this buffer is killed, it will be created again when the next
+message is logged.  To turn off logging, set `verb-enable-log' to nil."
+  (font-lock-add-keywords
+   nil '(;; (request number e.g. 10)
+	 ("^[[:digit:]-]+\\s-"
+	  (0 'bold))
+	 ;; Log level I after request number
+	 ("^[[:digit:]-]*\\s-+\\(I\\)"
+	  (1 'verb-log-info))
+	 ;; Log level W after request number
+	 ("^[[:digit:]-]*\\s-+\\(W\\)"
+	  (1 'verb-log-warning))
+	 ;; Log level E after request number
+	 ("^[[:digit:]-]*\\s-+\\(E\\)"
+	  (1 'verb-log-error)))))
 
 (defun verb--http-method-p (m)
   "Return non-nil if M is a valid HTTP method."
@@ -393,6 +450,41 @@ HEADER and VALUE must be nonempty strings."
 		(verb-toggle-show-headers))
 	    (verb-toggle-show-headers))))
     (setq header-line-format nil)))
+
+(defun verb--log (request level &rest args)
+  "Log a message in the *Verb Log* buffer.
+REQUEST must be a number corresponding to an HTTP request made.  LEVEL
+must be a value in `verb--log-levels'.  The remaining ARGS are used to
+call `format', and then the result is logged in the log buffer.
+
+If `verb-enable-log' is nil, do not log anything."
+  (setq request (if request (number-to-string request) "-"))
+  (unless (member level verb--log-levels)
+    (user-error "Invalid log level: \"%s\"" level))
+  (when verb-enable-log
+    (with-current-buffer (get-buffer-create "*Verb Log*")
+      (unless (derived-mode-p 'verb-log-mode)
+	(verb-log-mode))
+      (let ((inhibit-read-only t)
+	    (last "")
+	    (line (line-number-at-pos)))
+	;; Get last logged request number
+	(when (re-search-backward "^\\(-\\|[[:digit:]]+\\)\\s-"
+				  nil t)
+	  (setq last (match-string 1)))
+	(goto-char (point-max))
+	;; Log new message
+	(insert (format "%s  %s  "
+			(if (string= last request)
+			    (make-string (length request) ? )
+			  request)
+			level)
+		(apply #'format args)
+		"\n")
+	;; If logged messaged contained newlines, add a blank line
+	;; to make things more readable
+	(when (> (line-number-at-pos) (1+ line))
+	  (newline))))))
 
 (defun verb--nonempty-string (s)
   "Return S. If S is the empty string, return nil."
@@ -723,7 +815,8 @@ explicitly.  Lisp code tags will be evaluated before exporting."
 				       verb-export-functions
 				       nil t))))
     (when-let ((fn (cdr (assoc exporter verb-export-functions))))
-      (funcall fn rs))))
+      (funcall fn rs)
+      (verb--log nil 'I "Exported request to %s format." exporter))))
 
 (defun verb-export-request-on-point-verb ()
   "Export request on point to verb format.
@@ -778,7 +871,7 @@ Add the generated command to the kill ring and return it.  For more
 information about curl see URL `https://curl.haxx.se/'.  If NO-MESSAGE
 is non-nil, do not display a message on the minibuffer."
   (with-temp-buffer
-    (insert "curl '" (verb-request-spec-url-string rs) "'")
+    (insert "curl '" (verb-request-spec-url-to-string rs) "'")
     (dolist (key-value (oref rs headers))
       (insert " \\\n")
       (insert "-H '" (car key-value) ": " (cdr key-value) "'"))
@@ -830,7 +923,7 @@ is non-nil, do not display a message on the minibuffer."
 	       value
 	       (if (= value 1) "" "s"))))))
 
-(cl-defmethod verb-request-spec-url-string ((rs verb-request-spec))
+(cl-defmethod verb-request-spec-url-to-string ((rs verb-request-spec))
   "Return RS's url member as a string if it is non-nil."
   (let ((url (oref rs url)))
     (when url
@@ -870,17 +963,18 @@ present, return (nil . nil)."
 CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
   (cdr (assoc-string (car content-type) handlers-list t)))
 
-(defun verb--request-spec-callback (status rs response-buf start timeout-timer where)
+(defun verb--request-spec-callback (status rs response-buf start timeout-timer where num)
   "Callback for `verb--request-spec-send' for request RS.
 More response information can be read from STATUS.
-RESPONSE-BUF should point to a buffer where the response should be
-copied to, which the user can then use or edit freely.
-START should contain a floating point number indicating the timestamp
-at which the request was sent.
-TIMEOUT-TIMER should contain a timer set to call `verb--timeout-warn',
-or nil.
+RESPONSE-BUF points to a buffer where the response should be copied
+to, which the user can then use or edit freely.
+START contains a floating point number indicating the timestamp at
+which the request was sent.
+TIMEOUT-TIMER contains a timer set to call `verb--timeout-warn', or
+nil.
 WHERE describes where the results should be shown in (see
 `verb-send-request-on-point').
+NUM is this request's identification number.
 
 This function sets up the current buffer so that it can be used to
 view the HTTP response in a user-friendly way."
@@ -900,6 +994,7 @@ view the HTTP response in a user-friendly way."
 			  (cadr error-info)))
       (kill-buffer (current-buffer))
       (kill-buffer response-buf)
+      (verb--log num 'E "Connection error: %s" http-error)
       (user-error "Failed to connect to host %s (port: %s)"
 		  (url-host url) (url-port url))))
 
@@ -915,6 +1010,8 @@ view the HTTP response in a user-friendly way."
     (setq status-line (verb--nonempty-string
 		       (buffer-substring-no-properties (point)
 						       (line-end-position))))
+
+    (verb--log num 'I "%s" status-line)
 
     (forward-line)
     ;; Skip all HTTP headers
@@ -968,14 +1065,16 @@ view the HTTP response in a user-friendly way."
     (if binary-handler
 	;; Response content is a binary format:
 
-	(with-current-buffer response-buf
-	  (fundamental-mode)
-	  (set-buffer-multibyte nil)
-	  (buffer-disable-undo)
-	  ;; Copy bytes into RESPONSE-BUF
-	  (insert-buffer-substring original-buffer)
-	  (goto-char (point-min))
-	  (funcall binary-handler))
+	(progn
+	  (verb--log num 'I "Using binary handler: %s" binary-handler)
+	  (with-current-buffer response-buf
+	    (fundamental-mode)
+	    (set-buffer-multibyte nil)
+	    (buffer-disable-undo)
+	    ;; Copy bytes into RESPONSE-BUF
+	    (insert-buffer-substring original-buffer)
+	    (goto-char (point-min))
+	    (funcall binary-handler)))
 
       ;; Response content is text:
 
@@ -1005,6 +1104,8 @@ view the HTTP response in a user-friendly way."
 	      (verb--buffer-string-no-properties)))
 
       (when text-handler
+	(verb--log num 'I "Using text handler: %s" text-handler)
+
 	(set-buffer-file-coding-system coding-system)
 
 	;; Prepare buffer for editing by user
@@ -1135,12 +1236,13 @@ be loaded into."
 	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
 	 (response-buf (generate-new-buffer "*HTTP Response*"))
+	 (num (setq verb--requests-count (1+ verb--requests-count)))
 	 timeout-timer)
     ;; Start the timeout warning timer
     (when verb-show-timeout-warning
       (setq timeout-timer (run-with-timer verb-show-timeout-warning nil
 					  #'verb--timeout-warn
-					  response-buf rs)))
+					  response-buf rs num)))
 
     ;; Advice url.el functions
     (verb--advice-url)
@@ -1156,7 +1258,8 @@ be loaded into."
 			   response-buf
 			   (time-to-seconds)
 			   timeout-timer
-			   where)
+			   where
+			   num)
 		     t verb-inhibit-cookies)
 	    (setq err nil))
 	;; If an error occurred while sending the request, do some
@@ -1174,7 +1277,12 @@ be loaded into."
     ;; Show user some quick information
     (message "%s request sent to %s"
 	     (oref rs method)
-	     (verb-request-spec-url-string rs))
+	     (verb-request-spec-url-to-string rs))
+
+    ;; Log the request
+    (verb--log num 'I "%s %s"
+	       (oref rs method)
+	       (verb-request-spec-url-to-string rs))
 
     ;; Return the response buffer
     response-buf))
@@ -1192,14 +1300,15 @@ This string should be able to be used with
       (insert "\n" body))
     (verb--buffer-string-no-properties)))
 
-(defun verb--timeout-warn (buffer rs)
+(defun verb--timeout-warn (buffer rs num)
   "Warn the user about a possible network timeout for request RS.
 This function should be run `verb-show-timeout-warning' seconds after
 an HTTP request has been sent.  Show the warning only when response
-buffer BUFFER is live."
+buffer BUFFER is live.  NUM is the request's identification number."
+  (verb--log num 'W "%s" "Request is taking longer than expected.")
   (when (buffer-live-p buffer)
     (message "Request to %s is taking longer than expected"
-	     (verb-request-spec-url-string rs))))
+	     (verb-request-spec-url-to-string rs))))
 
 (defun verb--override-alist (original other)
   "Override alist ORIGINAL with OTHER.

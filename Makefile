@@ -47,7 +47,7 @@ load-examples:
 		 --eval "(set-face-attribute 'default nil :height $(FONT_SIZE))" \
 		 --eval "(setq initial-scratch-message nil)" \
 		 --eval "(with-current-buffer (get-buffer \"*scratch*\") (verb-mode))" \
-		 --eval "(setq verb--debug-enable t)" \
+		 --eval "(load-theme 'wombat)" \
 		 --eval "(setq url-debug t)" \
 		 --eval "(toggle-debug-on-error)" \
 		 --eval "(dired \"docs\")" \

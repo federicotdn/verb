@@ -41,6 +41,9 @@
 				    :headers headers
 				    :body body))))
 
+;; Create log buffer now
+(verb--log nil 'I "")
+
 (ert-deftest test-outline-C-c-C-r-unbound ()
   (with-temp-buffer
     (outline-mode)
@@ -296,22 +299,22 @@
 
 (ert-deftest test-request-spec-from-text-simple ()
   (setq aux (text-as-spec "GET https://example.com"))
-  (should (string= (verb-request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-to-string aux)
 		   "https://example.com"))
   (should (string= (oref aux :method) "GET"))
 
   (setq aux (text-as-spec "GET https://example.com\n"))
-  (should (string= (verb-request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-to-string aux)
 		   "https://example.com"))
 
   (setq aux (text-as-spec "GET /some/path"))
-  (should (string= (verb-request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-to-string aux)
 		   "/some/path"))
 
   (setq aux (text-as-spec "# Comment\n"
 			  "\n"
 			  "GET https://example.com"))
-  (should (string= (verb-request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-to-string aux)
 		   "https://example.com"))
   (should (string= (oref aux :method) "GET"))
 
@@ -319,7 +322,7 @@
 			  "  # hello\n"
 			  "\n"
 			  "GET https://example.com"))
-  (should (string= (verb-request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-to-string aux)
 		   "https://example.com"))
   (should (string= (oref aux :method) "GET")))
 
@@ -378,7 +381,7 @@
 
 (ert-deftest test-request-spec-from-text-code-tags ()
   (setq aux (text-as-spec "GET http://example.com/users/{{(+ 1 1)}}\n"))
-  (should (string= (verb-request-spec-url-string aux) "http://example.com/users/2"))
+  (should (string= (verb-request-spec-url-to-string aux) "http://example.com/users/2"))
 
   (setq aux (text-as-spec "GET http://example.com\n"
 			  "Accept: {{(* 3 2)}}\n"
@@ -535,7 +538,7 @@
 			  " Referer   :host\n"
 			  "\n"
 			  "Content\n"))
-  (should (string= (verb-request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-to-string aux)
 		   "http://example.com/foobar"))
   (should (string= (oref aux :method) "POST"))
   (should (equal (oref aux :headers)
@@ -552,12 +555,12 @@
 (ert-deftest test-request-spec-url-string ()
   (setq aux (verb-request-spec-from-string
 	     "GET http://hello.com/test"))
-  (should (string= (verb-request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-to-string aux)
 		   "http://hello.com/test"))
 
   (setq aux (verb-request-spec-from-string
 	     "GET hello/world"))
-  (should (string= (verb-request-spec-url-string aux)
+  (should (string= (verb-request-spec-url-to-string aux)
 		   "hello/world")))
 
 (ert-deftest test-override-url ()
@@ -1177,7 +1180,7 @@
     (should verb-response-body-mode)
     (should verb-http-response)
     (should (oref verb-http-response request))
-    (should (string= (verb-request-spec-url-string (oref verb-http-response request))
+    (should (string= (verb-request-spec-url-to-string (oref verb-http-response request))
 		     "http://localhost:8000/basic"))))
 
 (ert-deftest test-server-basic-json ()

@@ -12,20 +12,25 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
   Hook run after receiving an HTTP response, processing its contents, and setting up the response buffer. Use this hook to add custom behaviour after receiving a response.
 - Major Mode: **verb-mode**
 - Major Mode: **verb-response-headers-mode**
+- Major Mode: **verb-log-mode**
 - Minor Mode: **verb-response-body-mode**
 - Face: **verb-http-keyword**
 - Face: **verb-header**
 - Face: **verb-comment**
 - Face: **verb-code-tag**
 - Face: **verb-json-key**
+- Face: **verb-log-info**
+- Face: **verb-log-warning**
+- Face: **verb-log-error**
 - Variable: **verb-last**
-- Variable: **verb-http-response**
+- Variable: **verb-http-response** \
+  Response object for this response buffer. Use this variable from the verb-post-response-hook to access request and response information and contents.
 - Variable: **verb-kill-this-buffer**
 - Variable: **verb-mode-prefix-map**
 - Variable: **verb-response-headers-mode-map**
 - Function: **verb-read-file** *file*
-- Function: **verb-request-spec-url-string** *rs*
 - Function: **verb-request-spec-validate** *rs*
+- Function: **verb-request-spec-url-to-string** *rs*
 - Function: **verb-request-spec-to-string** *rs*
 - Function: **verb-request-spec-from-string** *text*
 - Function: **verb-request-spec-override** *original* *other*
@@ -80,6 +85,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-inhibit-cookies**
 - User Option: **verb-using-proxy**
 - User Option: **verb-advice-url**
+- User Option: **verb-enable-log**
 - User Option: **verb-max-redirections**
 - User Option: **verb-show-timeout-warning**
 - User Option: **verb-code-tag-delimiters**
