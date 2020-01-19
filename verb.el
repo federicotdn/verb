@@ -29,7 +29,7 @@
 ;; details.
 
 ;;; Code:
-(require 'outline)
+(require 'org)
 (require 'eieio)
 (require 'subr-x)
 (require 'url)
@@ -277,8 +277,6 @@ previous requests on new requests.")
 (defvar verb-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r") verb-mode-prefix-map)
-    (define-key map (kbd "TAB") #'verb-cycle)
-    (define-key map (kbd "<C-return>") #'verb-insert-heading)
     map)
   "Keymap for `verb-mode'.")
 
@@ -295,9 +293,6 @@ previous requests on new requests.")
      ;; Content-type: application/json
      ("^\\([[:alnum:]-]+:\\)\\s-.+$"
       (1 'verb-header))
-     ;; # This is a comment
-     (,(concat "^\\s-*" verb--comment-character ".*$")
-      (0 'verb-comment))
      ;; "something": 123
      ("\\s-\\(\"[[:graph:]]+?\"\\)\\s-*:."
       (1 'verb-json-key))
@@ -308,20 +303,13 @@ previous requests on new requests.")
 	       (cdr verb-code-tag-delimiters)
 	       "\\).*$")
       (1 'verb-code-tag))))
-  (setq font-lock-keywords-case-fold-search t)
-  (font-lock-ensure)
-  ;; `outline-4' is just `font-lock-comment-face', avoid using that
-  ;; one in heading fonts.
-  (setq-local outline-font-lock-faces
-	      [outline-1 outline-2 outline-3 outline-5
-			 outline-6 outline-7 outline-8]))
+  (font-lock-ensure))
 
 ;;;###autoload
-(define-derived-mode verb-mode outline-mode "Verb"
+(define-derived-mode verb-mode org-mode "Verb"
   "Major mode for organizing and making HTTP requests from Emacs.
 See the documentation in URL `https://github.com/federicotdn/verb' for
 more details on how to use it."
-  (setq-local comment-start verb--comment-character)
   (verb--setup-font-lock-keywords))
 
 ;;;###autoload
@@ -520,15 +508,6 @@ Return t if there was a heading to move towards to and nil otherwise."
       (outline-up-heading 1 t)
       (not (= p (point))))))
 
-(defun verb--outline-level ()
-  "Return the outline level.
-Level zero indicates that no headings exist."
-  (save-match-data
-    (save-excursion
-      (if (verb--back-to-heading)
-	  (funcall outline-level)
-	0))))
-
 (defun verb--heading-has-content-p ()
   "Return non-nil if the heading is followed by text contents."
   (save-match-data
@@ -540,31 +519,6 @@ Level zero indicates that no headings exist."
 	    (> (line-number-at-pos) line))
 	;; Buffer has no headings
 	(< 0 (buffer-size))))))
-
-(defun verb-insert-heading ()
-  "Insert a new heading under the current one.
-The new heading will have the same level as the current heading on
-point.  If not currently on a heading, signal an error."
-  (interactive)
-  (unless (outline-on-heading-p)
-    (user-error "%s" "Not currently on a heading"))
-  (let ((line (buffer-substring (line-beginning-position)
-				(line-end-position)))
-	(level (verb--outline-level))
-	(searching t))
-    (while (and searching (outline-next-heading))
-      (when (<= (verb--outline-level) level)
-	(setq searching nil)))
-    (when searching
-      (newline))
-    (insert (progn
-	      (string-match outline-regexp line)
-	      (match-string 0 line))
-	    " ")
-    (unless searching
-      (insert "\n")
-      (forward-line -1)
-      (end-of-line))))
 
 (defun verb--heading-contents ()
   "Return the heading's text contents.
@@ -597,7 +551,7 @@ override them in inverse order according to the rules described in
 `verb-request-spec-override'."
   (let (specs done final-spec)
     (save-excursion
-      ;; Go up through the Outline tree taking a request specification
+      ;; Go up through the headings tree taking a request specification
       ;; from each level
       (while (not done)
 	(let ((spec (verb--request-spec-from-heading)))
@@ -663,35 +617,6 @@ Delete the window only if it isn't the only window in the frame."
   (kill-buffer (current-buffer))
   (ignore-errors
     (delete-window)))
-
-(defun verb--heading-invisible-p ()
-  "Return non-nil if the contents of the current heading are invisible."
-  (save-excursion
-    (end-of-line)
-    (outline-invisible-p)))
-
-(defun verb-cycle ()
-  "Cycle the current heading's visibility, like in Org mode.
-If point is not on a heading, emulate a TAB key press."
-  (interactive)
-  (if (outline-on-heading-p)
-      (let ((level (save-excursion
-		     (beginning-of-line)
-		     (outline-level)))
-	    (next-invisible (save-excursion
-			      (and (outline-next-heading)
-				   (verb--heading-invisible-p))))
-	    (next-level (save-excursion
-			  (and (outline-next-heading)
-			       (outline-level)))))
-	(cond
-	 ((verb--heading-invisible-p)
-	  (outline-toggle-children))
-	 ((and next-level (> next-level level) next-invisible)
-	  (outline-show-subtree))
-	 (t
-	  (outline-hide-subtree))))
-    (call-interactively (global-key-binding "\t"))))
 
 (defmacro verb-var (&optional var)
   "Ensure VAR has a value and return it.
@@ -1475,10 +1400,11 @@ Neither request specification is modified, a new one is returned."
   "Return a regexp to match an HTTP method.
 HTTP methods are defined in `verb--http-methods'.
 Additionally, allow matching `verb--template-keyword'."
-  (mapconcat #'identity
-	     (append verb--http-methods
-		     (list verb--template-keyword))
-	     "\\|"))
+  (let ((terms (append verb--http-methods
+		       (mapcar #'downcase verb--http-methods)
+		       (list verb--template-keyword
+			     (downcase verb--template-keyword)))))
+    (mapconcat #'identity terms "\\|")))
 
 (defun verb--eval-string (s)
   "Eval S as Lisp code and return the result.
