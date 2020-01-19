@@ -490,54 +490,49 @@ Do not include text properties."
 Or, move to beggining of this line if it's a heading.  If there are no
 headings, move to the beggining of buffer.  Return t if a heading was
 found."
-  (if (ignore-errors (outline-back-to-heading t))
+  (if (ignore-errors (org-back-to-heading t))
       t
     (goto-char (point-min))
     nil))
-
-(defun verb--section-end ()
-  "Skip forward to before the next heading.
-If there is no next heading, skip to the end of the buffer."
-  (outline-next-preface))
 
 (defun verb--up-heading ()
   "Move to the parent heading, if there is one.
 Return t if there was a heading to move towards to and nil otherwise."
   (let ((p (point)))
     (ignore-errors
-      (outline-up-heading 1 t)
+      (org-up-heading-all 1)
       (not (= p (point))))))
 
-(defun verb--heading-has-content-p ()
-  "Return non-nil if the heading is followed by text contents."
-  (save-match-data
-    (save-excursion
-      (if (verb--back-to-heading)
-	  ;; A heading was found
-	  (let ((line (line-number-at-pos)))
-	    (verb--section-end)
-	    (> (line-number-at-pos) line))
-	;; Buffer has no headings
-	(< 0 (buffer-size))))))
+(defun verb--next-heading ()
+  "Move to the next heading."
+  ;; Implemented as in `org-next-visible-heading'
+  (org-with-limited-levels
+   (outline-next-heading)))
 
 (defun verb--heading-contents ()
   "Return the heading's text contents.
-Return nil if `verb--heading-has-content-p' returns nil."
-  (when (verb--heading-has-content-p)
-    (let ((start (save-excursion
-		   (when (verb--back-to-heading)
+If no headings exist, return the contents of the entire buffer."
+  (if (verb--back-to-heading)
+      (let ((start (save-excursion
 		     (end-of-line)
-		     (forward-char))
-		   (point)))
-	  (end (save-excursion (verb--section-end) (point))))
-      (buffer-substring-no-properties start end))))
+		     (unless (eobp) (forward-char))
+		     (point)))
+	    (end (save-excursion
+		   (verb--next-heading)
+		   (when (and (org-at-heading-p)
+			      (not (eobp)))
+		     (backward-char))
+		   (point))))
+	(if (<= start end)
+	    (buffer-substring-no-properties start end)
+	  ""))
+    (verb--buffer-string-no-properties)))
 
 (defun verb--request-spec-from-heading ()
   "Return a request spec generated from the heading's text contents.
-Return nil of the heading has no text contents."
+Return nil if the heading has no text contents."
   (let ((text (verb--heading-contents)))
-    (unless (or (null text)
-		(string-empty-p (string-trim text)))
+    (unless (string-empty-p text)
       (condition-case nil
 	  (verb-request-spec-from-string text)
 	(verb-empty-spec nil)))))

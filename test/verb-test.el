@@ -94,7 +94,24 @@
   (with-temp-buffer
     (verb-mode)
     (insert outline-test)
-    (should-not (verb--heading-contents)))
+    (should (string= (verb--heading-contents) "")))
+
+  (setq outline-test
+	(join-lines "* Heading"
+		    "* H2"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should (string= (verb--heading-contents) "")))
+
+  (setq outline-test
+	(join-lines "* Heading"
+		    "* H2"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (goto-char (point-min))
+    (should (string= (verb--heading-contents) "")))
 
   (setq outline-test
 	(join-lines "** Heading level 2"
@@ -106,7 +123,16 @@
 		     "get http://test.com")))
 
   (setq outline-test
-	;; no headers
+	(join-lines "** Heading level 2"
+		    "\nget http://test.com\n\n"))
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should (string= (verb--heading-contents)
+		     "\nget http://test.com\n\n")))
+
+  (setq outline-test
+	;; no headings
 	(join-lines "get http://test.com"))
   (with-temp-buffer
     (verb-mode)
