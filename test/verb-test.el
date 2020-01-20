@@ -53,6 +53,7 @@
 		    "*** Level 3 heading"
 		    "get http://test.com"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (verb--up-heading)
@@ -68,6 +69,7 @@
 		    "*** Level 3 heading"
 		    "get http://test.com"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (verb--up-heading)
@@ -80,6 +82,7 @@
 	(join-lines "* Heading"
 		    "get http://test.com"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (string= (verb--heading-contents)
@@ -88,6 +91,7 @@
   (setq outline-test
 	(join-lines "* Heading"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (string= (verb--heading-contents) "")))
@@ -96,6 +100,7 @@
 	(join-lines "* Heading"
 		    "* H2"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (string= (verb--heading-contents) "")))
@@ -104,6 +109,7 @@
 	(join-lines "* Heading"
 		    "* H2"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (goto-char (point-min))
@@ -113,6 +119,7 @@
 	(join-lines "** Heading level 2"
 		    "get http://test.com"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (string= (verb--heading-contents)
@@ -122,6 +129,7 @@
 	(join-lines "** Heading level 2"
 		    "\nget http://test.com\n\n"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (string= (verb--heading-contents)
@@ -131,6 +139,7 @@
 	;; no headings
 	(join-lines "get http://test.com"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (string= (verb--heading-contents)

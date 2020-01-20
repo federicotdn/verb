@@ -42,11 +42,15 @@ package-lint:
 check: byte-compile checkdoc package-lint
 
 load-examples:
-	$(EMACS) -Q -l verb.el \
+	rm -f verb-autoloads.el verb.elc
+	$(EMACS) -Q -L . \
+		 --eval "(require 'package)" \
+		 --eval "(package-generate-autoloads \"verb\" \".\")" \
+		 --eval "(load \"verb-autoloads.el\")" \
 		 --eval "(add-to-list 'default-frame-alist '(fullscreen . maximized))" \
 		 --eval "(set-face-attribute 'default nil :height $(FONT_SIZE))" \
 		 --eval "(setq initial-scratch-message nil)" \
-		 --eval "(add-hook 'org-mode-hook #'verb-mode)" \
+		 --eval "(eval-after-load 'org '(define-key org-mode-map (kbd \"C-c C-r\") verb-mode-prefix-map))" \
 		 --eval "(with-current-buffer (get-buffer \"*scratch*\") (org-mode))" \
 		 --eval "(load-theme 'wombat)" \
 		 --eval "(setq url-debug t)" \

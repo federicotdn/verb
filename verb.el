@@ -285,6 +285,7 @@ previous requests on new requests.")
 (defvar verb--requests-count 0
   "Number of HTTP requests sent in the past.")
 
+;;;###autoload
 (defvar verb-mode-prefix-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") #'verb-send-request-on-point-other-window)
@@ -295,7 +296,9 @@ previous requests on new requests.")
     (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
     (define-key map (kbd "C-v") #'verb-set-var)
     map)
-  "Prefix map for `verb-mode'.")
+  "Prefix map for `verb-mode'.
+Bind this map to an easy-to-reach key in Org mode in order to use Verb
+comfortably.")
 
 (defun verb--setup-font-lock-keywords ()
   "Configure font lock keywords for `verb-mode'."
@@ -332,9 +335,8 @@ See the documentation in URL `https://github.com/federicotdn/verb' for
 more details on how to use it."
   :lighter " Verb"
   :group 'verb
-  :keymap `((,(kbd "C-c C-r") . ,verb-mode-prefix-map))
   (when verb-mode
-    (unless (derived-mode-p 'org)
+    (unless (derived-mode-p 'org-mode)
       (message "%s" "Warning: Verb is only useful on Org mode buffers"))
     (verb--setup-font-lock-keywords)
     (verb--log nil 'I
@@ -499,6 +501,11 @@ If `verb-enable-log' is nil, do not log anything."
 	(when (> (line-number-at-pos) (1+ line))
 	  (newline))))))
 
+(defun verb--ensure-verb-mode ()
+  "Ensure `verb-mode' is enabled in the current buffer."
+  (unless verb-mode
+    (verb-mode)))
+
 (defun verb--nonempty-string (s)
   "Return S. If S is the empty string, return nil."
   (if (string-empty-p s)
@@ -658,6 +665,7 @@ been set once with `verb-var'."
   (interactive (list (completing-read "Variable: "
 				      (mapcar #'symbol-name verb--vars)
 				      nil t)))
+  (verb--ensure-verb-mode)
   (set (intern var) (read-string (format "Set value for %s: " var))))
 
 (defun verb-read-file (file)
@@ -739,13 +747,16 @@ current window.  WHERE defaults to nil.
 The `verb-post-response-hook' hook is called after a response has been
 received."
   (interactive)
+  (verb--ensure-verb-mode)
   (verb--request-spec-send (verb--request-spec-from-hierarchy)
 			   where))
 
+;;;###autoload
 (defun verb-kill-all-response-buffers (&optional keep-windows)
   "Kill all response buffers, and delete their windows.
 If KEEP-WINDOWS is non-nil, do not delete their respective windows."
   (interactive)
+  (verb--ensure-verb-mode)
   (dolist (buf (buffer-list))
     (with-current-buffer buf
       (when verb-http-response
@@ -762,6 +773,7 @@ Lisp, use the export function under NAME.
 No HTTP request will be sent, unless the export function does this
 explicitly.  Lisp code tags will be evaluated before exporting."
   (interactive)
+  (verb--ensure-verb-mode)
   (let ((rs (verb--request-spec-from-hierarchy))
 	(exporter (or name
 		      (completing-read "Export function: "
