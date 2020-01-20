@@ -257,7 +257,10 @@ E = Error.")
 (defvar-local verb-http-response nil
   "HTTP response for this response buffer (`verb-response' object).
 The decoded body contents of the response are included in the buffer
-itself.")
+itself.
+
+In a response buffer, before the response has been received, this
+variable will be set to t.")
 (put 'verb-http-response 'permanent-local t)
 
 (defvar-local verb--response-headers-buffer nil
@@ -1155,6 +1158,15 @@ If a validation does not pass, signal with `user-error'."
 			       "(e.g. \"https://github.com\") in the "
 			       "heading hierarchy")))))
 
+(defun verb--generate-response-buffer ()
+  "Return a new buffer ready to be used as response buffer."
+  (with-current-buffer (generate-new-buffer "*HTTP Response*")
+    ;; Set `verb-http-response's value to something other than nil
+    ;; so that `verb-kill-all-response-buffers' can find it even if
+    ;; no response was ever received.
+    (setq verb-http-response t)
+    (current-buffer)))
+
 (cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
   "Send the HTTP request described by RS.
 Show the results according to parameter WHERE (see
@@ -1175,7 +1187,7 @@ be loaded into."
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
-	 (response-buf (generate-new-buffer "*HTTP Response*"))
+	 (response-buf (verb--generate-response-buffer))
 	 (num (setq verb--requests-count (1+ verb--requests-count)))
 	 timeout-timer)
     ;; Start the timeout warning timer
