@@ -1,3 +1,6 @@
+# -*- mode: verb -*-
+#+FILETAGS: :verb:
+
 * Postman Echo API
 # Postman Echo is service you can use to test your REST clients and
 # make sample API calls. It provides endpoints for GET, POST, PUT,

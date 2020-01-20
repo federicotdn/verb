@@ -191,6 +191,24 @@ response's decoded contents.  The buffer-local `verb-http-response'
 variable will be set to the corresponding `verb-response' object."
   :type 'hook)
 
+(defcustom verb-tag "verb"
+  "Tag used to mark headings that contain HTTP request specs.
+Headings that do not contain this tag will be ignored when building
+requests from heading hierarchies.
+
+If set to t, consider all headings to contain HTTP request specs.
+
+You can set this variable file-locally to use different tags on
+different files, like so:
+
+# -*- verb-tag: \"foo\" -*-
+
+Note that if a heading has a tag, then all its subheadings inherit
+that tag as well.  This can be changed via the
+`org-use-tag-inheritance' variable."
+  :type '(choice (string :tag "verb")
+		 (const :tag "All" t)))
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
   "Face for highlighting HTTP methods.")
@@ -311,9 +329,6 @@ previous requests on new requests.")
 See the documentation in URL `https://github.com/federicotdn/verb' for
 more details on how to use it."
   (verb--setup-font-lock-keywords))
-
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.verb\\'" . verb-mode))
 
 (defvar verb-response-headers-mode-map
   (let ((map (make-sparse-keymap)))
@@ -503,8 +518,14 @@ Return t if there was a heading to move towards to and nil otherwise."
       (org-up-heading-all 1)
       (not (= p (point))))))
 
+(defun verb--heading-tags ()
+  "Return all (inherited) tags from current heading."
+  (verb--back-to-heading)
+  (when-let ((tags (org-entry-get (point) "ALLTAGS" t)))
+    (split-string (string-trim tags ":" ":") ":")))
+
 (defun verb--heading-contents ()
-  "Return the heading's text contents.
+  "Return the current heading's text contents.
 If no headings exist, return the contents of the entire buffer."
   (if (verb--back-to-heading)
       (let ((start (save-excursion
@@ -524,12 +545,15 @@ If no headings exist, return the contents of the entire buffer."
 
 (defun verb--request-spec-from-heading ()
   "Return a request spec generated from the heading's text contents.
-Return nil if the heading has no text contents."
-  (let ((text (verb--heading-contents)))
-    (unless (string-empty-p text)
-      (condition-case nil
-	  (verb-request-spec-from-string text)
-	(verb-empty-spec nil)))))
+Return nil if the heading has no text contents, or if the heading does
+not have the tag `verb-tag'."
+  (when (or (member verb-tag (verb--heading-tags))
+	    (eq verb-tag t))
+    (let ((text (verb--heading-contents)))
+      (unless (string-empty-p text)
+	(condition-case nil
+	    (verb-request-spec-from-string text)
+	  (verb-empty-spec nil))))))
 
 (defun verb--request-spec-from-hierarchy ()
   "Return a request spec generated from the headings hierarchy.
@@ -554,7 +578,7 @@ override them in inverse order according to the rules described in
 	      ;; Override spec 1 with spec 2, and the result with spec
 	      ;; 3, then with 4, etc.
 	      (setq final-spec (verb-request-spec-override final-spec
-							    spec))))
+							   spec))))
 	  (verb-request-spec-validate final-spec)
 	  final-spec)
       (user-error "%s" (concat "No request specification found\nTry "

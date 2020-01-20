@@ -1,3 +1,6 @@
+# -*- mode: verb -*-
+#+FILETAGS: :verb:
+
 * Binary content type tests
 # Each subheading specifies a request for a binary content type
 # (non-text), like PDF documents, images, etc.

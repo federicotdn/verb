@@ -1,3 +1,5 @@
+#+FILETAGS: :verb:
+
 * Testing Endpoints
 # Make some requests against the test server (server.py) The requests
 # are executed programatically by loading this file, moving to a

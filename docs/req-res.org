@@ -1,3 +1,6 @@
+# -*- mode: verb -*-
+#+FILETAGS: :verb:
+
 * REQ|RES
 # Test your front-end against a real API
 # A hosted REST-API ready to respond to your AJAX requests.

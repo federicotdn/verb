@@ -1,4 +1,5 @@
 # -*- mode: verb -*-
+#+FILETAGS: :verb:
 
 * Example .org file
 # Although this file has a .org extension, you can still load it with

@@ -136,7 +136,7 @@
 
 (ert-deftest test-request-spec-from-hierarchy ()
   (setq outline-test
-	(join-lines "* Test"
+	(join-lines "* Test :verb:"
 		    "template http://hello.com"
 		    "** Test2"
 		    "get"))
@@ -148,7 +148,7 @@
 				      :url (verb--clean-url
 					    "http://hello.com")))))
   (setq outline-test
-	(join-lines "* Test"
+	(join-lines "* Test :verb:"
 		    "template http://hello.com"
 		    "** Test2"
 		    "post ?a=b"))
@@ -160,14 +160,14 @@
 				      :url (verb--clean-url
 					    "http://hello.com?a=b")))))
   (setq outline-test
-	(join-lines "* Test"))
+	(join-lines "* Test :verb:"))
   (with-temp-buffer
     (verb-mode)
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy)))
 
   (setq outline-test
-	(join-lines "* Test"
+	(join-lines "* Test :verb:"
 		    "template http://hello.com"))
   (with-temp-buffer
     (verb-mode)
@@ -175,7 +175,7 @@
     (should-error (verb--request-spec-from-hierarchy)))
 
     (setq outline-test
-	(join-lines "* Test"
+	(join-lines "* Test :verb:"
 		    "get"))
   (with-temp-buffer
     (verb-mode)
@@ -183,7 +183,7 @@
     (should-error (verb--request-spec-from-hierarchy)))
 
   (setq outline-test
-	(join-lines "* Test"
+	(join-lines "* Test :verb:"
 		    "get /some/path"))
   (with-temp-buffer
     (verb-mode)
@@ -1133,7 +1133,7 @@
 
 ;; Tests using the test server (server.py)
 
-(setq test-file-name (expand-file-name "test/test.verb"))
+(setq test-file-name (expand-file-name "test/test.org"))
 (setq test-buf (find-file test-file-name))
 
 (defmacro server-test (test-name &rest body)
