@@ -1,4 +1,3 @@
-# -*- mode: verb -*-
 #+FILETAGS: :verb:
 
 * Postman Echo API

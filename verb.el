@@ -292,12 +292,6 @@ previous requests on new requests.")
     map)
   "Prefix map for `verb-mode'.")
 
-(defvar verb-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-r") verb-mode-prefix-map)
-    map)
-  "Keymap for `verb-mode'.")
-
 (defun verb--setup-font-lock-keywords ()
   "Configure font lock keywords for `verb-mode'."
   (font-lock-add-keywords
@@ -321,14 +315,17 @@ previous requests on new requests.")
 	       (cdr verb-code-tag-delimiters)
 	       "\\).*$")
       (1 'verb-code-tag))))
-  (font-lock-ensure))
+  (font-lock-flush))
 
-;;;###autoload
-(define-derived-mode verb-mode org-mode "Verb"
-  "Major mode for organizing and making HTTP requests from Emacs.
+(define-minor-mode verb-mode
+  "Minor mode for organizing and making HTTP requests from Emacs.
 See the documentation in URL `https://github.com/federicotdn/verb' for
 more details on how to use it."
-  (verb--setup-font-lock-keywords))
+  :lighter " Verb"
+  :group 'verb
+  :keymap `((,(kbd "C-c C-r") . ,verb-mode-prefix-map))
+  (when verb-mode
+    (verb--setup-font-lock-keywords)))
 
 (defvar verb-response-headers-mode-map
   (let ((map (make-sparse-keymap)))

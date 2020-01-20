@@ -1,4 +1,3 @@
-# -*- mode: verb -*-
 #+FILETAGS: :verb:
 
 * Binary content type tests
