@@ -3,20 +3,19 @@
 All hooks, variables, functions and classes starting with `verb-` but not starting with `verb--` are part of the package's public API. They are listed below. Make sure to check each symbol's documentation for more information.
 
 - Hook: **verb-mode-hook** \
-  Run when Verb mode is activated (e.g. when opening a `.verb` file).
+  Run when Verb mode is activated (e.g. when executing M-x verb-mode).
 - Hook: **verb-response-body-mode-hook** \
   Run after deciding what major mode to use on a response buffer.
 - Hook: **verb-response-headers-mode-hook** \
   Run after opening the response headers buffer.
 - Hook: **verb-post-response-hook** \
   Hook run after receiving an HTTP response, processing its contents, and setting up the response buffer. Use this hook to add custom behaviour after receiving a response.
-- Major Mode: **verb-mode**
+- Minor Mode: **verb-mode**
+- Minor Mode: **verb-response-body-mode**
 - Major Mode: **verb-response-headers-mode**
 - Major Mode: **verb-log-mode**
-- Minor Mode: **verb-response-body-mode**
 - Face: **verb-http-keyword**
 - Face: **verb-header**
-- Face: **verb-comment**
 - Face: **verb-code-tag**
 - Face: **verb-json-key**
 - Face: **verb-log-info**
@@ -84,6 +83,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-using-proxy**
 - User Option: **verb-advice-url**
 - User Option: **verb-enable-log**
+- User Option: **verb-tag**
 - User Option: **verb-max-redirections**
 - User Option: **verb-show-timeout-warning**
 - User Option: **verb-code-tag-delimiters**

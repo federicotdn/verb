@@ -218,9 +218,6 @@ that tag as well.  This can be changed via the
 (defface verb-header '((t :inherit font-lock-constant-face))
   "Face for highlighting HTTP headers.")
 
-(defface verb-comment '((t :inherit font-lock-comment-face))
-  "Face for highlighting comments.")
-
 (defface verb-code-tag '((t :inherit italic))
   "Face for highlighting Lisp code tags.")
 
@@ -237,7 +234,8 @@ that tag as well.  This can be changed via the
   "Face for highlighting E entries in the log buffer.")
 
 (defconst verb--comment-character "#"
-  "Character to use to mark commented lines.")
+  "Character to use to mark commented lines.
+Should be set to the same character Org uses to comment lines.")
 
 (defconst verb--http-methods '("GET" "POST" "DELETE" "PUT"
 			       "OPTIONS" "HEAD" "PATCH"
