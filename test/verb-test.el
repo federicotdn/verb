@@ -360,6 +360,8 @@
   (should (equal (oref aux :headers)
 		 (list (cons "Accept" "text"))))
 
+  (should-error (text-as-spec "optionssss"))
+
   (setq aux (text-as-spec "GET example.com\n"
 			  "Foo-Bar: text\n"
 			  "Referer: host.com\n"))

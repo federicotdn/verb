@@ -1553,12 +1553,19 @@ signal an error."
 	    (line (verb--eval-lisp-code-in-string
 		   (buffer-substring-no-properties (point)
 						   (line-end-position)))))
-	(when (string-match (concat "^\\s-*\\("
-				    (verb--http-methods-regexp)
-				    "\\)\\s-*\\(.*\\)$")
-			    line)
-	  (setq method (upcase (match-string 1 line))
-		url (match-string 2 line))))
+	(if (string-match (concat "^\\s-*\\("
+				  (verb--http-methods-regexp)
+				  "\\)\\s-+\\(.+\\)$")
+			  line)
+	    ;; Matched method + URL, store them
+	    (setq method (upcase (match-string 1 line))
+		  url (match-string 2 line))
+	  (when (string-match (concat "^\\s-*\\("
+				      (verb--http-methods-regexp)
+				      "\\)\\s-*$")
+			      line)
+	    ;; Matched method only, store it
+	    (setq method (upcase (match-string 1 line))))))
 
       ;; We've processed the URL line, move to the end of it
       (end-of-line)
@@ -1566,8 +1573,7 @@ signal an error."
       (if method
 	  (when (string= method verb--template-keyword)
 	    (setq method nil))
-	(user-error (concat "Could not read a valid HTTP method, "
-			    "valid HTTP methods are: %s\n"
+	(user-error (concat "Could not read a valid HTTP method (%s)\n"
 			    "Additionally, you can also specify %s "
 			    "(matching is case insensitive)")
 		    (mapconcat #'identity verb--http-methods ", ")
@@ -1614,7 +1620,7 @@ signal an error."
 	  (setq body rest)))
       ;; Return a `verb-request-spec'
       (verb-request-spec :method method
-			 :url (unless (string-empty-p url)
+			 :url (unless (string-empty-p (or url ""))
 				(verb--clean-url url))
 			 :headers headers
 			 :body body))))
