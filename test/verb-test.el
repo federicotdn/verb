@@ -151,6 +151,7 @@
 		    "get"))
 
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (equal (verb--request-spec-from-hierarchy) test-rs))))
@@ -162,6 +163,7 @@
 		    "** Test2"
 		    "get"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (equal (verb--request-spec-from-hierarchy)
@@ -174,6 +176,7 @@
 		    "** Test2"
 		    "post ?a=b"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should (equal (verb--request-spec-from-hierarchy)
@@ -183,6 +186,7 @@
   (setq outline-test
 	(join-lines "* Test :verb:"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy)))
@@ -191,6 +195,7 @@
 	(join-lines "* Test :verb:"
 		    "template http://hello.com"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy)))
@@ -198,15 +203,17 @@
     (setq outline-test
 	(join-lines "* Test :verb:"
 		    "get"))
-  (with-temp-buffer
-    (verb-mode)
-    (insert outline-test)
-    (should-error (verb--request-spec-from-hierarchy)))
+    (with-temp-buffer
+      (org-mode)
+      (verb-mode)
+      (insert outline-test)
+      (should-error (verb--request-spec-from-hierarchy)))
 
   (setq outline-test
 	(join-lines "* Test :verb:"
 		    "get /some/path"))
   (with-temp-buffer
+    (org-mode)
     (verb-mode)
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy))))
@@ -336,12 +343,17 @@
   (should (string= (oref aux :method) "GET")))
 
 (ert-deftest test-request-spec-from-text-headers ()
-  (should-error (text-as-spec "GET example.com\nTest:\n"))
-
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text"))
   (should (equal (oref aux :headers)
 		 (list (cons "Accept" "text"))))
+
+  (setq aux (text-as-spec "GET example.com\n"
+			  "A:\n"
+			  "B:"))
+  (should (equal (oref aux :headers)
+		 (list (cons "A" "")
+		       (cons "B" ""))))
 
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"))
@@ -602,7 +614,6 @@
   (should-not (verb--http-headers-p (list (cons 1 2))))
   (should-not (verb--http-headers-p (list (cons nil nil))))
   (should-not (verb--http-headers-p (list (cons "" ""))))
-  (should-not (verb--http-headers-p (list (cons "Hello" ""))))
   (should-not (verb--http-headers-p (list (cons "" "Hello")))))
 
 (ert-deftest test-insert-header-contents ()

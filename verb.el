@@ -303,7 +303,7 @@ previous requests on new requests.")
      (,(concat "^\\(" (verb--http-methods-regexp) "\\)\\s-+.+$")
       (1 'verb-http-keyword))
      ;; Content-type: application/json
-     ("^\\([[:alnum:]-]+:\\)\\s-.+$"
+     ("^\\([[:alnum:]-]+:\\)\\s-?.*$"
       (1 'verb-header))
      ;; "something": 123
      ("\\s-\\(\"[[:graph:]]+?\"\\)\\s-*:."
@@ -378,16 +378,15 @@ message is logged.  To turn off logging, set `verb-enable-log' to nil."
   (member m verb--http-methods))
 
 (defun verb--http-headers-p (h)
-  "Return non-nil if H is an alist of (HEADER . VALUE) elements.
-HEADER and VALUE must be nonempty strings."
+  "Return non-nil if H is an alist of (KEY . VALUE) elements.
+KEY and VALUE must be strings.  KEY must not be the empty string."
   (when (consp h)
     (catch 'end
       (dolist (elem h)
 	(unless (and (consp elem)
 		     (stringp (car elem))
 		     (stringp (cdr elem))
-		     (< 0 (length (car elem)))
-		     (< 0 (length (cdr elem))))
+		     (not (string-empty-p (car elem))))
 	  (throw 'end nil)))
       t)))
 
@@ -1583,7 +1582,7 @@ signal an error."
 	    ;; Check if line matches KEY: VALUE after evaluating any
 	    ;; present code tags
 	    (setq line (verb--eval-lisp-code-in-string line))
-	    (if (string-match "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\s-?\\(.*\\)$"
+	    (if (string-match "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\(.*\\)$"
 			      line)
 		;; Line matches, trim KEY and VALUE and store them
 		(push (cons (string-trim (match-string 1 line))
