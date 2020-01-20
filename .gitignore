@@ -22,3 +22,6 @@ tests.log
 
 # package-lint installation directory
 /package-lint
+
+# autoloads
+verb-autoloads.el

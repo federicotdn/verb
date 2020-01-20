@@ -322,14 +322,20 @@ previous requests on new requests.")
       (1 'verb-code-tag))))
   (font-lock-flush))
 
+;;;###autoload
 (define-minor-mode verb-mode
   "Minor mode for organizing and making HTTP requests from Emacs.
+This mode acts as an extension to Org mode.  Make sure you enable it
+on buffers using Org as their major mode.
+
 See the documentation in URL `https://github.com/federicotdn/verb' for
 more details on how to use it."
   :lighter " Verb"
   :group 'verb
   :keymap `((,(kbd "C-c C-r") . ,verb-mode-prefix-map))
   (when verb-mode
+    (unless (derived-mode-p 'org)
+      (message "%s" "Warning: Verb is only useful on Org mode buffers"))
     (verb--setup-font-lock-keywords)
     (verb--log nil 'I
 	       "Verb mode enabled in buffer: %s"
@@ -702,6 +708,7 @@ Set the buffer's `verb-kill-this-buffer' variable to t."
 	(verb--insert-header-contents headers)
 	(fit-window-to-buffer)))))
 
+;;;###autoload
 (defun verb-send-request-on-point-other-window ()
   "Send the request specified by the selected heading's text contents.
 Show the results on another window and switch to it (use
@@ -709,6 +716,7 @@ Show the results on another window and switch to it (use
   (interactive)
   (verb-send-request-on-point 'other-window))
 
+;;;###autoload
 (defun verb-send-request-on-point-other-window-stay ()
   "Send the request specified by the selected heading's text contents.
 Show the results on another window, but don't switch to it (use
@@ -716,6 +724,7 @@ Show the results on another window, but don't switch to it (use
   (interactive)
   (verb-send-request-on-point 'stay-window))
 
+;;;###autoload
 (defun verb-send-request-on-point (&optional where)
   "Send the request specified by the selected heading's text contents.
 The contents of all parent headings are used as well; see
@@ -742,6 +751,7 @@ If KEEP-WINDOWS is non-nil, do not delete their respective windows."
       (when verb-http-response
 	(verb-kill-response-buffer-and-window keep-windows)))))
 
+;;;###autoload
 (defun verb-export-request-on-point (&optional name)
   "Export the request specification on point.
 Interactively, prompt the user for an export function, and call that
@@ -761,18 +771,21 @@ explicitly.  Lisp code tags will be evaluated before exporting."
       (funcall fn rs)
       (verb--log nil 'I "Exported request to %s format." exporter))))
 
+;;;###autoload
 (defun verb-export-request-on-point-verb ()
   "Export request on point to verb format.
 See `verb--export-to-verb' for more information."
   (interactive)
   (verb-export-request-on-point "verb"))
 
+;;;###autoload
 (defun verb-export-request-on-point-human ()
   "Export request on point to a human-readable format.
 See `verb--export-to-human' for more information."
   (interactive)
   (verb-export-request-on-point "human"))
 
+;;;###autoload
 (defun verb-export-request-on-point-curl ()
   "Export request on point to curl format.
 See `verb--export-to-curl' for more information."
