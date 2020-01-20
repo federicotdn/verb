@@ -9,6 +9,8 @@
 ;; Package-Version: 1.4.1
 ;; Package-Requires: ((emacs "26"))
 
+;; This file is NOT part of GNU Emacs.
+
 ;; verb is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
