@@ -580,8 +580,9 @@ override them in inverse order according to the rules described in
 							   spec))))
 	  (verb-request-spec-validate final-spec)
 	  final-spec)
-      (user-error "%s" (concat "No request specification found\nTry "
-			       "writing: get https://<hostname>/<path>")))))
+      (user-error (concat "No request specification found\n"
+			  "Remember to tag your headlines with :%s:")
+		  verb-tag))))
 
 (defun verb--split-window ()
   "Split selected window by its longest side."

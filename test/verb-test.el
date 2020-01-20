@@ -1169,6 +1169,7 @@
 
 (setq test-file-name (expand-file-name "test/test.org"))
 (setq test-buf (find-file test-file-name))
+(with-current-buffer test-buf (verb-mode))
 
 (defmacro server-test (test-name &rest body)
   (declare (indent 1))
