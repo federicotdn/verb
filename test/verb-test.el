@@ -134,6 +134,27 @@
     (should (string= (verb--heading-contents)
 		     "get http://test.com"))))
 
+(ert-deftest test-request-spec-from-hierarchy-ignore-nontagged ()
+  (setq test-rs (verb-request-spec :method "GET"
+				   :url (verb--clean-url "http://hello.com")))
+  (setq outline-test
+	(join-lines "* Header"
+		    "this is not a valid spec"
+		    "- [ ] a todo list"
+		    ""
+		    "** Test :verb:"
+		    ":PROPERTIES:"
+		    ":Author: me"
+		    ":END:"
+		    "template http://hello.com"
+		    "*** Test2"
+		    "get"))
+
+  (with-temp-buffer
+    (verb-mode)
+    (insert outline-test)
+    (should (equal (verb--request-spec-from-hierarchy) test-rs))))
+
 (ert-deftest test-request-spec-from-hierarchy ()
   (setq outline-test
 	(join-lines "* Test :verb:"
