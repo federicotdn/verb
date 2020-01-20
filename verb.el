@@ -325,7 +325,10 @@ more details on how to use it."
   :group 'verb
   :keymap `((,(kbd "C-c C-r") . ,verb-mode-prefix-map))
   (when verb-mode
-    (verb--setup-font-lock-keywords)))
+    (verb--setup-font-lock-keywords)
+    (verb--log nil 'I
+	       "Verb mode enabled in buffer: %s"
+	       (buffer-name))))
 
 (defvar verb-response-headers-mode-map
   (let ((map (make-sparse-keymap)))

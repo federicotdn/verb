@@ -46,7 +46,8 @@ load-examples:
 		 --eval "(add-to-list 'default-frame-alist '(fullscreen . maximized))" \
 		 --eval "(set-face-attribute 'default nil :height $(FONT_SIZE))" \
 		 --eval "(setq initial-scratch-message nil)" \
-		 --eval "(with-current-buffer (get-buffer \"*scratch*\") (verb-mode))" \
+		 --eval "(add-hook 'org-mode-hook #'verb-mode)" \
+		 --eval "(with-current-buffer (get-buffer \"*scratch*\") (org-mode))" \
 		 --eval "(load-theme 'wombat)" \
 		 --eval "(setq url-debug t)" \
 		 --eval "(toggle-debug-on-error)" \
