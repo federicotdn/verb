@@ -1355,6 +1355,11 @@
     (should (string= (cdr (assoc "OTHER-TEST"
 				 (oref verb-http-response headers))) "bar"))))
 
+(ert-deftest test-zero-bytes-json ()
+  (server-test "zero-bytes-json"
+    (should (zerop (buffer-size)))
+    (should (string-match "200" header-line-format))))
+
 (ert-deftest test-verb-last ()
   (server-test "basic")
   (should (string= (oref verb-last body) "Hello, World!"))

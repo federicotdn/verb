@@ -41,7 +41,7 @@ package-lint:
 
 check: byte-compile checkdoc package-lint
 
-load-examples:
+run:
 	rm -f verb-autoloads.el verb.elc
 	$(EMACS) -Q -L . \
 		 --eval "(require 'package)" \

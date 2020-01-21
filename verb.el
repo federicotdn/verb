@@ -901,12 +901,13 @@ is non-nil, do not display a message on the minibuffer."
   (when (< (oref verb-http-response body-bytes)
 	   (or verb-json-max-pretty-print-size 0))
     (unwind-protect
-	(let ((json-pretty-print-max-secs 0))
-	  (buffer-disable-undo)
-	  (json-pretty-print-buffer)
-	  ;; "Use" `json-pretty-print-max-secs' here to avoid byte-compiler warning in
-	  ;; Emacs 26
-	  json-pretty-print-max-secs)
+	(unless (zerop (buffer-size))
+	  (let ((json-pretty-print-max-secs 0))
+	    (buffer-disable-undo)
+	    (json-pretty-print-buffer)
+	    ;; "Use" `json-pretty-print-max-secs' here to avoid byte-compiler warning in
+	    ;; Emacs 26
+	    json-pretty-print-max-secs))
       (buffer-enable-undo))
     (goto-char (point-min))))
 

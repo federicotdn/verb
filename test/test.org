@@ -78,5 +78,7 @@ post /content-length
 
 áéíóú
 test
+** zero-bytes-json
+get /zero-bytes-json
 * connection-fail-test
 get http://localhost:1234/test
