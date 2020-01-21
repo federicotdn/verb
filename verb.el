@@ -41,7 +41,7 @@
 (require 'js)
 
 (defgroup verb nil
-  "A new HTTP client for Emacs."
+  "An HTTP client for Emacs that extends Org mode."
   :prefix "verb-"
   :group 'tools)
 

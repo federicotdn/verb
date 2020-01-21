@@ -22,6 +22,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Face: **verb-log-warning**
 - Face: **verb-log-error**
 - Variable: **verb-last**
+  Stores the last received HTTP response.
 - Variable: **verb-http-response** \
   Response object for this response buffer. Use this variable from the verb-post-response-hook to access request and response information and contents.
 - Variable: **verb-kill-this-buffer**
@@ -39,7 +40,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-send-request-on-point-other-window-stay**
 - Command: **verb-re-send-request**
 - Command: **verb-kill-all-response-buffers** *keep-windows*
-- Command: **verb-export-request-on-point**
+- Command: **verb-export-request-on-point** *name*
 - Command: **verb-export-request-on-point-verb**
 - Command: **verb-export-request-on-point-human**
 - Command: **verb-export-request-on-point-curl**
