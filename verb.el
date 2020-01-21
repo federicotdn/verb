@@ -1535,35 +1535,47 @@ and fragment component of a URL with no host or schema defined."
   "Request specification has no contents.")
 
 (defun verb-request-spec-from-string (text)
-  "Create a request spec from a string representation, TEXT.
+  "Create and return a request specification from string TEXT.
 
-The text format for defining requests is:
+The text format for request specifications is the following:
 
-[COMMENTS]...
-METHOD [URL | PARTIAL-URL]
-[HEADERS]...
+[COMMENT]...
+METHOD [URL]
+[HEADER]...
 
 [BODY]
 
-COMMENTS must be lines starting with `verb--comment-character' or
-\":\" (see Org headline property syntax).
-Adding comments is optional, if present they will be ignored.
+Each COMMENT must be a blank line, or a line starting with
+`verb--comment-character' or \":\" (see Org headline property
+syntax).  All comments will be ignored.
+
 METHOD must be a method matched by `verb--http-methods-regexp' (that
 is, an HTTP method or the value of `verb--template-keyword').
+Matching is case-insensitive.
+
 URL can be the empty string, or a URL with an \"http\" or \"https\"
 schema.
 PARTIAL-URL can be the empty string, or the path + query string +
 fragment part of a URL.
-Each line of HEADERS must be in the form of KEY: VALUE.
-Adding headers is optional.
+
+URL must be a full URL, or a part of it.  If present, the schema must
+be \"http\" or \"https\".  If the schema is not present, the URL will
+be interpreted as a path, plus (if present) query string and fragment.
+Therefore, using just \"example.org\" (note no schema present) as URL
+will result in a URL with its path set to \"example.org\", not its
+host.
+
+Each HEADER must be in the form of KEY: VALUE. KEY must be a nonempty
+string, VALUE can be the nonempty string.
+
 BODY can contain arbitrary text.  Note that there must be a blank
-line between HEADERS and BODY.
+line between the HEADER list and BODY.
 
 As a special case, if the text specification consists exclusively of
 comments and/or whitespace, or is the empty string, signal
 `verb-empty-spec'.
 
-If METHOD could not be matched with `verb--http-methods-regexp',
+If TEXT does not conform to the request specification text format,
 signal an error."
   (let (method url headers body)
     (with-temp-buffer
