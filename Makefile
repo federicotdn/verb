@@ -46,6 +46,7 @@ run:
 	$(EMACS) -Q -L . \
 		 --eval "(progn \
 			   (require 'package) \
+			   (package-initialize) \
 		           (package-generate-autoloads \"verb\" \".\") \
 			   (load \"verb-autoloads.el\") \
 			   (add-to-list 'default-frame-alist '(fullscreen . maximized)) \
