@@ -2,13 +2,13 @@
 ## **2.0.0** - 2020-01-21
 - Verb is now based on Org mode instead of Outline mode.
 - Verb is now a minor mode (to be enabled with Org) instead of a major mode.
-- Because Verb now works on Org mode buffers, the preferred file extension is `.org` (the old `.verb` is no longer used).
+- Because Verb now works on Org mode buffers, the preferred file extension is `.org` (the old `.verb` extension is no longer used).
 - Added package autoloads for most user-facing commands (e.g. `verb-send-request-on-point`).
 - Verb now only processes headlines which have been tagged as `verb`. All other headlines are ignored.
 - Updated installation instructions.
 - Fixed small detail in HTTP method parsing - leaving a space between the method and the URL was optional before but now it's required.
 - Fixed error when receiving an empty body marked as content type JSON.
-- Request specifications now accept empty values.
+- HTTP headers in request specifications now accept empty values.
 - Fixed error when receiving HTTP headers with empty values.
 
 ## **1.4.1** - 2020-01-19
