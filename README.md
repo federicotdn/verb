@@ -40,7 +40,13 @@ Once Verb has been installed and loaded, add the following to your `init.el`:
   (define-key org-mode-map (kbd "C-c C-r") verb-mode-prefix-map))
 ```
 
-This will set <kbd>C-c C-r</kbd> as the prefix key for all Verb commands in Org mode. Feel free to use another key if you prefer that.
+If you're using [use-package](https://github.com/jwiegley/use-package), try this instead:
+```elisp
+(use-package 'org
+  :bind-keymap ("C-c C-r" . verb-mode-prefix-map))
+```
+
+Both cases will set <kbd>C-c C-r</kbd> as the prefix key for all Verb commands in Org mode. Feel free to use another key if you prefer that.
 
 ## Quick Start
 
@@ -103,9 +109,9 @@ Note that the heading has a `:verb:` tag. **Verb functions only process headings
 
 You may change the value of the tag used by modifying the `verb-tag` variable. Note that if you modify it, you'll need to update your files as well.
 
-### Loading Verb
-When you open an `.org` file with HTTP request specifications in it, Verb mode won't be enabled. To enable it, you can choose from different options:
-- Run one of the commands that load Verb before running (e.g. `verb-send-request-on-point`). You may use the keybindings set up in your `init.el` file (see [Installation](#installation)).
+### Enabling Verb in Org Buffers
+When you open an `.org` file with HTTP request specifications in it, Verb mode won't be enabled by default. To enable it, you can choose from these different options:
+- Run one of the commands that enable Verb automatically (e.g. `verb-send-request-on-point-other-window-stay`). You may use the keybinding set up in your `init.el` file (<kbd>C-c C-r C-r</kbd>, see [Installation](#installation)).
 - Run <kbd>M-x</kbd>`verb-mode`<kbd>RET</kbd>.
 - Add a file-local variable at the bottom of your file:
 ```
@@ -114,7 +120,7 @@ When you open an `.org` file with HTTP request specifications in it, Verb mode w
 # End:
 ```
 
-In general, the first option should be useful enough for most cases.
+In general, the first option should be useful enough for most cases. Once Verb mode has been enabled, `Verb` should appear on the modeline.
 
 ### Sending Requests
 
@@ -297,7 +303,7 @@ delete
 
 ### Emacs Lisp Code Tags
 
-You can embed Lisp code inside request specifications. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere in the request specification: the URL, method, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
+You can embed Emacs Lisp code inside request specifications by using code tags. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere in the request specification: the URL, method, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
 
 Depending on the type of the resulting value for a code tag, Verb will do the following:
 - `string`: The value will be inserted as-is into the request contents.

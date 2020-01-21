@@ -598,7 +598,7 @@ override them in inverse order according to the rules described in
 							   spec))))
 	  (verb-request-spec-validate final-spec)
 	  final-spec)
-      (user-error (concat "No request specification found\n"
+      (user-error (concat "No request specifications found\n"
 			  "Remember to tag your headlines with :%s:")
 		  verb-tag))))
 
