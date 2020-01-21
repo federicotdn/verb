@@ -103,12 +103,12 @@ This defines a minimal HTTP request specification, describing a method (`GET`) a
 
 A buffer may contain zero headings, in which case the entire contents of the file are interpreted as a single request specification. This is useful for quick testing (on the `*scratch*` buffer, for example).
 
-Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** By default, subheadings inherit their parents' headings in Org mode (see the `org-use-tag-inheritance` variable). To add the `:verb:` tag to all headings in an Org document, add the following to the top of your file:
+Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. Note that in Org mode, by defaul subheadings inherit their parents' headings (see the `org-use-tag-inheritance` variable). To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
 ```
 #+FILETAGS: :verb:
 ```
 
-You may change the value of the tag used by modifying the `verb-tag` variable. Note that if you modify it, you'll need to update your files as well.
+You may tweak the text value of the tag used by modifying the `verb-tag` variable. Note that if you modify it, you'll need to update your files as well.
 
 ### Enabling Verb in Org Buffers
 When you open an `.org` file with HTTP request specifications in it, Verb mode won't be enabled by default. To enable it, you can choose from these different options:
