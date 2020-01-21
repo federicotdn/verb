@@ -339,7 +339,9 @@ more details on how to use it."
     (verb--setup-font-lock-keywords)
     (verb--log nil 'I
 	       "Verb mode enabled in buffer: %s"
-	       (buffer-name))))
+	       (buffer-name))
+    (verb--log nil 'I "Org version: %s, GNU Emacs version: %s"
+	       (org-version) emacs-version)))
 
 (defvar verb-response-headers-mode-map
   (let ((map (make-sparse-keymap)))

@@ -5,7 +5,7 @@
 
 **Verb** is a package for Emacs which allows you to organize and send HTTP requests.
 
-The package introduces a new major mode, **Verb mode**, which is based on [Outline mode](https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html). The core idea is to organize specifications for HTTP requests in a tree structure. Properties defined in the higher levels extend or sometimes override properties defined in the lower levels - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Outline mode with the common functionality provided by other HTTP clients.
+The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to organize specifications for HTTP requests using Org's tree structure. Properties defined in the higher levels extend or sometimes override properties defined in the lower levels - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Org mode with the common functionality provided by other HTTP clients.
 
 Verb has been tested on Emacs 26 and 27.
 
@@ -17,7 +17,7 @@ Verb has been tested on Emacs 26 and 27.
 ## Features
 
 - Send requests from Emacs using HTTP and HTTPS.
-- Organize request specifications using Outline mode (the precursor to [Org mode](https://orgmode.org/)).
+- Organize request specifications using Org mode.
 - Easily define common attributes (URLs, query string, headers, etc.) for many requests.
 - Correctly handle text encodings (charsets) for requests and responses.
 - View PDF, PNG, JPEG, BMP, GIF and SVG responses inside Emacs.
@@ -32,19 +32,22 @@ You can install Verb by using the `package-install` command (make sure either [M
 
 <kbd>M-x</kbd> `package-install` <kbd>RET</kbd> `verb` <kbd>RET</kbd>
 
-If you're using [use-package](https://github.com/jwiegley/use-package), you can add the following to your `init.el`:
+Alternatively, you can just add [`verb.el`](verb.el) to your `load-path` instead of installing it as a package.
 
+Once Verb has been installed and loaded, add the following to your `init.el`:
 ```elisp
-(use-package verb
-  :mode ("\\.verb\\'" . verb-mode))
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "C-c C-r") verb-mode-prefix-map))
 ```
 
-Alternatively, you can just add [`verb.el`](verb.el) to your `load-path` instead of installing it as a package.
+This will set <kbd>C-c C-r</kbd> as the prefix key for all Verb commands in Org mode. Feel free to use another key if you prefer that.
 
 ## Quick Start
 
-Here's a quick example in case you want to get started without reading the [Usage Guide](#usage-guide). Place the following on an `example.verb` file:
+Here's a quick example in case you want to get started without reading the [Usage Guide](#usage-guide). Place the following on an `example.org` file:
 ```
+#+FILETAGS: :verb:
+
 * Quick Start for Verb
 # Comments start with '#'. You can only place
 # comments before the URL and in the headers.
@@ -80,16 +83,38 @@ Then, move the point to one of the level 2 headings (marked with `**`), and pres
 
 ## Usage Guide
 
-After installing Verb, get started by creating a new `guide.verb` file. The `.verb` extension is added to the `auto-mode-alist` as part of the package autoloads, so the `verb-mode` major mode will be activated automatically. In the example file, add the following contents:
+This guide assumes that you're using <kbd>C-c C-r</kbd> as the prefix key for all Verb commands, and that you're also getting started with Org mode.
+
+After setting up Verb, begin by creating a new `guide.org` file. In the example file, add the following contents:
 
 ```
-* Get users list
+* Get users list         :verb:
 get https://reqres.in/api/users
 ```
 
 This defines a minimal HTTP request specification, describing a method (`GET`) and a URL (`https://reqres.in/api/users`). The request is contained under a heading marked with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level. All the text under a heading (if any) corresponds to the HTTP request it is describing.
 
 A buffer may contain zero headings, in which case the entire contents of the file are interpreted as a single request specification. This is useful for quick testing (on the `*scratch*` buffer, for example).
+
+Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** By default, subheadings inherit their parents' headings in Org mode (see the `org-use-tag-inheritance` variable). To add the `:verb:` tag to all headings in an Org document, add the following to the top of your file:
+```
+#+FILETAGS: :verb:
+```
+
+You may change the value of the tag used by modifying the `verb-tag` variable. Note that if you modify it, you'll need to update your files as well.
+
+### Loading Verb
+When you open an `.org` file with HTTP request specifications in it, Verb mode won't be enabled. To enable it, you can choose from different options:
+- Run one of the commands that load Verb before running (e.g. `verb-send-request-on-point`). You may use the keybindings set up in your `init.el` file (see [Installation](#installation)).
+- Run <kbd>M-x</kbd>`verb-mode`<kbd>RET</kbd>.
+- Add a file-local variable at the bottom of your file:
+```
+# Local Variables:
+# eval: (verb-mode)
+# End:
+```
+
+In general, the first option should be useful enough for most cases.
 
 ### Sending Requests
 
@@ -121,13 +146,13 @@ The contents of the response body will be shown on the buffer. To choose how the
 
 There's two recommended ways of closing response buffers:
 - If the response buffer is the current buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see next section).
-- If the response buffer is not the current buffer (e.g. you are still on your `guide.verb` buffer), you can kill **all** response buffers by using the `verb-kill-all-response-buffers`, which is bound to <kbd>C-c C-r C-k</kbd> by default. Response headers buffers will also be killed automatically.
+- If the response buffer is not the current buffer (e.g. you are still on your `guide.org` buffer), you can kill **all** response buffers by using the `verb-kill-all-response-buffers`, which is bound to <kbd>C-c C-r C-k</kbd> by default. Response headers buffers will also be killed automatically.
 
 As you send more HTTP requests, more response buffers will be created, with `<N>` at the end of their name to distinguish between them. If you wish to automatically have old response buffers killed when making a new request, set the `verb-auto-kill-response-buffers` variable to `t`.
 
 ### Re-sending requests
 
-If you wish to re-send the request that generated the current response buffer, select the window showing it and use the `verb-re-send-request` command, which is bound to <kbd>C-c C-r C-f</kbd> by default. Note that the exact same request will be sent, even if the originating `.verb` file was modified.
+If you wish to re-send the request that generated the current response buffer, select the window showing it and use the `verb-re-send-request` command, which is bound to <kbd>C-c C-r C-f</kbd> by default. Note that the exact same request will be sent, even if the originating `.org` file was modified.
 
 ### The Response Headers Buffer
 
@@ -152,7 +177,7 @@ To close the response headers buffer, use the `verb-toggle-show-headers` command
 
 You can add headers to your request specifications. To do this, simply write them below the request method and URL. Following from our first example:
 ```
-* Get users list
+* Get users list         :verb:
 get https://reqres.in/api/users
 Accept: application/json
 Content-Language: de-DE
@@ -185,12 +210,12 @@ To encode the request body, Verb will use the `charset` value defined in the `Co
 Our example file should now look like the following:
 
 ```
-* Get users list
+* Get users list         :verb:
 get https://reqres.in/api/users
 Accept: application/json
 Content-Language: de-DE
 
-* Create a user
+* Create a user          :verb:
 post https://reqres.in/api/users
 Accept: application/json
 Content-Type: application/json
@@ -204,7 +229,7 @@ Content-Type: application/json
 Notice that the two request specifications share many things in common: the URL host, path and one header. In order to avoid repeating all this information, we can actually define a `template` request, establishing all the common attributes among requests, and then extend this template request with different values. To to this, let's create a new level 1 heading, and move the already existing headings below it, making them level 2 headings:
 
 ```
-* User management
+* User management             :verb:
 template https://reqres.in/api/users
 Accept: application/json
 
@@ -235,10 +260,10 @@ Now, when we send the request under "Get users list", Verb will collect all the 
 - **Headers:**: All headers will be merged. Values from higher level headings take priority.
 - **Body**: The last request body present in a heading will be used (if no heading defines a body, none will be used).
 
-You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.verb` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL schema, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources, and the level 3 headings will specify actions to run on those resources. For example (unrelated to `guide.verb`):
+You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.org` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL schema, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources, and the level 3 headings will specify actions to run on those resources. For example (unrelated to `guide.org`):
 
 ```
-* Foobar Blog API
+* Foobar Blog API                    :verb:
 template https://foobar-blog-api.org/api/v1
 Accept: application/json
 
@@ -281,7 +306,7 @@ Depending on the type of the resulting value for a code tag, Verb will do the fo
 
 Let's extend the previous example so that it now uses code tags:
 ```
-* User management
+* User management              :verb:
 template https://reqres.in/api/users
 Authentication: {{(verb-var token)}}
 Accept: application/json
@@ -304,7 +329,7 @@ The example uses the `verb-var` function in the first code tag. This function re
 
 If you wish to quickly re-set the value of a variable previously set with `verb-var`, use the `verb-set-var` command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`.
 
-If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). The following example does this; add it to the ending of your `guide.verb` file:
+If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). The following example does this; add it to the ending of your `guide.org` file:
 
 ```
 ** Get last created user
@@ -341,21 +366,6 @@ Content-Type: text/markdown
 
 Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this for you. This will let the server know how to interpret the contents of the request.
 
-### Outline Mode Commands
-
-Because Verb mode is based on Outline mode, all the commands available in Outline mode are available in Verb mode as well. Some examples:
-
-- <kbd>C-c C-a</kbd>: `outline-show-all`
-- <kbd>C-c C-p</kbd>: `outline-previous-visible-heading`
-- <kbd>C-c C-n</kbd>: `outline-next-visible-heading`
-- <kbd>C-c RET</kbd>: `outline-insert-heading`
-
-(Use <kbd>C-h f</kbd> `outline-mode` <kbd>RET</kbd> for the full commands list)
-
-Additionally, Verb adds the following commands:
-- <kbd>TAB</kbd>: `verb-cycle` Imitates the `org-cycle` command found in Org mode.
-- <kbd>C-RET</kbd>: `verb-insert-heading` Inserts below a new heading with the same level as the one on point.
-
 ### Customization
 
 To see which aspects of Verb may be customized, use <kbd>M-x</kbd> `customize-group` <kbd>RET</kbd> `verb` <kbd>RET</kbd>.
@@ -381,7 +391,7 @@ To see a listing of Verb's public symbols (hooks, functions, variables, classes,
 
 ## Examples
 
-The [docs/](docs) directory contains various `.verb` files which showcase different features of the package.
+The [docs/](docs) directory contains various `.org` files which showcase different features of the package.
 
 ## Changelog
 
