@@ -56,6 +56,7 @@ run:
 			     'org-babel-load-languages \
 			     '((verb . t))) \
 			   (setq org-confirm-babel-evaluate nil) \
+			   (setq verb-auto-kill-response-buffers t) \
 			   (with-current-buffer (get-buffer \"*scratch*\") (org-mode)) \
 			   (load-theme 'wombat) \
 			   (setq url-debug t) \
