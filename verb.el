@@ -334,8 +334,6 @@ more details on how to use it."
   :lighter " Verb"
   :group 'verb
   (when verb-mode
-    (unless (derived-mode-p 'org-mode)
-      (message "%s" "Warning: Verb is only useful on Org mode buffers"))
     (verb--setup-font-lock-keywords)
     (verb--log nil 'I
 	       "Verb mode enabled in buffer: %s"
