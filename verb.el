@@ -309,7 +309,7 @@ comfortably.")
      (,(concat "^\\(" (verb--http-methods-regexp) "\\)\\s-+.+$")
       (1 'verb-http-keyword))
      ;; Content-type: application/json
-     ("^\\([[:alnum:]-]+:\\)\\s-?.*$"
+     ("^\\([[:alnum:]-]+:\\).*$"
       (1 'verb-header))
      ;; "something": 123
      ("\\s-\\(\"[[:graph:]]+?\"\\)\\s-*:."
@@ -353,7 +353,7 @@ more details on how to use it."
   "Major mode for displaying an HTTP response's headers."
   (font-lock-add-keywords
    nil '(;; Key: Value
-	 ("^\\([[:alnum:]-]+:\\)\\s-.+$"
+	 ("^\\([[:alnum:]-]+:\\).*$"
 	  (1 'verb-header)))))
 
 (define-derived-mode verb-log-mode special-mode "Verb[Log]"
