@@ -1,4 +1,9 @@
 # Verb Changelog
+## master
+- Verb can now be used from Babel source blocks.
+- Added customizable option `verb-babel-timeout`.
+- Added new major mode: `ob-verb-response-mode`.
+
 ## **2.0.0** - 2020-01-21
 - Verb is now based on Org mode instead of Outline mode.
 - Verb is now a minor mode (to be enabled with Org) instead of a major mode.
