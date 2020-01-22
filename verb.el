@@ -798,7 +798,8 @@ If KEEP-WINDOWS is non-nil, do not delete their respective windows."
 Interactively, prompt the user for an export function, and call that
 function with the request specification object.  See the
 `verb-export-functions' variable for more details.  If called from
-Lisp, use the export function under NAME.
+Lisp, use the export function under NAME.  If NAME is nil, prompt the
+user anyways.
 
 No HTTP request will be sent, unless the export function does this
 explicitly.  Lisp code tags will be evaluated before exporting."
@@ -835,7 +836,8 @@ See `verb--export-to-curl' for more information."
   (verb-export-request-on-point "curl"))
 
 (defun verb--export-to-human (rs)
-  "Export a request spec RS to a human-readable format."
+  "Export a request spec RS to a human-readable format.
+Return a new buffer with the export results inserted into it."
   (with-current-buffer (generate-new-buffer "*HTTP Request Spec*")
     (text-mode)
     (insert (propertize "HTTP Method: " 'font-lock-face 'bold)
@@ -854,20 +856,24 @@ See `verb--export-to-curl' for more information."
 	  (insert (propertize "Body:" 'font-lock-face 'bold) "\n"
 		  body "\n")
 	(insert "No body defined.")))
-    (switch-to-buffer-other-window (current-buffer))))
+    (switch-to-buffer-other-window (current-buffer))
+    (current-buffer)))
 
 (defun verb--export-to-verb (rs)
-  "Export a request spec RS to Verb format."
+  "Export a request spec RS to Verb format.
+Return a new buffer with the export results inserted into it."
   (with-current-buffer (generate-new-buffer "*HTTP Request Spec*")
     (verb-mode)
     (insert (verb-request-spec-to-string rs))
-    (switch-to-buffer-other-window (current-buffer))))
+    (switch-to-buffer-other-window (current-buffer))
+    (current-buffer)))
 
-(defun verb--export-to-curl (rs &optional no-message)
+(defun verb--export-to-curl (rs &optional no-message no-kill)
   "Export a request spec RS to curl format.
 Add the generated command to the kill ring and return it.  For more
 information about curl see URL `https://curl.haxx.se/'.  If NO-MESSAGE
-is non-nil, do not display a message on the minibuffer."
+is non-nil, do not display a message on the minibuffer.  If NO-KILL is
+non-nil, do not add the command to the kill ring."
   (with-temp-buffer
     (insert "curl '" (verb-request-spec-url-to-string rs) "'")
     (dolist (key-value (oref rs headers))
@@ -893,7 +899,8 @@ is non-nil, do not display a message on the minibuffer."
        (insert "-X TRACE"))
       ("CONNECT"
        (user-error "%s" "CONNECT method not supported in curl format")))
-    (kill-new (verb--buffer-string-no-properties))
+    (unless no-kill
+      (kill-new (verb--buffer-string-no-properties)))
     (unless no-message
       (message "Curl command copied to the kill ring"))
     ;; Return the generated command
