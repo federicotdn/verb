@@ -34,6 +34,9 @@
 (defun text-as-spec (&rest args)
   (verb-request-spec-from-string (mapconcat #'identity args "")))
 
+(defun text-as-spec-nl (&rest args)
+  (verb-request-spec-from-string (mapconcat #'identity args "\n")))
+
 (defun override-specs (s1 s2 &optional url method headers body)
   (should (equal (verb-request-spec-override
 		  (verb-request-spec-from-string (mapconcat #'identity s1 ""))
@@ -1437,6 +1440,38 @@
   (should-error (verb--export-to-curl
 		 (verb-request-spec-from-string
 		  "CONNECT http://abc.com"))))
+
+(ert-deftest test-human-readable-export ()
+  (setq test-spec (text-as-spec-nl "# test"
+				   "post https://hello.com"
+				   "Test: Foobar"
+				   "Test2: Foo"
+				   ""
+				   "Body contents"))
+  (with-current-buffer (verb--export-to-human test-spec)
+    (should (string= (verb--buffer-string-no-properties)
+		     (join-lines "HTTP Method: POST"
+				 "URL: https://hello.com"
+				 "Headers:"
+				 "    Test: Foobar"
+				 "    Test2: Foo"
+				 ""
+				 "Body:"
+				 "Body contents\n")))))
+
+(ert-deftest test-verb-export ()
+  (setq test-spec (text-as-spec-nl "PUT https://hello.com"
+				   "Test: Foobar"
+				   "Test2: Foo"
+				   ""
+				   "Body contents"))
+  (with-current-buffer (verb--export-to-verb test-spec)
+    (should (string= (verb--buffer-string-no-properties)
+		     (verb-request-spec-to-string test-spec)))
+    ;; We should be able to parse the string back to a request-spec and
+    ;; get the same thing
+    (should (equal test-spec (verb-request-spec-from-string
+			      (verb--buffer-string-no-properties))))))
 
 (provide 'verb-test)
 ;;; verb-test.el ends here
