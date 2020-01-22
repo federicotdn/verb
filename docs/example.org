@@ -10,6 +10,29 @@
 
 get https://api.ipify.org?format=json
 
+** Babel Source Block
+# This example is contained in a Babel source block. Move the point to
+# somewhere inside the block and press C-c C-c to execute it and store
+# the response in this same file.
+
+#+BEGIN_SRC verb :wrap src verb-response-headers-mode
+get https://api.kanye.rest
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_src verb-response-headers-mode
+HTTP/1.1 200 OK
+Date: Wed, 22 Jan 2020 18:09:49 GMT
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+Vary: Accept-Encoding
+Server: cloudflare
+Content-Encoding: gzip
+
+{"quote":"I really love my Tesla. I'm in the future. Thank you Elon."}
+#+END_src
+
 ** Tasks
 - [ ] Find my IPv4 address
 - [ ] Find my IPv6 address
