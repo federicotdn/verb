@@ -15,14 +15,14 @@ get https://api.ipify.org?format=json
 # somewhere inside the block and press C-c C-c to execute it and store
 # the response in this same file.
 
-#+BEGIN_SRC verb :wrap src verb-response-headers-mode
+#+BEGIN_SRC verb :wrap src ob-verb-response
 get https://api.kanye.rest
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_src verb-response-headers-mode
+#+BEGIN_src ob-verb-response
 HTTP/1.1 200 OK
-Date: Wed, 22 Jan 2020 18:09:49 GMT
+Date: Wed, 22 Jan 2020 22:32:58 GMT
 Content-Type: application/json
 Transfer-Encoding: chunked
 Connection: keep-alive
@@ -30,7 +30,7 @@ Vary: Accept-Encoding
 Server: cloudflare
 Content-Encoding: gzip
 
-{"quote":"I really love my Tesla. I'm in the future. Thank you Elon."}
+{"quote": "I really love my Tesla. I'm in the future. Thank you Elon."}
 #+END_src
 
 ** Tasks

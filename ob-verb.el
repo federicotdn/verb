@@ -52,5 +52,16 @@ This function is called by `org-babel-execute-src-block'."
 							      start))
 	(verb-response-to-string verb-http-response)))))
 
+;;;###autoload
+(define-derived-mode ob-verb-response-mode special-mode "ob-verb"
+  "Major mode for displaying HTTP responses with Babel."
+  (font-lock-add-keywords
+   nil `(;; HTTP/1.1 200 OK
+	 ("^HTTP/1\\.[01]\\s-+[[:digit:]]\\{3\\}.*$"
+	  (0 'verb-http-keyword))
+	 ;; Key: Value
+	 (,verb--http-header-regexp
+	  (1 'verb-header)))))
+
 (provide 'ob-verb)
 ;;; ob-verb.el ends here

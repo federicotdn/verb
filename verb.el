@@ -259,6 +259,9 @@ I = Information.
 W = Warning.
 E = Error.")
 
+(defconst verb--http-header-regexp "^\\([[:alnum:]-]+:\\).*$"
+  "Regexp for font locking HTTP headers.")
+
 (defvar-local verb-http-response nil
   "HTTP response for this response buffer (`verb-response' object).
 The decoded body contents of the response are included in the buffer
@@ -316,7 +319,7 @@ comfortably.")
      (,(concat "^\\(" (verb--http-methods-regexp) "\\)\\s-+.+$")
       (1 'verb-http-keyword))
      ;; Content-type: application/json
-     ("^\\([[:alnum:]-]+:\\).*$"
+     (,verb--http-header-regexp
       (1 'verb-header))
      ;; "something": 123
      ("\\s-\\(\"[[:graph:]]+?\"\\)\\s-*:."
@@ -359,8 +362,8 @@ more details on how to use it."
 (define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
   "Major mode for displaying an HTTP response's headers."
   (font-lock-add-keywords
-   nil '(;; Key: Value
-	 ("^\\([[:alnum:]-]+:\\).*$"
+   nil `(;; Key: Value
+	 (,verb--http-header-regexp
 	  (1 'verb-header)))))
 
 (define-derived-mode verb-log-mode special-mode "Verb[Log]"
