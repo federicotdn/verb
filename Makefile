@@ -28,31 +28,34 @@ test:
 setup-check:
 	git clone https://github.com/purcell/package-lint.git $(PACKAGE_LINT)
 
-byte-compile:
-	$(EMACS) -Q --batch --eval '(byte-compile-file "verb.el")' 2>&1 | $(NOOUTPUT)
-
-checkdoc:
-	yes n | $(EMACS) -Q --batch --eval '(find-file "verb.el")' \
-		      	    	    --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
-
-package-lint:
+lint-file:
+	$(EMACS) --batch -L . \
+			 --eval '(byte-compile-file "$(filename)")' 2>&1 | $(NOOUTPUT)
+	yes n | $(EMACS) --batch \
+			 --eval '(find-file "$(filename)")' \
+			 --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
 	$(EMACS) --batch -l $(PACKAGE_LINT)/package-lint.el \
-			 -f package-lint-batch-and-exit verb.el
+			 -f package-lint-batch-and-exit "$(filename)"
 
-check: byte-compile checkdoc package-lint
+check:
+	make lint-file filename=verb.el
+	make lint-file filename=ob-verb.el
 
 run:
-	rm -f verb-autoloads.el verb.elc
+	rm -f verb-autoloads.el verb.elc ob-verb.elc
 	$(EMACS) -Q -L . \
 		 --eval "(progn \
 			   (require 'package) \
-			   (package-initialize) \
 		           (package-generate-autoloads \"verb\" \".\") \
 			   (load \"verb-autoloads.el\") \
 			   (add-to-list 'default-frame-alist '(fullscreen . maximized)) \
 			   (set-face-attribute 'default nil :height $(FONT_SIZE)) \
 			   (setq initial-scratch-message nil) \
 			   (with-eval-after-load 'org (define-key org-mode-map (kbd \"C-c C-r\") verb-mode-prefix-map)) \
+			   (org-babel-do-load-languages \
+			     'org-babel-load-languages \
+			     '((verb . t))) \
+			   (setq org-confirm-babel-evaluate nil) \
 			   (with-current-buffer (get-buffer \"*scratch*\") (org-mode)) \
 			   (load-theme 'wombat) \
 			   (setq url-debug t) \

@@ -32,6 +32,7 @@
 
 ;;; Code:
 (require 'org)
+(require 'ob)
 (require 'eieio)
 (require 'subr-x)
 (require 'url)
@@ -153,6 +154,12 @@ to warn the user about a possible network timeout.  When set to nil,
 don't show any warnings."
   :type '(choice (float :tag "Time in seconds")
 		 (const :tag "Off" nil)))
+
+(defcustom verb-babel-timeout 10.0
+  "Timeout (s) for HTTP requests made from a Babel source blocks.
+Note that Emacs will be blocked while the response hasn't been
+receieved."
+  :type 'float)
 
 (defcustom verb-code-tag-delimiters '("{{" . "}}")
   "Lisp code tag delimiters for HTTP request specifications.
@@ -335,11 +342,13 @@ more details on how to use it."
   :group 'verb
   (when verb-mode
     (verb--setup-font-lock-keywords)
-    (verb--log nil 'I
-	       "Verb mode enabled in buffer: %s"
-	       (buffer-name))
-    (verb--log nil 'I "Org version: %s, GNU Emacs version: %s"
-	       (org-version) emacs-version)))
+    (when (buffer-file-name)
+      (verb--log nil 'I
+		 "Verb mode enabled in buffer: %s"
+		 (buffer-name))
+      (verb--log nil 'I "Org version: %s, GNU Emacs version: %s"
+		 (org-version)
+		 emacs-version))))
 
 (defvar verb-response-headers-mode-map
   (let ((map (make-sparse-keymap)))
@@ -570,14 +579,30 @@ not have the tag `verb-tag'."
 	    (verb-request-spec-from-string text)
 	  (verb-empty-spec nil))))))
 
-(defun verb--request-spec-from-hierarchy ()
+(defun verb--request-spec-from-babel-src-block (pos body)
+  "Return a request spec generated from a Babel source block.
+BODY should contain the body of the source block.  POS should be a
+position of the buffer that lies inside the source block.
+
+Note that the entire buffer will be considered when generating the
+request spec, not only the section contained by the source block."
+  (save-excursion
+    (goto-char pos)
+    (let ((rs (verb-request-spec-from-string body)))
+      (when (verb--up-heading)
+	(setq rs (verb--request-spec-from-hierarchy rs)))
+      rs)))
+
+(defun verb--request-spec-from-hierarchy (&rest specs)
   "Return a request spec generated from the headings hierarchy.
 To do this, use `verb--request-spec-from-heading' for the current
 heading, for that heading's parent, and so on until the root of the
-hierarchy is reached.  Once all the request specs have been collected,
-override them in inverse order according to the rules described in
-`verb-request-spec-override'."
-  (let (specs done final-spec)
+hierarchy is reached.
+Once all the request specs have been collected, override them in
+inverse order according to the rules described in
+`verb-request-spec-override'.  After that, override that result with
+all the request specs in SPECS, in the order they were passed in."
+  (let (done final-spec)
     (save-excursion
       ;; Go up through the headings tree taking a request specification
       ;; from each level
@@ -731,20 +756,24 @@ Show the results on another window, but don't switch to it (use
   (verb-send-request-on-point 'stay-window))
 
 ;;;###autoload
-(defun verb-send-request-on-point (&optional where)
+(defun verb-send-request-on-point (where)
   "Send the request specified by the selected heading's text contents.
-The contents of all parent headings are used as well; see
-`verb--request-spec-from-hierarchy' to see how this is done.
+After the request has been sent, return the response buffer (the buffer
+where the response will be loaded into).
 
-If WHERE is `other-window', show the results of the request on another
-window and select it.  If WHERE is `show-window', show the results of
-the request on another window, but keep the current one selected.  If
-WHERE has any other value, show the results of the request in the
-current window.  WHERE defaults to nil.
+Note that the contents of all parent headings are considered as well;
+see `verb--request-spec-from-hierarchy' to see how this is done.
+
+If WHERE is `other-window', show the results of the request (the
+response buffer) on another window and select it.  If WHERE is
+`show-window', show the results of the request on another window, but
+keep the current one selected.  If WHERE is `this-window', show the
+results of the request in the current window.  If WHERE has any other
+value, send the request but do not show the results anywhere.
 
 The `verb-post-response-hook' hook is called after a response has been
 received."
-  (interactive)
+  (interactive (list 'this-window))
   (verb--ensure-verb-mode)
   (verb--request-spec-send (verb--request-spec-from-hierarchy)
 			   where))
@@ -1083,7 +1112,7 @@ view the HTTP response in a user-friendly way."
 	('other-window (switch-to-buffer-other-window (current-buffer)))
 	('stay-window (save-selected-window
 			(switch-to-buffer-other-window (current-buffer))))
-	(_ (switch-to-buffer (current-buffer)))))
+	('this-window (switch-to-buffer (current-buffer)))))
 
     (with-current-buffer response-buf
       (verb-response-body-mode)
@@ -1274,6 +1303,17 @@ This string should be able to be used with
       (insert (car key-value) ": " (cdr key-value) "\n"))
     (when-let ((body (oref rs body)))
       (insert "\n" body))
+    (verb--buffer-string-no-properties)))
+
+(cl-defmethod verb-response-to-string ((resp verb-response))
+  "Return HTTP response RESP as a string."
+  (with-temp-buffer
+    (insert (oref resp status) "\n")
+    (verb--insert-header-contents (oref resp headers))
+    (insert "\n")
+    (when-let ((body (oref resp body)))
+      (insert "\n")
+      (insert body))
     (verb--buffer-string-no-properties)))
 
 (defun verb--timeout-warn (buffer rs num)
