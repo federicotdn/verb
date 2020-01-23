@@ -13,8 +13,12 @@ setup-tests:
 server:
 	source env/bin/activate && python3 test/server.py
 
-test:
-	rm -f verb.elc
+clean:
+	rm -f tests.log
+	rm -f test/server.pid
+	find . -name "*.elc" -type f -delete
+
+test: clean
 	source env/bin/activate && python3 test/server.py &
 	sleep 0.5
 	$(EMACS) --batch -L . \
@@ -40,8 +44,7 @@ check:
 	make lint-file filename=verb.el
 	make lint-file filename=ob-verb.el
 
-run:
-	rm -f verb-autoloads.el verb.elc ob-verb.elc
+run: clean
 	$(EMACS) -Q -L . \
 		 --eval "(progn \
 			   (require 'package) \
