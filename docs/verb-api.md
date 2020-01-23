@@ -14,6 +14,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Minor Mode: **verb-response-body-mode**
 - Major Mode: **verb-response-headers-mode**
 - Major Mode: **verb-log-mode**
+- Major Mode: **ob-verb-response-mode**
 - Face: **verb-http-keyword**
 - Face: **verb-header**
 - Face: **verb-code-tag**
@@ -28,7 +29,9 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Variable: **verb-kill-this-buffer**
 - Variable: **verb-mode-prefix-map**
 - Variable: **verb-response-headers-mode-map**
+- Function: **org-babel-execute:verb** *body* *params*
 - Function: **verb-read-file** *file*
+- Function: **verb-response-to-string** *resp*
 - Function: **verb-request-spec-validate** *rs*
 - Function: **verb-request-spec-url-to-string** *rs*
 - Function: **verb-request-spec-to-string** *rs*
@@ -90,3 +93,4 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-code-tag-delimiters**
 - User Option: **verb-url-retrieve-function**
 - User Option: **verb-json-max-pretty-print-size**
+- User Option: **verb-babel-timeout**
