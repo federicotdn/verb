@@ -27,6 +27,13 @@
 ;;; Code:
 
 (require 'verb)
+(require 'ob-verb)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((verb . t)))
+
+(setq org-confirm-babel-evaluate nil)
 
 (defun join-lines (&rest args)
   (mapconcat #'identity args "\n"))
@@ -1184,6 +1191,7 @@
 (setq test-file-name (expand-file-name "test/test.org"))
 (setq test-buf (find-file test-file-name))
 (with-current-buffer test-buf (verb-mode))
+(setq req-sleep-time 0.25)
 
 (defmacro server-test (test-name &rest body)
   (declare (indent 1))
@@ -1193,7 +1201,7 @@
      (re-search-forward (concat "^\\*+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-send-request-on-point 'same-window)
-	 (sleep-for 0.25)
+	 (sleep-for req-sleep-time)
 	 ,@body))))
 
 (defun get-response-buffers ()
@@ -1473,5 +1481,33 @@
     (should (equal test-spec (verb-request-spec-from-string
 			      (verb--buffer-string-no-properties))))))
 
+(ert-deftest test-babel ()
+  (with-temp-buffer
+    (org-mode)
+    (insert (join-lines "* Heading 1    :verb:"
+			"template http://localhost:8000"
+			"** heading 2"
+			"get"
+			"Accept: application/json"
+			"*** Heading 3"
+			"#+begin_src verb :wrap src ob-verb-response"
+			"get /basic-json"
+			"#+end_src"))
+    (re-search-backward "get ")
+    (org-ctrl-c-ctrl-c)
+    (sleep-for req-sleep-time)
+    (goto-char (point-min))
+    (re-search-forward "RESULTS:")
+    (forward-char)
+    (should (string= (buffer-substring-no-properties (point) (point-max))
+		     (join-lines "#+BEGIN_src ob-verb-response"
+				 "HTTP/1.1 200 OK"
+				 "Connection: keep-alive"
+				 "Keep-Alive: 5"
+				 "Content-Length: 28"
+				 "Content-Type: application/json"
+				 ""
+				 "{\"foo\":true,\"hello\":\"world\"}"
+				 "#+END_src\n")))))
 (provide 'verb-test)
 ;;; verb-test.el ends here
