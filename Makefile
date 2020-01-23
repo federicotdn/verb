@@ -58,7 +58,7 @@ run: clean
 			     '((verb . t))) \
 			   (setq org-confirm-babel-evaluate nil) \
 			   (setq verb-auto-kill-response-buffers t) \
-			   (with-current-buffer (get-buffer \"*scratch*\") (org-mode)) \
+			   (with-current-buffer (get-buffer \"*scratch*\") (org-mode) (verb-mode)) \
 			   (load-theme 'wombat) \
 			   (setq url-debug t) \
 			   (toggle-debug-on-error) \

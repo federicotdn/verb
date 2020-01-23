@@ -192,7 +192,8 @@
 				      :url (verb--clean-url
 					    "http://hello.com")))))
   (setq outline-test
-	(join-lines "* Test :verb:"
+	(join-lines "foo bar"
+		    "* Test :verb:"
 		    "template http://hello.com"
 		    "** Test2"
 		    "post ?a=b"))
@@ -204,6 +205,19 @@
 		   (verb-request-spec :method "POST"
 				      :url (verb--clean-url
 					    "http://hello.com?a=b")))))
+
+  ;; No headings
+  (setq outline-test
+	(join-lines "delete http://test.com"))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert outline-test)
+    (should (equal (verb--request-spec-from-hierarchy)
+		   (verb-request-spec :method "DELETE"
+				      :url (verb--clean-url
+					    "http://test.com")))))
+
   (setq outline-test
 	(join-lines "* Test :verb:"))
   (with-temp-buffer

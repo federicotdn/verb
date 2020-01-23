@@ -572,11 +572,18 @@ If no headings exist, return the contents of the entire buffer."
 
 (defun verb--request-spec-from-heading ()
   "Return a request spec generated from the heading's text contents.
-Return nil if the heading has no text contents, or if the heading does
-not have the tag `verb-tag'."
+After getting the heading's text content, run it through
+`verb--maybe-extract-babel-src-block'.  From that result, try to parse
+a request specification.  Return nil if the heading has no text
+contents, if contains only comments, or if the heading does not have
+the tag `verb-tag'."
   (when (or (member verb-tag (verb--heading-tags))
-	    (eq verb-tag t))
-    (let ((text (verb--heading-contents)))
+	    (eq verb-tag t)
+	    ;; If there's no heading to move back to, then assume
+	    ;; there are no headings and bypass the tag check
+	    (not (verb--back-to-heading)))
+    (let ((text (verb--maybe-extract-babel-src-block
+		 (verb--heading-contents))))
       (unless (string-empty-p text)
 	(condition-case nil
 	    (verb-request-spec-from-string text)
