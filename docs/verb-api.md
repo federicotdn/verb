@@ -22,7 +22,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Face: **verb-log-info**
 - Face: **verb-log-warning**
 - Face: **verb-log-error**
-- Variable: **verb-last**
+- Variable: **verb-last** \
   Stores the last received HTTP response.
 - Variable: **verb-http-response** \
   Response object for this response buffer. Use this variable from the verb-post-response-hook to access request and response information and contents.

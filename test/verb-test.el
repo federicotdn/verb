@@ -1481,6 +1481,11 @@
     (should (equal test-spec (verb-request-spec-from-string
 			      (verb--buffer-string-no-properties))))))
 
+(defun replace-all (from to)
+  (goto-char (point-min))
+  (while (search-forward from nil t)
+    (replace-match to t)))
+
 (ert-deftest test-babel ()
   (with-temp-buffer
     (org-mode)
@@ -1496,11 +1501,13 @@
     (re-search-backward "get ")
     (org-ctrl-c-ctrl-c)
     (sleep-for req-sleep-time)
+    (replace-all "BEGIN" "begin")
+    (replace-all "END" "end")
     (goto-char (point-min))
     (re-search-forward "RESULTS:")
     (forward-char)
     (should (string= (buffer-substring-no-properties (point) (point-max))
-		     (join-lines "#+BEGIN_src ob-verb-response"
+		     (join-lines "#+begin_src ob-verb-response"
 				 "HTTP/1.1 200 OK"
 				 "Connection: keep-alive"
 				 "Keep-Alive: 5"
@@ -1511,6 +1518,6 @@
 				 "  \"foo\": true,"
 				 "  \"hello\": \"world\""
 				 "}"
-				 "#+END_src\n")))))
+				 "#+end_src\n")))))
 (provide 'verb-test)
 ;;; verb-test.el ends here

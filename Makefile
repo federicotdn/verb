@@ -14,8 +14,7 @@ server:
 	source env/bin/activate && python3 test/server.py
 
 clean:
-	rm -f tests.log
-	rm -f test/server.pid
+	rm -f verb-autoloads.el tests.log test/server.pid
 	find . -name "*.elc" -type f -delete
 
 test: clean
@@ -40,7 +39,7 @@ lint-file:
 	$(EMACS) --batch -l $(PACKAGE_LINT)/package-lint.el \
 			 -f package-lint-batch-and-exit "$(filename)"
 
-check:
+check: clean
 	make lint-file filename=verb.el
 	make lint-file filename=ob-verb.el
 
