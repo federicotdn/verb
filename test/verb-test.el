@@ -1519,5 +1519,83 @@
 				 "  \"hello\": \"world\""
 				 "}"
 				 "#+end_src\n")))))
+
+(defun babel-src-test (input output)
+  (should (string= (verb--maybe-extract-babel-src-block input)
+		   output)))
+
+(ert-deftest test-maybe-extract-babel-source-block ()
+  (babel-src-test (join-lines "hello")
+		  (join-lines "hello"))
+
+  (babel-src-test (join-lines "")
+		  (join-lines ""))
+
+  (babel-src-test (join-lines "" "")
+		  (join-lines "" ""))
+
+  (babel-src-test (join-lines "test"
+			      "#+begin_src verb"
+			      "hello world"
+			      "#+end_src")
+		  (join-lines "hello world"))
+
+  (babel-src-test (join-lines "test"
+			      "#+begin_src verb"
+			      "#+end_src")
+		  (join-lines ""))
+
+  (babel-src-test (join-lines "test"
+			      "#+begin_src verb"
+			      ""
+			      "#+end_src")
+		  (join-lines ""))
+
+  (babel-src-test (join-lines "test"
+			      "#+begin_src verb"
+			      "something"
+			      "something else"
+			      "#+end_src"
+			      "test"
+			      "#+begin_src verb"
+			      "101010101"
+			      "#+end_src"
+			      )
+		  (join-lines "something"
+			      "something else"))
+
+  (babel-src-test (join-lines "test"
+			      "#+begin_src verb"
+			      "hello world"
+			      "#+end_src"
+			      "trailing stuff")
+		  (join-lines "hello world"))
+
+  (babel-src-test (join-lines "test"
+			      "#+begin_src verb"
+			      "hello world"
+			      "foobar"
+			      "#+end_src"
+			      "trailing stuff")
+		  (join-lines "hello world"
+			      "foobar"))
+
+  (babel-src-test (join-lines "test"
+			      "#+begin_SRC verb"
+			      "hello world"
+			      "#+eNd_src")
+		  (join-lines "hello world"))
+
+  (should-error (verb--maybe-extract-babel-src-block
+		 (join-lines "#+begin_src"
+			     "helloooo"
+			     "#+end_src")))
+
+  (babel-src-test (join-lines "test"
+			      "#+begin_SRC verb abcdef"
+			      "hello world"
+			      "#+eNd_src")
+		  (join-lines "hello world")))
+
 (provide 'verb-test)
 ;;; verb-test.el ends here

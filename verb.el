@@ -582,6 +582,33 @@ not have the tag `verb-tag'."
 	    (verb-request-spec-from-string text)
 	  (verb-empty-spec nil))))))
 
+(defun verb--maybe-extract-babel-src-block (text)
+  "Return contents of the first Verb Babel source block in TEXT.
+If no Babel source blocks are found, return TEXT."
+  (with-temp-buffer
+    (insert text)
+    (goto-char (point-min))
+    (let ((case-fold-search t)
+	  start result)
+      (when (search-forward "#+begin_src" nil t)
+	(unless (looking-at " verb")
+	  (user-error "%s" (concat "Found a non-verb Babel source block\n"
+				   "Make sure all source blocks in the "
+				   "hierarchy use \"verb\" as language")))
+	;; Found the start
+	(end-of-line)
+	(forward-char)
+	(setq start (point))
+	(when (search-forward "#+end_src" nil t)
+	  ;; Found the end
+	  (beginning-of-line)
+	  (backward-char)
+	  (setq result
+		(if (<= start (point))
+		    (buffer-substring-no-properties start (point))
+		  ""))))
+      (or result (verb--buffer-string-no-properties)))))
+
 (defun verb--request-spec-from-babel-src-block (pos body)
   "Return a request spec generated from a Babel source block.
 BODY should contain the body of the source block.  POS should be a
