@@ -390,7 +390,7 @@ Note: code tags will be evaluated when exporting a request.
 
 ### Verb Log
 
-When you send a request or receive a response, some information is logged in the `*Verb Log*` buffer. You can use this log to get some more details on any errors that might have happened and other internal stuff. You can disable logging by setting the `verb-enable-log` variable to `nil`.
+When you send a request or receive a response, some information is logged in the `*Verb Log*` buffer. You can use this log to get some more details on any errors that might have happened and other internal stuff. You can disable logging by setting the `verb-enable-log` variable to `nil`. While reading the log, you can press <kbd>q</kbd> to go back to the previous buffer.
 
 ## Hooks, Variables, Functions
 

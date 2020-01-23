@@ -98,7 +98,7 @@ Called when :op `send' is passed to `org-babel-execute:verb'."
       (if (eq verb-http-response t)
 	  (format "(Request timed out after %.4g seconds)"
 		  (- (time-to-seconds) start))
-	(verb-response-to-string verb-http-response)))))
+	(verb-response-to-string verb-http-response buf)))))
 
 ;;;###autoload
 (define-derived-mode ob-verb-response-mode special-mode "ob-verb"

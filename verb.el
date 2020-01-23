@@ -1315,15 +1315,17 @@ This string should be able to be used with
       (insert "\n" body))
     (verb--buffer-string-no-properties)))
 
-(cl-defmethod verb-response-to-string ((resp verb-response))
-  "Return HTTP response RESP as a string."
+(cl-defmethod verb-response-to-string ((resp verb-response) buf)
+  "Return HTTP response RESP as a string.
+BUF is the response buffer corresponding to this response object.  The
+buffer must contain the response's processed body."
   (with-temp-buffer
     (insert (oref resp status) "\n")
     (verb--insert-header-contents (oref resp headers))
     (insert "\n")
-    (when-let ((body (oref resp body)))
+    (when (oref resp body)
       (insert "\n")
-      (insert body))
+      (insert-buffer-substring buf))
     (verb--buffer-string-no-properties)))
 
 (defun verb--timeout-warn (buffer rs num)

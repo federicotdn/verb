@@ -31,7 +31,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Variable: **verb-response-headers-mode-map**
 - Function: **org-babel-execute:verb** *body* *params*
 - Function: **verb-read-file** *file*
-- Function: **verb-response-to-string** *resp*
+- Function: **verb-response-to-string** *resp* *buf*
 - Function: **verb-request-spec-validate** *rs*
 - Function: **verb-request-spec-url-to-string** *rs*
 - Function: **verb-request-spec-to-string** *rs*

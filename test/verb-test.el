@@ -1507,7 +1507,10 @@
 				 "Content-Length: 28"
 				 "Content-Type: application/json"
 				 ""
-				 "{\"foo\":true,\"hello\":\"world\"}"
+				 "{"
+				 "  \"foo\": true,"
+				 "  \"hello\": \"world\""
+				 "}"
 				 "#+END_src\n")))))
 (provide 'verb-test)
 ;;; verb-test.el ends here
