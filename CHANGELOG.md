@@ -3,6 +3,7 @@
 - Renamed `verb-mode-prefix-map` to `verb-command-map` (existing `init.el` configs must be updated).
 - Signal an error when using `verb-set-var` if no variables have been previously set with `verb-var`.
 - Fix `verb-re-send-request` not showing response buffer.
+- Added modeline mouse menus for `verb-mode` and `verb-response-body-mode`.
 
 ## **2.1.0** - 2020-01-24
 - Verb can now be used from Babel source blocks.

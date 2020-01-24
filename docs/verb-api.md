@@ -27,7 +27,10 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Variable: **verb-http-response** \
   Response object for this response buffer. Use this variable from the verb-post-response-hook to access request and response information and contents.
 - Variable: **verb-kill-this-buffer**
-- Variable: **verb-command-map**
+- Variable: **verb-mode-map**
+- Variable: **verb-response-body-mode-map**
+- Variable: **verb-command-map** \
+  Keymap for Verb mode commands.
 - Variable: **verb-response-headers-mode-map**
 - Function: **org-babel-execute:verb** *body* *params*
 - Function: **verb-read-file** *file*
@@ -51,6 +54,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-kill-buffer-and-window**
 - Command: **verb-toggle-show-headers**
 - Command: **verb-set-var** *var*
+- Command: **verb-view-log**
 - Macro: **verb-var** *var*
 - Class: **verb-request-spec** \
   Represents an HTTP request specification.

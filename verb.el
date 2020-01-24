@@ -249,6 +249,9 @@ Should be set to the same character Org uses to comment lines.")
 			       "TRACE" "CONNECT")
   "List of valid HTTP methods.")
 
+(defconst verb--log-buffer-name "*Verb Log*"
+  "Default name for log buffer.")
+
 (defconst verb--template-keyword "TEMPLATE"
   "Keyword to use when defining request templates.
 Request templates are defined without HTTP methods, paths or hosts.")
@@ -304,9 +307,9 @@ previous requests on new requests.")
     (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
     (define-key map (kbd "C-v") #'verb-set-var)
     map)
-  "Map of `verb-mode'-related commands.
-Bind this map to an easy-to-reach key in Org mode in order to use Verb
-comfortably.  Al commands listed in this map automatically enable
+  "Keymap for `verb-mode' commands.
+Bind this to an easy-to-reach key in Org mode in order to use Verb
+comfortably.  All commands listed in this keymap automatically enable
 `verb-mode' in the current buffer when used.")
 
 (defun verb--setup-font-lock-keywords ()
@@ -333,6 +336,27 @@ comfortably.  Al commands listed in this map automatically enable
 	       "\\).*$")
       (1 'verb-code-tag))))
   (font-lock-flush))
+
+(defvar verb-mode-map
+  (let ((map (make-sparse-keymap)))
+    (easy-menu-define verb-mode-menu map
+      "Menu for Verb mode"
+      '("Verb"
+	["Send request on selected window" verb-send-request-on-point]
+	["Send request on other window & switch" verb-send-request-on-point-other-window]
+	["Send request on other window" verb-send-request-on-point-other-window-stay]
+	"--"
+	["Kill response buffers" verb-kill-all-response-buffers]
+	"--"
+	["Set variable value" verb-set-var]
+	"--"
+	["Export request to curl" verb-export-request-on-point-curl]
+	["Export request to human-readable" verb-export-request-on-point-human]
+	["Export request to Verb" verb-export-request-on-point-verb]
+	"--"
+	["View log" verb-view-log]))
+    map)
+  "Keymap for `verb-mode'.")
 
 ;;;###autoload
 (define-minor-mode verb-mode
@@ -459,13 +483,28 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 	       "Number of bytes in response body."))
   "Represents an HTTP response to a request.")
 
+  :keymap `((,(kbd "C-c C-r C-r") . verb-toggle-show-headers)
+	    (,(kbd "C-c C-r C-k") . verb-kill-response-buffer-and-window)
+	    (,(kbd "C-c C-r C-f") . verb-re-send-request))
+
+(defvar verb-response-body-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-r C-r") #'verb-toggle-show-headers)
+    (define-key map (kbd "C-c C-r C-k") #'verb-kill-response-buffer-and-window)
+    (define-key map (kbd "C-c C-r C-f") #'verb-re-send-request)
+    (easy-menu-define verb-response-body-mode-menu map
+      "Menu for Verb response body mode"
+      '("Verb[Body]"
+	["Toggle show response headers" verb-toggle-show-headers]
+	["Kill buffer and window" verb-kill-response-buffer-and-window]
+	["Re-send request" verb-re-send-request]))
+    map)
+  "Keymap for `verb-response-body-mode'.")
+
 (define-minor-mode verb-response-body-mode
   "Minor mode for displaying an HTTP response's body."
   :lighter " Verb[Body]"
   :group 'verb
-  :keymap `((,(kbd "C-c C-r C-r") . verb-toggle-show-headers)
-	    (,(kbd "C-c C-r C-k") . verb-kill-response-buffer-and-window)
-	    (,(kbd "C-c C-r C-f") . verb-re-send-request))
   (if verb-response-body-mode
       (progn
 	(setq header-line-format
@@ -476,6 +515,11 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 		(verb-toggle-show-headers))
 	    (verb-toggle-show-headers))))
     (setq header-line-format nil)))
+
+(defun verb-view-log ()
+  "Switch to the *Verb Log* buffer."
+  (interactive)
+  (switch-to-buffer (get-buffer-create verb--log-buffer-name)))
 
 (defun verb--log (request level &rest args)
   "Log a message in the *Verb Log* buffer.
@@ -488,7 +532,7 @@ If `verb-enable-log' is nil, do not log anything."
   (unless (member level verb--log-levels)
     (user-error "Invalid log level: \"%s\"" level))
   (when verb-enable-log
-    (with-current-buffer (get-buffer-create "*Verb Log*")
+    (with-current-buffer (get-buffer-create verb--log-buffer-name)
       (unless (derived-mode-p 'verb-log-mode)
 	(verb-log-mode))
       (let ((inhibit-read-only t)
