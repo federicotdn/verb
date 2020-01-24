@@ -929,12 +929,13 @@ non-nil, do not add the command to the kill ring."
        (insert "-X TRACE"))
       ("CONNECT"
        (user-error "%s" "CONNECT method not supported in curl format")))
-    (unless no-kill
-      (kill-new (verb--buffer-string-no-properties)))
-    (unless no-message
-      (message "Curl command copied to the kill ring"))
-    ;; Return the generated command
-    (car kill-ring)))
+    (let ((result (verb--buffer-string-no-properties)))
+      (unless no-kill
+	(kill-new result))
+      (unless no-message
+	(message "Curl command copied to the kill ring"))
+      ;; Return the generated command
+      result)))
 
 (cl-defmethod verb--response-header-line-string ((response verb-response))
   "Return a short description of an HTTP RESPONSE's properties."
