@@ -1,4 +1,7 @@
 # Verb Changelog
+## master
+- Renamed `verb-mode-prefix-map` to `verb-command-map` (existing `init.el` configs must be updated).
+
 ## **2.1.0** - 2020-01-24
 - Verb can now be used from Babel source blocks.
 - Added customizable option `verb-babel-timeout`.

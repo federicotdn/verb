@@ -52,7 +52,7 @@ run: clean
 			   (add-to-list 'default-frame-alist '(fullscreen . maximized)) \
 			   (set-face-attribute 'default nil :height $(FONT_SIZE)) \
 			   (setq initial-scratch-message nil) \
-			   (with-eval-after-load 'org (define-key org-mode-map (kbd \"C-c C-r\") verb-mode-prefix-map)) \
+			   (with-eval-after-load 'org (define-key org-mode-map (kbd \"C-c C-r\") verb-command-map)) \
 			   (org-babel-do-load-languages \
 			     'org-babel-load-languages \
 			     '((verb . t))) \

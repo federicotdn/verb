@@ -38,14 +38,14 @@ Alternatively, you can just add [`verb.el`](verb.el) to your `load-path` instead
 Once Verb has been installed and loaded, add the following to your `init.el`:
 ```elisp
 (with-eval-after-load 'org
-  (define-key org-mode-map (kbd "C-c C-r") verb-mode-prefix-map))
+  (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
 ```
 
 If you're using [use-package](https://github.com/jwiegley/use-package), try this instead:
 ```elisp
 (use-package verb
   :after org
-  :config (define-key org-mode-map (kbd "C-c C-r") verb-mode-prefix-map))
+  :config (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
 ```
 
 Both cases will set <kbd>C-c C-r</kbd> as the prefix key for all Verb commands in Org mode. Feel free to use another key if you prefer that.

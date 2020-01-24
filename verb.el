@@ -294,7 +294,7 @@ previous requests on new requests.")
   "Number of HTTP requests sent in the past.")
 
 ;;;###autoload
-(defvar verb-mode-prefix-map
+(defvar verb-command-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") #'verb-send-request-on-point-other-window)
     (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window-stay)
@@ -304,9 +304,10 @@ previous requests on new requests.")
     (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
     (define-key map (kbd "C-v") #'verb-set-var)
     map)
-  "Prefix map for `verb-mode'.
+  "Map of `verb-mode'-related commands.
 Bind this map to an easy-to-reach key in Org mode in order to use Verb
-comfortably.")
+comfortably.  Al commands listed in this map automatically enable
+`verb-mode' in the current buffer when used.")
 
 (defun verb--setup-font-lock-keywords ()
   "Configure font lock keywords for `verb-mode'."
