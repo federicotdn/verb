@@ -1,5 +1,5 @@
 # Verb Changelog
-## master
+## **2.1.0** - 2020-01-24
 - Verb can now be used from Babel source blocks.
 - Added customizable option `verb-babel-timeout`.
 - Added new major mode: `ob-verb-response-mode`.
