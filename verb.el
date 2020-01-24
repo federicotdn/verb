@@ -625,7 +625,7 @@ request spec, not only the section contained by the source block."
     (let ((rs (verb-request-spec-from-string body)))
       (when (verb--up-heading)
 	(setq rs (verb--request-spec-from-hierarchy rs)))
-      rs)))
+      (verb-request-spec-validate rs))))
 
 (defun verb--request-spec-from-hierarchy (&rest specs)
   "Return a request spec generated from the headings hierarchy.
@@ -653,8 +653,7 @@ all the request specs in SPECS, in the order they were passed in."
 	      ;; 3, then with 4, etc.
 	      (setq final-spec (verb-request-spec-override final-spec
 							   spec))))
-	  (verb-request-spec-validate final-spec)
-	  final-spec)
+	  (verb-request-spec-validate final-spec))
       (user-error (concat "No request specifications found\n"
 			  "Remember to tag your headlines with :%s:")
 		  verb-tag))))
@@ -1235,7 +1234,7 @@ For more information, see `verb-advice-url'."
 		   #'verb--http-handle-authentication)))
 
 (cl-defmethod verb-request-spec-validate ((rs verb-request-spec))
-  "Run validations on request spec RS.
+  "Run validations on request spec RS and return it.
 If a validation does not pass, signal with `user-error'."
   (unless (oref rs method)
     (user-error "%s" (concat "No HTTP method specified\n"
@@ -1250,7 +1249,8 @@ If a validation does not pass, signal with `user-error'."
       (user-error "%s" (concat "URL has no host defined\n"
 			       "Make sure you specify a host "
 			       "(e.g. \"https://github.com\") in the "
-			       "heading hierarchy")))))
+			       "heading hierarchy"))))
+  rs)
 
 (defun verb--generate-response-buffer ()
   "Return a new buffer ready to be used as response buffer."

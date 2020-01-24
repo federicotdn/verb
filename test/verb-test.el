@@ -1497,9 +1497,20 @@
   (while (search-forward from nil t)
     (replace-match to t)))
 
+(ert-deftest test-babel-single-block ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "#+begin_src verb"
+			"template http://localhost:8000/basic"
+			"#+end_src"))
+    (re-search-backward "template")
+    (should-error (org-ctrl-c-ctrl-c))))
+
 (ert-deftest test-babel ()
   (with-temp-buffer
     (org-mode)
+    (verb-mode)
     (insert (join-lines "* Heading 1    :verb:"
 			"template http://localhost:8000"
 			"** heading 2"
@@ -1511,7 +1522,6 @@
 			"#+end_src"))
     (re-search-backward "get ")
     (org-ctrl-c-ctrl-c)
-    (sleep-for req-sleep-time)
     (replace-all "BEGIN" "begin")
     (replace-all "END" "end")
     (goto-char (point-min))
