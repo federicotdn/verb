@@ -553,30 +553,34 @@ Return t if there was a heading to move towards to and nil otherwise."
 
 (defun verb--heading-contents ()
   "Return the current heading's text contents.
-If no headings exist, return the contents of the entire buffer."
-  (if (verb--back-to-heading)
-      (let ((start (save-excursion
-		     (end-of-line)
-		     (unless (eobp) (forward-char))
-		     (point)))
-	    (end (save-excursion
-		   (goto-char (org-entry-end-position))
-		   (when (and (org-at-heading-p)
-			      (not (eobp)))
-		     (backward-char))
-		   (point))))
-	(if (<= start end)
-	    (buffer-substring-no-properties start end)
-	  ""))
-    (verb--buffer-string-no-properties)))
+If not on a heading, signal an error."
+  (unless (org-at-heading-p)
+    (user-error "%s" "Can't get heading text contents: not at a heading"))
+  (let ((start (save-excursion
+		 (end-of-line)
+		 (unless (eobp) (forward-char))
+		 (point)))
+	(end (save-excursion
+	       (goto-char (org-entry-end-position))
+	       (when (and (org-at-heading-p)
+			  (not (eobp)))
+		 (backward-char))
+	       (point))))
+    (if (<= start end)
+	(buffer-substring-no-properties start end)
+      "")))
 
 (defun verb--request-spec-from-heading ()
-  "Return a request spec generated from the heading's text contents.
-After getting the heading's text content, run it through
-`verb--maybe-extract-babel-src-block'.  From that result, try to parse
-a request specification.  Return nil if the heading has no text
-contents, if contains only comments, or if the heading does not have
-the tag `verb-tag'."
+  "Return a request spec from the current heading's text contents.
+If a heading is found, get its contents using
+`verb--heading-contents'.  After getting the heading's text content,
+run it through `verb--maybe-extract-babel-src-block'.  From that
+result, try to parse a request specification.  Return nil if the
+heading has no text contents, if contains only comments, or if the
+heading does not have the tag `verb-tag'.
+If not on a heading, signal an error."
+  (unless (org-at-heading-p)
+    (user-error "%s" "Can't read request spec: not at a heading"))
   (when (or (member verb-tag (verb--heading-tags))
 	    (eq verb-tag t))
     (let ((text (verb--maybe-extract-babel-src-block
@@ -638,8 +642,11 @@ inverse order according to the rules described in
 all the request specs in SPECS, in the order they were passed in."
   (let (done final-spec)
     (save-excursion
-      ;; Go up through the headings tree taking a request specification
-      ;; from each level
+      ;; First, go back to the current heading, if possible. If no
+      ;; heading is found, then don't attempt to read anything.
+      (setq done (not (verb--back-to-heading)))
+      ;; If there's at least one heading above us, go up through the
+      ;; headings tree taking a request specification from each level.
       (while (not done)
 	(let ((spec (verb--request-spec-from-heading)))
 	  (when spec (push spec specs)))

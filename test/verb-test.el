@@ -89,12 +89,13 @@
 
 (ert-deftest test-heading-contents ()
   (setq outline-test
-	(join-lines "* Heading"
+	(join-lines "* Heading1"
 		    "get http://test.com"))
   (with-temp-buffer
     (org-mode)
     (verb-mode)
     (insert outline-test)
+    (goto-char (point-min))
     (should (string= (verb--heading-contents)
 		     "get http://test.com")))
 
@@ -104,15 +105,7 @@
     (org-mode)
     (verb-mode)
     (insert outline-test)
-    (should (string= (verb--heading-contents) "")))
-
-  (setq outline-test
-	(join-lines "* Heading"
-		    "* H2"))
-  (with-temp-buffer
-    (org-mode)
-    (verb-mode)
-    (insert outline-test)
+    (goto-char (point-min))
     (should (string= (verb--heading-contents) "")))
 
   (setq outline-test
@@ -132,6 +125,7 @@
     (org-mode)
     (verb-mode)
     (insert outline-test)
+    (goto-char (point-min))
     (should (string= (verb--heading-contents)
 		     "get http://test.com")))
 
@@ -142,8 +136,35 @@
     (org-mode)
     (verb-mode)
     (insert outline-test)
+    (goto-char (point-min))
     (should (string= (verb--heading-contents)
 		     "\nget http://test.com\n\n")))
+
+  (setq outline-test
+	(join-lines "** Heading level 2"
+		    "hello world"
+		    "* level 1"))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert outline-test)
+    (goto-char (point-min))
+    (should (string= (verb--heading-contents)
+		     "hello world")))
+
+  (setq outline-test
+	(join-lines "** Heading level 2"
+		    "hello world"
+		    ""
+		    "* level 1"
+		    "something"))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert outline-test)
+    (goto-char (point-min))
+    (should (string= (verb--heading-contents)
+		     "hello world\n")))
 
   (setq outline-test
 	;; no headings
@@ -152,8 +173,8 @@
     (org-mode)
     (verb-mode)
     (insert outline-test)
-    (should (string= (verb--heading-contents)
-		     "get http://test.com"))))
+    (goto-char (point-min))
+    (should-error (verb--heading-contents))))
 
 (ert-deftest test-request-spec-from-hierarchy-ignore-nontagged ()
   (setq test-rs (verb-request-spec :method "GET"
