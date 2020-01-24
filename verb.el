@@ -703,7 +703,8 @@ If you use this command frequently, consider setting
 `verb-auto-kill-response-buffers' to t.  This will help avoiding
 having many response buffers open."
   (interactive)
-  (verb--request-spec-send (oref verb-http-response request) nil))
+  (verb--request-spec-send (oref verb-http-response request)
+			   'this-window))
 
 (defun verb-kill-buffer-and-window ()
   "Delete selected window and kill its current buffer.
