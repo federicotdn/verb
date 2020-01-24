@@ -177,6 +177,15 @@
     (insert outline-test)
     (should (equal (verb--request-spec-from-hierarchy) test-rs))))
 
+(ert-deftest test-request-spec-from-hierarchy-no-headings ()
+  (setq outline-test
+	(join-lines "delete http://test.com"))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert outline-test)
+    (should-error (verb--request-spec-from-hierarchy))))
+
 (ert-deftest test-request-spec-from-hierarchy ()
   (setq outline-test
 	(join-lines "* Test :verb:"
@@ -205,18 +214,6 @@
 		   (verb-request-spec :method "POST"
 				      :url (verb--clean-url
 					    "http://hello.com?a=b")))))
-
-  ;; No headings
-  (setq outline-test
-	(join-lines "delete http://test.com"))
-  (with-temp-buffer
-    (org-mode)
-    (verb-mode)
-    (insert outline-test)
-    (should (equal (verb--request-spec-from-hierarchy)
-		   (verb-request-spec :method "DELETE"
-				      :url (verb--clean-url
-					    "http://test.com")))))
 
   (setq outline-test
 	(join-lines "* Test :verb:"))

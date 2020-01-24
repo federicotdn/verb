@@ -578,10 +578,7 @@ a request specification.  Return nil if the heading has no text
 contents, if contains only comments, or if the heading does not have
 the tag `verb-tag'."
   (when (or (member verb-tag (verb--heading-tags))
-	    (eq verb-tag t)
-	    ;; If there's no heading to move back to, then assume
-	    ;; there are no headings and bypass the tag check
-	    (not (verb--back-to-heading)))
+	    (eq verb-tag t))
     (let ((text (verb--maybe-extract-babel-src-block
 		 (verb--heading-contents))))
       (unless (string-empty-p text)

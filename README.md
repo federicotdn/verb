@@ -99,9 +99,7 @@ After setting up Verb, begin by creating a new `guide.org` file. In the example 
 get https://reqres.in/api/users
 ```
 
-This defines a minimal HTTP request specification, describing a method (`GET`) and a URL (`https://reqres.in/api/users`). The request is contained under a heading marked with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level. All the text under a heading (if any) corresponds to the HTTP request it is describing.
-
-A buffer may contain zero headings, in which case the entire contents of the file are interpreted as a single request specification. This is useful for quick testing (on the `*scratch*` buffer, for example).
+This defines a minimal HTTP request specification under the "Get users list" heading, composed of a method (`GET`) and a URL (`https://reqres.in/api/users`). The heading is prefixed with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level. All the text under a heading corresponds to the HTTP request it is describing. It is not possible to write request specifications without adding a heading at the top.
 
 Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. Note that in Org mode, by defaul subheadings inherit their parents' headings (see the `org-use-tag-inheritance` variable). To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
 ```
