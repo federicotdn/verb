@@ -722,15 +722,19 @@ If VAR is unbound, use `read-string' to set its value first."
   (add-to-list 'verb--vars var)
   (symbol-value var))
 
-(defun verb-set-var (var)
+(defun verb-set-var (&optional var)
   "Set new value for variable VAR previously set with `verb-var'.
 When called interactively, prompt the user for a variable that has
 been set once with `verb-var'."
-  (interactive (list (completing-read "Variable: "
-				      (mapcar #'symbol-name verb--vars)
-				      nil t)))
+  (interactive)
   (verb--ensure-verb-mode)
-  (set (intern var) (read-string (format "Set value for %s: " var))))
+  (unless verb--vars
+    (user-error "%s" (concat "No variables have been initialized yet\n"
+			     "Run a {{(verb-var my-var)}} code tag first")))
+  (let ((v (or var
+	       (completing-read "Variable: " (mapcar #'symbol-name verb--vars)
+				nil t))))
+    (set (intern v) (read-string (format "Set value for %s: " v)))))
 
 (defun verb-read-file (file)
   "Return a buffer with the contents of FILE.

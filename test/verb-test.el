@@ -704,6 +704,10 @@
   (should (string= (verb--eval-lisp-code-in-string "{{(verb-var test-var-1)}}")
 		   "xyz")))
 
+(ert-deftest test-verb-set-var-error ()
+  (setq verb--vars nil)
+  (should-error (verb-set-var "test")))
+
 (ert-deftest test-verb-eval-lisp-code-in ()
   (should (string= (verb--eval-lisp-code-in-string "1 {{1}}")
 		   "1 1"))
