@@ -23,6 +23,7 @@ Verb has been tested on Emacs 26 and 27.
 - View PDF, PNG, JPEG, BMP, GIF and SVG responses inside Emacs.
 - Evaluate and substitute Emacs Lisp expressions in specifications text.
 - Can export requests to `curl` format.
+- Integrates with Babel.
 - Supports uploading files on requests.
 - Optionally uses `url-queue.el` backend.
 - Easy to use! (hopefully).
