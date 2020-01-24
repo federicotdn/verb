@@ -375,7 +375,14 @@ Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this f
 ### Babel Integration
 Verb also works on Org [Babel](https://orgmode.org/worg/org-contrib/babel/) source blocks. This feature allows you to send an HTTP request, and view the results in the same `.org` buffer where the request was read from.
 
-To use this feature, simply wrap your HTTP request specifications with `begin_src/end_src` like so:
+To enable this feature, remember to add `verb` to the `org-babel-load-languages` list. To do this, you may add the following to your `init.el`:
+```elisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((verb . t)))
+```
+
+Once that's done, simply wrap your HTTP request specifications with `begin_src`/`end_src` like so:
 ```
 * Make a request to an API
 #+begin_src verb :wrap src ob-verb-response
