@@ -483,10 +483,6 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 	       "Number of bytes in response body."))
   "Represents an HTTP response to a request.")
 
-  :keymap `((,(kbd "C-c C-r C-r") . verb-toggle-show-headers)
-	    (,(kbd "C-c C-r C-k") . verb-kill-response-buffer-and-window)
-	    (,(kbd "C-c C-r C-f") . verb-re-send-request))
-
 (defvar verb-response-body-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r C-r") #'verb-toggle-show-headers)
