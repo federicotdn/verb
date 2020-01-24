@@ -101,7 +101,7 @@ get https://reqres.in/api/users
 
 This defines a minimal HTTP request specification under the "Get users list" heading, composed of a method (`GET`) and a URL (`https://reqres.in/api/users`). The heading is prefixed with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level. All the text under a heading corresponds to the HTTP request it is describing. It is not possible to write request specifications without adding a heading at the top.
 
-Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. Note that in Org mode, by defaul subheadings inherit their parents' headings (see the `org-use-tag-inheritance` variable). To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
+Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. Note that in Org mode, by default subheadings inherit their parents' tags (see the `org-use-tag-inheritance` variable). To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
 ```
 #+FILETAGS: :verb:
 ```
@@ -110,7 +110,7 @@ You may tweak the text value of the tag used by modifying the `verb-tag` variabl
 
 ### Enabling Verb in Org Buffers
 When you open an `.org` file with HTTP request specifications in it, Verb mode won't be enabled by default. To enable it, you can choose from these different options:
-- Run one of the commands that enable Verb automatically (e.g. `verb-send-request-on-point-other-window-stay`). You may use the keybinding set up in your `init.el` file (<kbd>C-c C-r C-r</kbd>, see [Installation](#installation)).
+- Run one of the commands that enable Verb automatically (e.g. `verb-send-request-on-point-other-window-stay`). You may use the keybinding set up in your `init.el` file (i.e. <kbd>C-c C-r C-r</kbd>, see [Installation](#installation)).
 - Run <kbd>M-x</kbd>`verb-mode`<kbd>RET</kbd>.
 - Add a file-local variable at the bottom of your file:
 ```
@@ -252,7 +252,7 @@ Content-Type: application/json
 }
 ```
 
-Now, when we send the request under "Get users list", Verb will collect all the properties defined in the parent headings (in this case, a URL and one header), and then extend/override them with the attributes under this specific heading. This is how each attribute of an HTTP request specification is extended/overridden:
+Now, when we send the request under "Get users list", Verb will collect all the properties defined in all the parent headings tagged with `:verb:` (in this case, a URL and one header), and then extend/override them with the attributes under this specific heading. This is how each attribute of an HTTP request specification is extended/overridden:
 
 - **Method:** The last heading's (i.e. the one with the highest level) method will be used. The value `template` does not count as a method and will be ignored.
 - **URL:**
@@ -370,6 +370,38 @@ Content-Type: text/markdown
 ```
 
 Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this for you. This will let the server know how to interpret the contents of the request.
+
+### Babel Integration
+Verb also works on Org [Babel](https://orgmode.org/worg/org-contrib/babel/) source blocks. This feature allows you to send an HTTP request, and view the results in the same `.org` buffer where the request was read from.
+
+To use this feature, simply wrap your HTTP request specifications with `begin_src/end_src` like so:
+```
+* Make a request to an API
+#+begin_src verb :wrap src ob-verb-response
+get https://api.kanye.rest
+#+end_src
+```
+
+After that's done, move the point to the source block and press <kbd>C-c C-c</kbd>. The result of the request will appear below. Note that Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
+
+If you wish to export the request to a particular format instead, use the `:op` header argument on your source block. The values it accepts are:
+- `export curl`: Export this request to `curl` format and insert the results below.
+- `export human`: Export this request to human-readable format and insert the results below.
+- `export verb`: Export this request to Verb format and insert the results below.
+
+So for example, if you wanted to export the previous example to `curl`, you would need to write:
+```
+* Export request to curl
+#+begin_src verb :op export curl
+get https://api.kanye.rest
+#+end_src
+```
+
+And then execute the source block again with <kbd>C-c C-c</kbd>.
+
+Note: when Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways.
+
+Note: the heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
 ### Customization
 

@@ -3,6 +3,7 @@
 - Verb can now be used from Babel source blocks.
 - Added customizable option `verb-babel-timeout`.
 - Added new major mode: `ob-verb-response-mode`.
+- Verb now requires at least one heading to be defined for reading request specifications.
 
 ## **2.0.0** - 2020-01-21
 - Verb is now based on Org mode instead of Outline mode.
