@@ -611,7 +611,7 @@ If no Babel source blocks are found, return TEXT."
 		(if (<= start (point))
 		    (buffer-substring-no-properties start (point))
 		  ""))))
-      (or result (verb--buffer-string-no-properties)))))
+      (or result text))))
 
 (defun verb--request-spec-from-babel-src-block (pos body)
   "Return a request spec generated from a Babel source block.
