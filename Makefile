@@ -14,7 +14,7 @@ server:
 	source env/bin/activate && python3 test/server.py
 
 clean:
-	rm -f verb-autoloads.el tests.log test/server.pid
+	rm -f verb-autoloads.el test/server.pid
 	find . -name "*.elc" -type f -delete
 
 test: clean
@@ -22,10 +22,10 @@ test: clean
 	sleep 0.5
 	$(EMACS) --batch -L . \
 		 -l test/verb-test.el \
-		 -f ert-run-tests-batch-and-exit 2> tests.log || true
-	kill $$(cat test/server.pid)
-	cat tests.log
-	! grep FAILED tests.log > /dev/null
+		 -f ert-run-tests-batch-and-exit; \
+	ret=$$?; \
+	kill $$(cat test/server.pid); \
+	exit $$ret
 
 setup-check:
 	git clone https://github.com/purcell/package-lint.git $(PACKAGE_LINT)
