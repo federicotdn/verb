@@ -1227,7 +1227,7 @@
 (setq test-file-name (expand-file-name "test/test.org"))
 (setq test-buf (find-file test-file-name))
 (with-current-buffer test-buf (verb-mode))
-(setq req-sleep-time 0.25)
+(setq req-sleep-time 0.01)
 
 (defmacro server-test (test-name &rest body)
   (declare (indent 1))
@@ -1237,7 +1237,8 @@
      (re-search-forward (concat "^\\*+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-send-request-on-point 'same-window)
-	 (sleep-for req-sleep-time)
+	 (while (eq verb-http-response t)
+	   (sleep-for req-sleep-time))
 	 ,@body))))
 
 (defun get-response-buffers ()
@@ -1532,11 +1533,64 @@
     (re-search-backward "template")
     (should-error (org-ctrl-c-ctrl-c))))
 
-(ert-deftest test-babel ()
+(ert-deftest test-babel-invalid-op ()
   (with-temp-buffer
     (org-mode)
     (verb-mode)
-    (insert (join-lines "* Heading 1    :verb:"
+    (insert (join-lines "#+begin_src verb :op foobar"
+			"get http://localhost:8000/basic"
+			"#+end_src"))
+    (re-search-backward "get")
+    (should-error (org-ctrl-c-ctrl-c))))
+
+(ert-deftest test-babel-invalid-export ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "#+begin_src verb :op export foo"
+			"get http://localhost:8000/basic"
+			"#+end_src"))
+    (re-search-backward "get")
+    (should-error (org-ctrl-c-ctrl-c))))
+
+(ert-deftest test-babel-non-verb-block ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test          :verb:"
+			"#+begin_src foobar"
+			"template"
+			"#+end_src"
+			"** Test"
+			"#+begin_src verb"
+			"get http://localhost:8000/basic"
+			"#+end_src"))
+    (re-search-backward "get")
+    (should-error (org-ctrl-c-ctrl-c))))
+
+(defun babel-test (input output)
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert input)
+    (search-backward "#+begin_src")
+    (setq babel-result (org-ctrl-c-ctrl-c))
+    (should (string= babel-result output))))
+
+(ert-deftest test-babel-curl ()
+  (babel-test (join-lines "#+begin_src verb :op export curl"
+			  "post http://example.org?test=foo"
+			  "Content-Type: application/json"
+			  ""
+			  "{}"
+			  "#+end_src")
+	      (join-lines "curl 'http://example.org/?test=foo' \\"
+			  "-H 'Content-Type: application/json' \\"
+			  "-X POST \\"
+			  "--data-raw '{}'")))
+
+(ert-deftest test-babel-send ()
+  (babel-test (join-lines "* Heading 1    :verb:"
 			"template http://localhost:8000"
 			"** heading 2"
 			"get"
@@ -1544,27 +1598,17 @@
 			"*** Heading 3"
 			"#+begin_src verb :wrap src ob-verb-response"
 			"get /basic-json"
-			"#+end_src"))
-    (re-search-backward "get ")
-    (org-ctrl-c-ctrl-c)
-    (replace-all "BEGIN" "begin")
-    (replace-all "END" "end")
-    (goto-char (point-min))
-    (re-search-forward "RESULTS:")
-    (forward-char)
-    (should (string= (buffer-substring-no-properties (point) (point-max))
-		     (join-lines "#+begin_src ob-verb-response"
-				 "HTTP/1.1 200 OK"
-				 "Connection: keep-alive"
-				 "Keep-Alive: 5"
-				 "Content-Length: 28"
-				 "Content-Type: application/json"
-				 ""
-				 "{"
-				 "  \"foo\": true,"
-				 "  \"hello\": \"world\""
-				 "}"
-				 "#+end_src\n")))))
+			"#+end_src")
+	      (join-lines "HTTP/1.1 200 OK"
+			  "Connection: keep-alive"
+			  "Keep-Alive: 5"
+			  "Content-Length: 28"
+			  "Content-Type: application/json"
+			  ""
+			  "{"
+			  "  \"foo\": true,"
+			  "  \"hello\": \"world\""
+			  "}")))
 
 (defun babel-src-test (input output)
   (should (string= (verb--maybe-extract-babel-src-block input)
