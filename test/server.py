@@ -148,5 +148,11 @@ async def zero_bytes_json(request: Request):
     return response.text("", headers={"Content-Type": "application/json"})
 
 
+@app.route("/sorted-headers")
+async def sorted_headers(request: Request):
+    headers = sorted(k.lower() + ": " + v for k, v in request.headers.items())
+    return response.text("\n".join(headers), headers={"Content-Type": "text/plain"})
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, access_log=False)

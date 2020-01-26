@@ -1,4 +1,7 @@
 # Verb Changelog
+## master
+- Do not automatically add an `Accept-Charset` to requests anymore.
+
 ## **2.2.0** - 2020-01-24
 - Renamed `verb-mode-prefix-map` to `verb-command-map` (existing `init.el` configs must be updated).
 - Signal an error when using `verb-set-var` if no variables have been previously set with `verb-var`.

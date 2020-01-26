@@ -80,5 +80,7 @@ post /content-length
 test
 ** zero-bytes-json
 get /zero-bytes-json
+** sorted-headers
+get /sorted-headers
 * connection-fail-test
 get http://localhost:1234/test

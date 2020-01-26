@@ -1193,23 +1193,20 @@
 (ert-deftest test-prepare-http-headers ()
   (should (equal (verb--prepare-http-headers '(("A" . "a")
 					       ("B" . "v")))
-		 `(("Accept-Charset" . ,(url-mime-charset-string))
-		   ("A" . "a")
+		 '(("A" . "a")
 		   ("B" . "v"))))
 
   (should (equal (verb--prepare-http-headers '(("A" . "test")
 					       ("B" . "test")
 					       ("Content-Type" . "text")))
-		 `(("Accept-Charset" . ,(url-mime-charset-string))
-		   ("A" . "test")
+		 '(("A" . "test")
 		   ("B" . "test")
 		   ("Content-Type" . "text; charset=utf-8"))))
 
   (should (equal (verb--prepare-http-headers '(("A" . "test")
 					       ("B" . "test")
 					       ("Content-Type" . "text; charset=hello")))
-		 `(("Accept-Charset" . ,(url-mime-charset-string))
-		   ("A" . "test")
+		 '(("A" . "test")
 		   ("B" . "test")
 		   ("Content-Type" . "text; charset=hello")))))
 
@@ -1407,6 +1404,20 @@
   (server-test "zero-bytes-json"
     (should (zerop (buffer-size)))
     (should (string-match "200" header-line-format))))
+
+(ert-deftest test-default-headers ()
+  (server-test "sorted-headers"
+    (let ((headers '("mime-version"
+		     "connection"
+		     "extension"
+		     "host"
+		     "accept-encoding"
+		     "accept")))
+      (dolist (h headers)
+	(goto-char (point-min))
+	(should (search-forward (concat h ": "))))
+      (should (= (count-lines (point-min) (point-max))
+		 (length headers))))))
 
 (ert-deftest test-verb-last ()
   (server-test "basic")

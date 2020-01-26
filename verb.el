@@ -1221,20 +1221,15 @@ present/incomplete:
 
 Content-Type:
   Add \"charset=\" to it if not already present.
-Accept-Charset:
-  Set it if not already present.
 
 Uses `verb--to-ascii' to ensure all added text is unibyte.
 Returns a new alist, does not modify HEADERS."
-  (let ((content-type (assoc-string "Content-Type" headers t))
-	(accept-charset (assoc-string "Accept-Charset" headers t)))
+  (let ((content-type (assoc-string "Content-Type" headers t)))
     (when (and content-type
 	       (not (string-match-p "charset=" (cdr content-type))))
       (setcdr content-type (concat (cdr content-type)
 				   "; charset="
 				   verb-default-request-charset)))
-    (unless accept-charset
-      (push (cons "Accept-Charset" (url-mime-charset-string)) headers))
     ;; Encode all text to `us-ascii'
     (mapcar (lambda (e)
 	      (cons (verb--to-ascii (car e))
