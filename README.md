@@ -396,7 +396,7 @@ To enable this feature, remember to add `verb` to the `org-babel-load-languages`
  '((verb . t)))
 ```
 
-Once that's done, simply wrap your HTTP request specifications with `begin_src`/`end_src` like so:
+Once that's done, simply wrap your HTTP request specifications with `#+begin_src`/`#+end_src` like so:
 ```
 * Make a request to an API
 #+begin_src verb :wrap src ob-verb-response
@@ -404,12 +404,20 @@ get https://api.kanye.rest
 #+end_src
 ```
 
-After that's done, move the point to the source block and press <kbd>C-c C-c</kbd>. The result of the request will appear below. Note that Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
+Babel source blocks in Verb mode accept a header argument called `:op`. Its default value is `:op send`.
 
-If you wish to export the request to a particular format instead, use the `:op` header argument on your source block. The values it accepts are:
-- `export curl`: Export this request to `curl` format and insert the results below.
-- `export human`: Export this request to human-readable format and insert the results below.
-- `export verb`: Export this request to Verb format and insert the results below.
+#### Sending Requests (`:op send`)
+
+To send the request, move the point to the source block and press <kbd>C-c C-c</kbd>. The result of the request will appear below. The `:wrap src ob-verb-response` tells Babel to wrap the response in a source block, using `ob-verb-response-mode` as major mode for font locking.
+
+Note that Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
+
+#### Exporting Requests (`:op export ...`)
+
+If you wish to export the request to a particular format instead, use the `:op export ...` header argument on your source block. These are the values it can be used with:
+- `:op export curl`: Export this request to `curl` format and insert the results below.
+- `:op export human`: Export this request to human-readable format and insert the results below.
+- `:op export verb`: Export this request to Verb format and insert the results below.
 
 So for example, if you wanted to export the previous example to `curl`, you would need to write:
 ```
