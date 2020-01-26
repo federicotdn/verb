@@ -94,6 +94,7 @@ Then, move the point to one of the level 2 headings (marked with `**`), and pres
 
 This guide assumes that you're using <kbd>C-c C-r</kbd> as the prefix key for all Verb commands, and that you're also getting started with Org mode.
 
+### Writing Request Specifications
 After setting up Verb, begin by creating a new `guide.org` file. In the example file, add the following contents:
 
 ```
@@ -192,6 +193,14 @@ Content-Language: de-DE
 
 All headers must be written immediately after the method + URL line, without any blank lines in between. It is also possible to comment out headers. To do this, simply add `#` at the beginning of the line.
 
+A certain set of headers will **always** be included in sent requests, even if they haven't been specified. Some of them are due to requirements of the HTTP standard, and others due to limitations of the `url` Emacs library. They are the following:
+- `MIME-Version`: `1.0`
+- `Connection`: `close` or `keep-alive`
+- `Host`: *URL host*
+- `Accept`: `*/*` (default value, but may be overwritten by the user)
+- `Accept-Encoding`: `gzip`
+- `Extension`: `Security/Digest Security/SSL`
+
 **Note:** "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements used to separate sections of text.
 
 ### Adding a Body
@@ -233,7 +242,7 @@ Content-Type: application/json
 }
 ```
 
-Notice that the two request specifications share many things in common: the URL host, path and one header. In order to avoid repeating all this information, we can actually define a `template` request, establishing all the common attributes among requests, and then extend this template request with different values. To to this, let's create a new level 1 heading, and move the already existing headings below it, making them level 2 headings:
+Notice that the two request specifications share many things in common: the URL host, path and one header. In order to avoid repeating all this information, we can actually define a `template` request, establishing all the common attributes among requests, and then extend this template request with different values. Using `template` allows you to avoid specifying an HTTP method at a points in your file where you only want to establish shared attributes for other requests. To use it, create a new level 1 heading, and move the already existing headings below it, making them level 2 headings:
 
 ```
 * User management             :verb:
@@ -266,6 +275,8 @@ Now, when we send the request under "Get users list", Verb will collect all the 
   - **Fragment**: The last defined heading's URL fragment will be used.
 - **Headers:**: All headers will be merged. Values from higher level headings take priority.
 - **Body**: The last request body present in a heading will be used (if no heading defines a body, none will be used).
+
+If you try to send a request from the level 1 header, you'll get an error, as at that level there's no specified HTTP method.
 
 You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.org` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL schema, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources, and the level 3 headings will specify actions to run on those resources. For example (unrelated to `guide.org`):
 
