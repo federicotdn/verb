@@ -82,5 +82,8 @@ test
 get /zero-bytes-json
 ** sorted-headers
 get /sorted-headers
+*** accept-sorted-headers
+template
+Accept: hello-world
 * connection-fail-test
 get http://localhost:1234/test

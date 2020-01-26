@@ -1405,12 +1405,21 @@
     (should (zerop (buffer-size)))
     (should (string-match "200" header-line-format))))
 
+(ert-deftest test-default-headers-accept ()
+  (server-test "accept-sorted-headers"
+    (goto-char (point-min))
+    (should (search-forward "accept: hello-world"))
+    (goto-char (point-min))
+    (should (= (count-matches "accept:") 1))))
+
 (ert-deftest test-default-headers ()
   (server-test "sorted-headers"
     (let ((headers '("mime-version"
 		     "connection"
 		     "host"
-		     "accept")))
+		     "accept"
+		     "accept-encoding"
+		     "extension")))
       (dolist (h headers)
 	(goto-char (point-min))
 	(should (search-forward (concat h ": "))))

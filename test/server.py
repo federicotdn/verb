@@ -7,9 +7,10 @@ from sanic.request import Request
 app = Sanic()
 logger.setLevel(logging.CRITICAL)
 
-pidfile = os.path.join(os.path.dirname(__file__), "server.pid")
-with open(pidfile, "w") as f:
-    f.write(str(os.getpid()))
+if not "SKIP_PIDFILE" in os.environ:
+    pidfile = os.path.join(os.path.dirname(__file__), "server.pid")
+    with open(pidfile, "w") as f:
+        f.write(str(os.getpid()))
 
 
 @app.route("/basic")
@@ -155,4 +156,4 @@ async def sorted_headers(request: Request):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, access_log=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "8000")), access_log=False)

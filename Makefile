@@ -11,20 +11,25 @@ setup-tests:
 	source env/bin/activate && pip install -r test/requirements-dev.txt
 
 server:
-	source env/bin/activate && python3 test/server.py
+	SKIP_PIDFILE=1 source env/bin/activate && python3 test/server.py
+
+server-bg:
+	source env/bin/activate && python3 test/server.py &
+
+server-kill:
+	kill $$(cat test/server.pid)
 
 clean:
 	rm -f verb-autoloads.el test/server.pid
 	find . -name "*.elc" -type f -delete
 
-test: clean
-	source env/bin/activate && python3 test/server.py &
+test: clean server-bg
 	sleep 0.5
 	$(EMACS) --batch -L . \
 		 -l test/verb-test.el \
 		 -f ert-run-tests-batch-and-exit; \
 	ret=$$?; \
-	kill $$(cat test/server.pid); \
+	make server-kill; \
 	exit $$ret
 
 setup-check:
@@ -43,7 +48,7 @@ check: clean
 	make lint-file filename=verb.el
 	make lint-file filename=ob-verb.el
 
-run: clean
+run: clean server-bg
 	$(EMACS) -Q -L . \
 		 --eval "(progn \
 			   (require 'package) \
@@ -58,9 +63,15 @@ run: clean
 			     '((verb . t))) \
 			   (setq org-confirm-babel-evaluate nil) \
 			   (setq verb-auto-kill-response-buffers t) \
-			   (with-current-buffer (get-buffer \"*scratch*\") (org-mode) (verb-mode)) \
+			   (with-current-buffer (get-buffer \"*scratch*\") \
+			     (org-mode) \
+			     (verb-mode) \
+			     (insert \"* Test :verb:\") \
+			     (newline) \
+			     (insert \"get http://localhost:8000/\")) \
 			   (load-theme 'wombat) \
 			   (setq url-debug t) \
 			   (toggle-debug-on-error) \
 			   (dired \"docs\") \
 			   (delete-other-windows))"
+	make server-kill

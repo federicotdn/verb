@@ -1216,20 +1216,30 @@ view the HTTP response in a user-friendly way."
 
 (defun verb--prepare-http-headers (headers)
   "Prepare alist HEADERS of HTTP headers to use them on a request.
-Add/modify the following headers if they are not already
+Add/modify/remove the following headers if they are not already
 present/incomplete:
 
 Content-Type:
   Add \"charset=\" to it if not already present.
 
+Accept:
+  Remove header from list (will be set via `url-mime-accept-string').
+
 Uses `verb--to-ascii' to ensure all added text is unibyte.
 Returns a new alist, does not modify HEADERS."
-  (let ((content-type (assoc-string "Content-Type" headers t)))
+  (let* ((headers (copy-alist headers))
+	 (content-type (assoc-string "Content-Type" headers t))
+	 (accept (assoc-string "Accept" headers t)))
+    ;; Content-Type
     (when (and content-type
 	       (not (string-match-p "charset=" (cdr content-type))))
       (setcdr content-type (concat (cdr content-type)
 				   "; charset="
 				   verb-default-request-charset)))
+    ;; ;; Accept
+    (when accept
+      (setq headers (cl-delete (car accept) headers
+    			       :key #'car :test #'equal)))
     ;; Encode all text to `us-ascii'
     (mapcar (lambda (e)
 	      (cons (verb--to-ascii (car e))
@@ -1321,6 +1331,8 @@ be loaded into."
     (verb-kill-all-response-buffers t))
 
   (let* ((url (oref rs url))
+	 (accept-header (cdr (assoc-string "Accept"
+					   (oref rs headers) t)))
 	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers
 				     (oref rs headers)))
@@ -1330,8 +1342,7 @@ be loaded into."
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
-	 (url-extensions-header nil)
-	 (url-mime-encoding-string nil)
+	 (url-mime-accept-string (or accept-header "*/*"))
 	 (response-buf (verb--generate-response-buffer))
 	 (num (setq verb--requests-count (1+ verb--requests-count)))
 	 timeout-timer)
