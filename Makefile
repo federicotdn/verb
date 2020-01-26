@@ -1,20 +1,27 @@
 SHELL = bash
 EMACS ?= emacs
+PORT ?= 8000
 NOOUTPUT = { ! grep '^'; }
 PACKAGE_LINT = package-lint
 FONT_SIZE ?= 180
+ENV ?= env
+ACTIVATE = source $(ENV)/bin/activate
 
 .PHONY: test package-lint
 
 setup-tests:
-	python3 -m venv env
-	source env/bin/activate && pip install -r test/requirements-dev.txt
+	test -d $(ENV) || python3 -m venv $(ENV)
+	$(ACTIVATE) && \
+	pip install -U pip wheel && \
+	pip install -r test/requirements-dev.txt
 
 server:
-	source env/bin/activate && SKIP_PIDFILE=1 python3 test/server.py
+	$(ACTIVATE) && \
+	SKIP_PIDFILE=1 PORT=$(PORT) python3 test/server.py
 
 server-bg:
-	source env/bin/activate && python3 test/server.py &
+	$(ACTIVATE) && \
+	PORT=$(PORT) python3 test/server.py &
 
 server-kill:
 	kill $$(cat test/server.pid)
