@@ -1,5 +1,5 @@
 # Verb Changelog
-## master
+## **2.3.0** - 2020-01-26
 - Do not automatically add `Accept-Charset` header to requests anymore.
 - Fix `Accept` header being sent duplicated if included in a request specification.
 - Log a warning to `*Verb Log*` buffer when headers might get duplicated by url.el.
