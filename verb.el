@@ -218,6 +218,13 @@ that tag as well.  This can be changed via the
   :type '(choice (string :tag "verb")
 		 (const :tag "All" t)))
 
+(defcustom verb-base-headers nil
+  "Set of HTTP headers used as base when reading request specs.
+These headers will be included by default in requests, but still may
+be overriden by re-specifying them somwhere in the document
+hierarchy."
+  :type '(alist :key-type string :value-type string))
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
 				:weight bold))
   "Face for highlighting HTTP methods.")
@@ -453,9 +460,11 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 
 (defclass verb-request-spec ()
   ((method :initarg :method
+	   :initform nil
 	   :type (or null verb--http-method)
 	   :documentation "HTTP method.")
    (url :initarg :url
+	:initform nil
 	:type (or null url)
 	:documentation "Request URL.")
    (headers :initarg :headers
@@ -678,9 +687,13 @@ request spec, not only the section contained by the source block."
   (save-excursion
     (goto-char pos)
     (let ((rs (verb-request-spec-from-string body)))
-      (when (verb--up-heading)
-	(setq rs (verb--request-spec-from-hierarchy rs)))
-      (verb-request-spec-validate rs))))
+      ;; Go up one level first. Do this to avoid re-reading the
+      ;; request in the current level (contained in the source block)
+      (verb--up-heading)
+      ;; Continue reading requests from the headings
+      ;; hierarchy. Pre-include the one we read from the source block
+      ;; at the end of the list.
+      (verb--request-spec-from-hierarchy rs))))
 
 (defun verb--request-spec-from-hierarchy (&rest specs)
   "Return a request spec generated from the headings hierarchy.
@@ -704,6 +717,8 @@ all the request specs in SPECS, in the order they were passed in."
 	(setq done (not (verb--up-heading)))))
     (if specs
 	(progn
+	  (when verb-base-headers
+	    (push (verb-request-spec :headers verb-base-headers) specs))
 	  (setq final-spec (car specs))
 	  (when (< 1 (length specs))
 	    (dolist (spec (cdr specs))

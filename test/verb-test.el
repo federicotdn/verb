@@ -207,6 +207,22 @@
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy))))
 
+(ert-deftest test-request-spec-from-hierarchy-base ()
+  (let ((verb-base-headers '(("Foo" . "Bar")
+			     ("Quuz" . "Quux"))))
+    (setq outline-test
+	  (join-lines "* Test :verb:"
+		      "get http://hello.com"
+		      "Quuz: X"))
+    (with-temp-buffer
+      (org-mode)
+      (verb-mode)
+      (insert outline-test)
+      (setq req-spec (verb--request-spec-from-hierarchy))
+      (should (equal (oref req-spec headers)
+		     '(("Foo" . "Bar")
+		       ("Quuz" . "X")))))))
+
 (ert-deftest test-request-spec-from-hierarchy ()
   (setq outline-test
 	(join-lines "* Test :verb:"
@@ -1636,7 +1652,8 @@
     (verb-mode)
     (insert input)
     (search-backward "#+begin_src")
-    (setq babel-result (org-ctrl-c-ctrl-c))
+    (let ((inhibit-message t))
+      (setq babel-result (org-ctrl-c-ctrl-c)))
     (should (string= babel-result output))))
 
 (ert-deftest test-babel-curl ()
@@ -1671,6 +1688,28 @@
 			  "  \"foo\": true,"
 			  "  \"hello\": \"world\""
 			  "}")))
+
+(ert-deftest test-babel-base-headers ()
+  (let ((verb-base-headers '(("Foo" . "Bar")
+			     ("Quux" . "Quuz"))))
+    (babel-test (join-lines "#+begin_src verb"
+			    "get http://localhost:8000/sorted-headers"
+			    "Foo: XYZ"
+			    "#+end_src")
+		(join-lines "HTTP/1.1 200 OK"
+			    "Connection: keep-alive"
+			    "Keep-Alive: 5"
+			    "Content-Type: text/plain"
+			    "Content-Length: 155"
+			    ""
+			    "accept-encoding: gzip"
+			    "accept: */*"
+			    "connection: keep-alive"
+			    "extension: Security/Digest Security/SSL"
+			    "foo: XYZ"
+			    "host: localhost:8000"
+			    "mime-version: 1.0"
+			    "quux: Quuz"))))
 
 (defun babel-src-test (input output)
   (should (string= (verb--maybe-extract-babel-src-block input)

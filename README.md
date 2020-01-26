@@ -201,6 +201,8 @@ A certain set of headers will **always** be included in sent requests, even if t
 - `Accept-Encoding`: `gzip`
 - `Extension`: `Security/Digest Security/SSL`
 
+If you include one of these headers in one of your requests (except `Accept`), Verb will add a warning to the [log](#verb-log).
+
 **Note:** "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements used to separate sections of text.
 
 ### Adding a Body
@@ -423,10 +425,6 @@ Note: when Verb operates on a Babel source block, **it still takes into consider
 
 Note: the heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
-### Customization
-
-To see which aspects of Verb may be customized, use <kbd>M-x</kbd> `customize-group` <kbd>RET</kbd> `verb` <kbd>RET</kbd>.
-
 ### Export Requests
 
 You can export request specifications to other formats by using the `verb-export-request-on-point` command, by default bound to <kbd>C-c C-r C-e</kbd>. When used, you will be prompted for an export function name. The ones currently available are:
@@ -437,6 +435,18 @@ You can export request specifications to other formats by using the `verb-export
 You can export directly to `curl` by using the `verb-export-request-on-point-curl` command, bound by default to <kbd>C-c C-r C-u</kbd>.
 
 Note: code tags will be evaluated when exporting a request.
+
+### Base Headers
+
+You can define a set of base headers for all your HTTP requests via the `verb-base-headers` variable. These headers will be defined globally, but may still be overridden by re-specifying them somewhere in the headings hierarchy. The variable must be set to an alist of `(KEY . VALUE)` elements, where `KEY` and `VALUE` are strings. For example, here's how to add a `User-Agent` header to all requests in all files from your `init.el`:
+
+```elisp
+(setq verb-base-headers '(("User-Agent" . "my-user-agent")))
+```
+
+### Customization
+
+To see all aspects of Verb that may be customized, use <kbd>M-x</kbd> `customize-group` <kbd>RET</kbd> `verb` <kbd>RET</kbd>.
 
 ### Verb Log
 
