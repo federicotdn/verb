@@ -1,6 +1,6 @@
 # Verb Changelog
 ## master
-- Do not automatically add an `Accept-Charset` to requests anymore.
+- Do not automatically add `Accept-Charset`, `Accept-Encoding` and `Extension` headers to requests anymore.
 
 ## **2.2.0** - 2020-01-24
 - Renamed `verb-mode-prefix-map` to `verb-command-map` (existing `init.el` configs must be updated).

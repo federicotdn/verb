@@ -1330,6 +1330,8 @@ be loaded into."
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)
 						   (cdr content-type)))
+	 (url-extensions-header nil)
+	 (url-mime-encoding-string nil)
 	 (response-buf (verb--generate-response-buffer))
 	 (num (setq verb--requests-count (1+ verb--requests-count)))
 	 timeout-timer)

@@ -1409,9 +1409,7 @@
   (server-test "sorted-headers"
     (let ((headers '("mime-version"
 		     "connection"
-		     "extension"
 		     "host"
-		     "accept-encoding"
 		     "accept")))
       (dolist (h headers)
 	(goto-char (point-min))
