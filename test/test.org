@@ -85,5 +85,8 @@ get /sorted-headers
 *** accept-sorted-headers
 template
 Accept: hello-world
+*** repeated-sorted-headers
+template
+MIME-Version: foobar
 * connection-fail-test
 get http://localhost:1234/test

@@ -252,6 +252,16 @@ Should be set to the same character Org uses to comment lines.")
 (defconst verb--log-buffer-name "*Verb Log*"
   "Default name for log buffer.")
 
+(defconst verb--url-pre-defined-headers '("MIME-Version"
+					  "Connection"
+					  "Host"
+					  "Accept-Encoding"
+					  "Extension")
+  "List of HTTP headers which are automatically added by url.el.
+The values of these headers can't be easily modified by Verb, so a
+warning will be shown to the user if they set any of them (as they
+will appear duplicated in the request).")
+
 (defconst verb--template-keyword "TEMPLATE"
   "Keyword to use when defining request templates.
 Request templates are defined without HTTP methods, paths or hosts.")
@@ -1354,6 +1364,14 @@ be loaded into."
 
     ;; Advice url.el functions
     (verb--advice-url)
+
+    ;; Look for headers that might get duplicated by ur.el
+    (dolist (h verb--url-pre-defined-headers)
+      (when (assoc-string h url-request-extra-headers t)
+	(verb--log num 'W (concat "Header \"%s\" will appear duplicated "
+				  "in the request, as url.el adds its "
+				  "own version of it")
+		   h)))
 
     ;; Send the request!
     (let ((err t))

@@ -2,6 +2,7 @@
 ## master
 - Do not automatically add `Accept-Charset` header to requests anymore.
 - Fix `Accept` header being sent duplicated if included in a request specification.
+- Log a warning to `*Verb Log*` buffer when headers might get duplicated by url.el.
 
 ## **2.2.0** - 2020-01-24
 - Renamed `verb-mode-prefix-map` to `verb-command-map` (existing `init.el` configs must be updated).

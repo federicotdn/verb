@@ -1238,6 +1238,12 @@
 	   (sleep-for req-sleep-time))
 	 ,@body))))
 
+(defun should-log-contain (s)
+  (with-current-buffer verb--log-buffer-name
+    (save-excursion
+      (goto-char (point-min))
+      (should (search-forward s)))))
+
 (defun get-response-buffers ()
   (seq-filter (lambda (b) (buffer-local-value 'verb-http-response b))
 	      (buffer-list)))
@@ -1281,6 +1287,10 @@
     (should (= 13 (oref verb-http-response body-bytes)))
     (should (= 13 (length (oref verb-http-response body))))
     (should (= 13 (buffer-size)))))
+
+(ert-deftest test-repeated-header ()
+  (server-test "repeated-sorted-headers"
+    (should-log-contain "Header \"MIME-Version\" will appear duplicated")))
 
 (ert-deftest test-server-basic-json-pretty ()
   (let ((verb-json-max-pretty-print-size 99999))
