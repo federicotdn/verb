@@ -410,7 +410,11 @@ Babel source blocks in Verb mode accept a header argument called `:op`. Its defa
 
 To send the request, move the point to the source block and press <kbd>C-c C-c</kbd>. The result of the request will appear below. The `:wrap src ob-verb-response` tells Babel to wrap the response in a source block, using `ob-verb-response-mode` as major mode for font locking.
 
-Note that Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
+After the request has been sent, Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
+
+**Note:** when Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways.
+
+**Note:** the heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
 #### Exporting Requests (`:op export ...`)
 
@@ -429,10 +433,6 @@ get https://api.kanye.rest
 
 And then execute the source block again with <kbd>C-c C-c</kbd>.
 
-Note: when Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways.
-
-Note: the heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
-
 ### Export Requests
 
 You can export request specifications to other formats by using the `verb-export-request-on-point` command, by default bound to <kbd>C-c C-r C-e</kbd>. When used, you will be prompted for an export function name. The ones currently available are:
@@ -442,7 +442,7 @@ You can export request specifications to other formats by using the `verb-export
 
 You can export directly to `curl` by using the `verb-export-request-on-point-curl` command, bound by default to <kbd>C-c C-r C-u</kbd>.
 
-Note: code tags will be evaluated when exporting a request.
+**Note:** code tags will be evaluated when exporting a request.
 
 ### Base Headers
 
