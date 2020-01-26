@@ -11,7 +11,7 @@ setup-tests:
 	source env/bin/activate && pip install -r test/requirements-dev.txt
 
 server:
-	SKIP_PIDFILE=1 source env/bin/activate && python3 test/server.py
+	source env/bin/activate && SKIP_PIDFILE=1 python3 test/server.py
 
 server-bg:
 	source env/bin/activate && python3 test/server.py &
