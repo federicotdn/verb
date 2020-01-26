@@ -895,10 +895,38 @@
 					 (list (cons "a" "c")))
 		 (list (cons "a" "c"))))
 
+  (should (equal (verb--override-headers (list (cons "A" "b"))
+					 (list (cons "a" "c")))
+		 (list (cons "a" "c"))))
+
   (should (equal (verb--override-headers (list (cons "a" "d"))
 					 (list (cons "c" "c")))
 		 (list (cons "a" "d")
 		       (cons "c" "c")))))
+
+(ert-deftest test-override-headers-casing ()
+  (should (equal (verb--override-headers '(("Content-Type" . "foo"))
+					 '(("content-type" . "bar")))
+		 '(("content-type" . "bar"))))
+
+  (should (equal (verb--override-headers '(("Content-Type" . "foo")
+					   ("Content-TYPE" . "X"))
+					 '(("content-type" . "bar")))
+		 '(("content-type" . "bar"))))
+
+  (should (equal (verb--override-headers '(("Content-Type" . "foo")
+					   ("Content-TYPE" . "X"))
+					 '(("content-type" . "bar")
+					   ("Content-TyPE" . "Y")))
+		 '(("content-type" . "bar")
+		   ("Content-TyPE" . "Y")))))
+
+(ert-deftest test-override-url-queries-casing ()
+  (should (equal (verb--override-url-queries
+		  (verb--url-query-string-to-alist "foo_bar=X")
+		  (verb--url-query-string-to-alist "FOO_BAR=Y"))
+		 '(("foo_bar" . "X")
+		   ("FOO_BAR" . "Y")))))
 
 (ert-deftest test-override-url-queries ()
   (should (equal (verb--override-url-queries
@@ -1212,6 +1240,12 @@
 
 (ert-deftest test-to-ascii ()
   (should-not (multibyte-string-p (verb--to-ascii "ññáé"))))
+
+(ert-deftest test-string= ()
+  (should (verb--string= "hello" "hello"))
+  (should (verb--string= "HELLO" "hello"))
+  (should (verb--string= "HELLO_" "hello_"))
+  (should-not (verb--string= "foo" "hello")))
 
 (ert-deftest test-http-method-p ()
   (should (verb--http-method-p "GET"))

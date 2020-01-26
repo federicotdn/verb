@@ -84,7 +84,8 @@ get /zero-bytes-json
 get /sorted-headers
 *** accept-sorted-headers
 template
-Accept: hello-world
+accept: hello-world
+ACCEPT: hello-world2
 *** repeated-sorted-headers
 template
 MIME-Version: foobar

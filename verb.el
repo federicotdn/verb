@@ -1248,8 +1248,9 @@ Returns a new alist, does not modify HEADERS."
 				   verb-default-request-charset)))
     ;; ;; Accept
     (when accept
-      (setq headers (cl-delete (car accept) headers
-    			       :key #'car :test #'equal)))
+      (setq headers (cl-delete "Accept" headers
+    			       :key #'car
+			       :test #'verb--string=)))
     ;; Encode all text to `us-ascii'
     (mapcar (lambda (e)
 	      (cons (verb--to-ascii (car e))
@@ -1449,20 +1450,31 @@ buffer BUFFER is live.  NUM is the request's identification number."
     (message "Request to %s is taking longer than expected"
 	     (verb-request-spec-url-to-string rs))))
 
-(defun verb--override-alist (original other)
+(defun verb--string= (s1 s2)
+  "Return non-nil if strings S1 and S2 are equal, ignoring case."
+  (string= (downcase s1) (downcase s2)))
+
+(defun verb--override-alist (original other &optional case-fold)
   "Override alist ORIGINAL with OTHER.
 That is; overwrite (KEY . VALUE) pairs present in ORIGINAL with ones
 present in OTHER if KEYs are equal.  Return the results in a new
-alist."
+alist.  If CASE-FOLD is non-nil, ignore case when comparing KEYs."
   (let ((result (nreverse (copy-alist original)))
 	(processed))
     (dolist (key-value other)
       (let ((key (car key-value)))
-	(when (and (assoc key result)
-		   (not (member key processed)))
+	(when (and (assoc-string key result case-fold)
+		   (not (funcall (if case-fold
+				     #'member-ignore-case
+				   #'member)
+				 key processed)))
 	  ;; key in OTHER is in ORIGINAL, delete all entries using
-	  ;; this key in ORIGINAL
-	  (setq result (cl-delete key result :key #'car :test #'equal)))
+	  ;; this key in ORIGINAL (may be more than one)
+	  (setq result (cl-delete key result
+				  :key #'car
+				  :test (if case-fold
+					    #'verb--string=
+					  #'string=))))
 	(push key-value result)
 	;; Remember we deleted this key from ORIGINAL so that we don't
 	;; do it again accidentally (this can happen if OTHER contains
@@ -1475,10 +1487,12 @@ alist."
 Return the results in a new alist.  Work using the rules described in
 `verb-request-spec-override'.")
 
-(defalias 'verb--override-headers #'verb--override-alist
+(defun verb--override-headers (original other)
   "Override headers alist ORIGINAL with OTHER.
 Return the results in a new alist.  Work using the rules described in
-`verb-request-spec-override'.")
+`verb-request-spec-override'.  Note that case is ignored when comparing
+header keys (names)."
+  (verb--override-alist original other t))
 
 (defun verb--url-query-string-to-alist (query)
   "Return an alist of (KEY . VALUE) from query string QUERY.
