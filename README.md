@@ -349,6 +349,8 @@ The example uses the `verb-var` function in the first code tag. This function re
 
 If you wish to quickly re-set the value of a variable previously set with `verb-var`, use the `verb-set-var` command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`.
 
+### Last Response
+
 If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). The following example does this; add it to the ending of your `guide.org` file:
 
 ```
@@ -356,6 +358,34 @@ If you wish to access the last response's attributes, use the `verb-last` variab
 get /{{(cdr (assoc-string "id" (json-read-from-string (oref verb-last body))))}}
 Accept: application/json
 ```
+
+### Storing Responses by Key
+
+When writing a request specification, you may add properties via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
+
+The `Verb-Store` property has a special meaning. When this property is set, the request's response will automatically be stored under its value. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
+
+So, for example, we could modify our create/retrieve user endpoints like so:
+
+```
+** Create a user
+:properties:
+:Verb-Store: new-user
+:end:
+post
+Content-Type: application/json
+
+{
+    "name": "{{(user-full-name)}}",
+    "age": "{{(read-string "Age: ")}}"
+}
+
+** Get last created user
+get /{{(cdr (assoc-string "id" (json-read-from-string (oref (verb-stored-response "new-user") body))))}}
+Accept: application/json
+```
+
+After the "Create a user" request has been sent at least once, the result will be stored under "new-user". It can then be user later at any time. Sending the request again will overwrite the previous value. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always set `verb-last` globally.
 
 ### Body Lines starting with `*`
 

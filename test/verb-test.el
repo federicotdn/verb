@@ -1543,6 +1543,15 @@
   (server-test "error-400")
   (should (null (oref verb-last body))))
 
+(ert-deftest test-server-stored ()
+  (server-test "stored"
+    (setq stored-resp (verb-stored-response "foobar"))
+    (should (string= (oref stored-resp body)
+		     "Hello, World!"))))
+
+(ert-deftest test-no-stored-response ()
+  (should-error (verb-stored-response "adfsadfsadf")))
+
 (ert-deftest test-connection-error ()
   (setq num-buffers (length (buffer-list)))
   (ignore-errors

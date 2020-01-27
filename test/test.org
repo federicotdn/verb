@@ -13,7 +13,11 @@ get /basic
 
 ** basic-json
 get /basic-json
-
+** stored
+:properties:
+:Verb-Store: foobar
+:end:
+get /basic
 ** error-400
 get /error-400
 

@@ -1,4 +1,9 @@
 # Verb Changelog
+## master
+- Heading properties starting with `Verb-` will now be added to requests (and responses) automatically as metadata.
+- Added mechanism for automatically storing responses by key.
+- Added the `verb-stored-response` function.
+
 ## **2.3.0** - 2020-01-26
 - Do not automatically add `Accept-Charset` header to requests anymore.
 - Fix `Accept` header being sent duplicated if included in a request specification.

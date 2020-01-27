@@ -198,7 +198,8 @@ The hook is run with the response body buffer as the current buffer.
 The appropiate major mode will have already been activated, and
 `verb-response-body-mode' as well.  The buffer will contain the
 response's decoded contents.  The buffer-local `verb-http-response'
-variable will be set to the corresponding `verb-response' object."
+variable will be set to the corresponding class `verb-response'
+object."
   :type 'hook)
 
 (defcustom verb-tag "verb"
@@ -311,6 +312,12 @@ buffer, Verb will kill it after it has finished reading its contents.")
 This variable is shared across any buffers using Verb mode.  Consider
 using this variable inside code tags if you wish to use results from
 previous requests on new requests.")
+
+(defvar verb--stored-responses nil
+  "Alist of stored HTTP responses.
+Responses are stored only when the corresponding HTTP request contains
+a nonempty \"Verb-Store\" metadata field.  The response will be stored
+here under its value.")
 
 (defvar verb--vars nil
   "List of variables set with `verb-var'.")
@@ -1117,6 +1124,37 @@ present, return (nil . nil)."
 CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
   (cdr (assoc-string (car content-type) handlers-list t)))
 
+(defun verb--maybe-store-response (response)
+  "Store RESPONSE depending on its request metadata.
+Check `verb--stored-responses' for more details."
+  (when-let ((req (oref response request))
+	     (metadata (oref req metadata))
+	     (val (verb--nonempty-string (cdr (assoc-string
+					       "verb-store"
+					       metadata t)))))
+    (setq verb--stored-responses (cl-delete val verb--stored-responses
+					    :key #'car
+					    :test #'equal))
+    (push (cons val response) verb--stored-responses)))
+
+(defun verb-stored-response (key)
+  "Return stored HTTP response under KEY.
+To automatically store HTTP responses, set the request heading's
+\"Verb-Store\" property to a nonempty value.  The response will then
+be stored under that value. For example:
+
+* Example          :verb:
+:properties:
+:Verb-Store: storage-key-here
+:end:
+get https://gnu.org/test"
+  (if-let ((resp (assoc-string key verb--stored-responses)))
+      (cdr resp)
+    (user-error (concat "No response stored under key \"%s\"\n"
+			"Make sure you've set the \"Verb-Store\" heading property"
+			" and sent the request at least once")
+		key)))
+
 (defun verb--request-spec-callback (status rs response-buf start timeout-timer where num)
   "Callback for `verb--request-spec-send' for request RS.
 More response information can be read from STATUS.
@@ -1213,8 +1251,13 @@ view the HTTP response in a user-friendly way."
 			   :status status-line
 			   :duration elapsed
 			   :body-bytes body-bytes))
+
       ;; Update global last response variable
-      (setq verb-last verb-http-response))
+      (setq verb-last verb-http-response)
+
+      ;; Store the response separately as well depending on user
+      ;; metadata
+      (verb--maybe-store-response verb-http-response))
 
     (if binary-handler
 	;; Response content is a binary format:
