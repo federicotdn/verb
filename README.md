@@ -366,7 +366,7 @@ Accept: application/json
 
 When writing a request specification, you may add properties via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
 
-The `Verb-Store` property has a special meaning. When this property is set, Verb will automatically store the request's response under the value set. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
+The `Verb-Store` property has a special meaning. When this property is set, Verb will automatically store the request's response under the specified value. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
 
 So, for example, we could modify our create/retrieve user endpoints like so:
 
