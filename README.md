@@ -355,6 +355,9 @@ If you wish to access the last response's attributes, use the `verb-last` variab
 
 ```
 ** Get last created user
+# Extract the "id" value from the previous
+# JSON response body.
+
 get /{{(cdr (assoc-string "id" (json-read-from-string (oref verb-last body))))}}
 Accept: application/json
 ```
@@ -363,7 +366,7 @@ Accept: application/json
 
 When writing a request specification, you may add properties via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
 
-The `Verb-Store` property has a special meaning. When this property is set, the request's response will automatically be stored under its value. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
+The `Verb-Store` property has a special meaning. When this property is set, Verb will automatically store the request's response under the value set. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
 
 So, for example, we could modify our create/retrieve user endpoints like so:
 
@@ -385,7 +388,7 @@ get /{{(cdr (assoc-string "id" (json-read-from-string (oref (verb-stored-respons
 Accept: application/json
 ```
 
-After the "Create a user" request has been sent at least once, the result will be stored under "new-user". It can then be user later at any time. Sending the request again will overwrite the previous value. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always set `verb-last` globally.
+After the "Create a user" request has been sent at least once, the result will be stored internally under "new-user". It can then be used later at any time. Sending the request again will overwrite the previous value. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always set `verb-last` globally.
 
 ### Body Lines starting with `*`
 
