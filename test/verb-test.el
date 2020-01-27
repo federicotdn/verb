@@ -304,6 +304,42 @@
     (should (null aux))
     (should (= (point) 1))))
 
+(ert-deftest test-verb-heading-tags ()
+  (with-temp-buffer
+    (org-mode)
+    (insert (join-lines "* H1  :a:b:"
+			"something"
+			"** H2 :c:"))
+    (should (equal (verb--heading-tags) '("a" "b" "c"))))
+
+  (with-temp-buffer
+    (org-mode)
+    (insert (join-lines "no headings"))
+    (should-not (verb--heading-tags))))
+
+(ert-deftest test-verb-heading-property ()
+  (with-temp-buffer
+    (org-mode)
+    (insert (join-lines "* H1"
+			":properties:"
+			":Email: something"
+			":end:"
+			"** H2"
+			":properties:"
+			":Author: John"
+			":end:"))
+    (should (equal (verb--heading-property "Author")
+		   "John"))
+
+    (should (equal (verb--heading-property "AUTHOR")
+		   "John"))
+
+    (should (equal (verb--heading-property "author")
+		   "John"))
+
+    (should-not (verb--heading-property "Email"))
+    (should-not (verb--heading-property "adsfasd"))))
+
 (ert-deftest test-request-spec-from-text-comments-only ()
   (should-error (text-as-spec "# Hello\n" "# world")
 		:type 'verb-empty-spec)

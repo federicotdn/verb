@@ -611,6 +611,12 @@ Return t if there was a heading to move towards to and nil otherwise."
   (when-let ((tags (org-entry-get (point) "ALLTAGS" t)))
     (split-string (string-trim tags ":" ":") ":")))
 
+(defun verb--heading-property (property)
+  "Return value of PROPERTY from current heading.
+Does not use property inheritance."
+  (verb--back-to-heading)
+  (org-entry-get (point) property))
+
 (defun verb--heading-contents ()
   "Return the current heading's text contents.
 If not on a heading, signal an error."
