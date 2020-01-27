@@ -287,7 +287,7 @@
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy))))
 
-(ert-deftest test-request-spec-from-hierarchy-name ()
+(ert-deftest test-request-spec-from-hierarchy-metadata ()
   (with-temp-buffer
     (org-mode)
     (verb-mode)
@@ -301,7 +301,8 @@
 			":end:"
 			"get http://foobar.com"))
     (setq req-spec (verb--request-spec-from-hierarchy))
-    (should (equal (oref req-spec name) "JOHN"))))
+    (should (equal (oref req-spec metadata)
+		   '(("VERB-NAME" . "JOHN"))))))
 
 (ert-deftest test-nonempty-string ()
   (should (string= (verb--nonempty-string "hello") "hello"))
@@ -333,28 +334,19 @@
     (insert (join-lines "no headings"))
     (should-not (verb--heading-tags))))
 
-(ert-deftest test-verb-heading-property ()
+(ert-deftest test-verb-heading-properties ()
   (with-temp-buffer
     (org-mode)
     (insert (join-lines "* H1"
 			":properties:"
-			":Email: something"
+			":Verb-X: something"
 			":end:"
 			"** H2"
 			":properties:"
-			":Author: John"
+			":Verb-Y: foo"
 			":end:"))
-    (should (equal (verb--heading-property "Author")
-		   "John"))
-
-    (should (equal (verb--heading-property "AUTHOR")
-		   "John"))
-
-    (should (equal (verb--heading-property "author")
-		   "John"))
-
-    (should-not (verb--heading-property "Email"))
-    (should-not (verb--heading-property "adsfasd"))))
+    (should (equal (verb--heading-properties "verb-")
+		   '(("VERB-Y" . "foo"))))))
 
 (ert-deftest test-request-spec-from-text-comments-only ()
   (should-error (text-as-spec "# Hello\n" "# world")
@@ -1309,6 +1301,12 @@
 (ert-deftest test-to-ascii ()
   (should-not (multibyte-string-p (verb--to-ascii "ññáé"))))
 
+(ert-deftest test-verb-alist ()
+  (should-not (verb--alist-p nil))
+  (should (verb--alist-p '((1 . 1)
+			   (2 . 2))))
+  (should-not (verb--alist-p "asdf")))
+
 (ert-deftest test-string= ()
   (should (verb--string= "hello" "hello"))
   (should (verb--string= "HELLO" "hello"))
@@ -1677,8 +1675,8 @@
 			"#+end_src"))
     (re-search-backward "get")
     (org-ctrl-c-ctrl-c)
-    (should (string= (oref (oref verb-last request) name)
-		     "JOHN"))))
+    (should (equal (oref (oref verb-last request) metadata)
+		   '(("VERB-NAME" . "JOHN"))))))
 
 (ert-deftest test-babel-invalid-op ()
   (with-temp-buffer

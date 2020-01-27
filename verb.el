@@ -40,6 +40,7 @@
 (require 'mm-util)
 (require 'json)
 (require 'js)
+(require 'seq)
 
 (defgroup verb nil
   "An HTTP client for Emacs that extends Org mode."
@@ -282,8 +283,8 @@ E = Error.")
 (defconst verb--http-header-regexp "^\\([[:alnum:]-]+:\\).*$"
   "Regexp for font locking HTTP headers.")
 
-(defconst verb--request-name-prop "Verb-Name"
-  "Property key for request name in Org heading properties.
+(defconst verb--metadata-prefix "verb-"
+  "Prefix for Verb metadata keys in heading properties.
 Matching is case insensitive.")
 
 (defvar-local verb-http-response nil
@@ -449,6 +450,15 @@ message is logged.  To turn off logging, set `verb-enable-log' to nil."
   "Return non-nil if M is a valid HTTP method."
   (member m verb--http-methods))
 
+(defun verb--alist-p (l)
+  "Return on-nil if L is an alist."
+  (when (consp l)
+    (catch 'end
+      (dolist (elem l)
+	(unless (consp elem)
+	  (throw 'end nil)))
+      t)))
+
 (defun verb--http-headers-p (h)
   "Return non-nil if H is an alist of (KEY . VALUE) elements.
 KEY and VALUE must be strings.  KEY must not be the empty string."
@@ -479,10 +489,10 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 	 :initform nil
 	 :type (or null string)
 	 :documentation "Request body.")
-   (name :initarg :name
-	 :initform nil
-	 :type (or null string)
-	 :documentation "User-defined request name."))
+   (metadata :initarg :metadata
+	     :initform nil
+	     :type (or null verb--alist)
+	     :documentation "User-defined request metadata."))
   "Represents an HTTP request to be made.")
 
 (defclass verb-response ()
@@ -619,11 +629,13 @@ Return t if there was a heading to move towards to and nil otherwise."
   (when-let ((tags (org-entry-get (point) "ALLTAGS" t)))
     (split-string (string-trim tags ":" ":") ":")))
 
-(defun verb--heading-property (property)
-  "Return value of PROPERTY from current heading.
-Does not use property inheritance."
+(defun verb--heading-properties (prefix)
+  "Return alist of current heading properties starting with PREFIX.
+Does not use property inheritance.  Matching is case-insensitive."
   (verb--back-to-heading)
-  (org-entry-get (point) property))
+  (seq-filter (lambda (e)
+		(string-prefix-p prefix (car e) t))
+	      (org-entry-properties (point))))
 
 (defun verb--heading-contents ()
   "Return the current heading's text contents.
@@ -701,7 +713,7 @@ request spec, not only the section contained by the source block."
   (save-excursion
     (goto-char pos)
     (let ((rs (verb-request-spec-from-string body))
-	  (req-name (verb--heading-property verb--request-name-prop)))
+	  (req-metadata (verb--heading-properties verb--metadata-prefix)))
       ;; Go up one level first. Do this to avoid re-reading the
       ;; request in the current level (contained in the source block)
       (verb--up-heading)
@@ -709,9 +721,8 @@ request spec, not only the section contained by the source block."
       ;; hierarchy. Pre-include the one we read from the source block
       ;; at the end of the list.
       (setq rs (verb--request-spec-from-hierarchy rs))
-      ;; If we found a name for the request in the heading where the
-      ;; source block is, use it
-      (oset rs name req-name)
+      ;; Set the request metadata if any
+      (oset rs metadata req-metadata)
       rs)))
 
 (defun verb--request-spec-from-hierarchy (&rest specs)
@@ -723,16 +734,17 @@ Once all the request specs have been collected, override them in
 inverse order according to the rules described in
 `verb-request-spec-override'.  After that, override that result with
 all the request specs in SPECS, in the order they were passed in."
-  (let (done final-spec req-name)
+  (let (done final-spec req-metadata)
     (save-excursion
       ;; First, go back to the current heading, if possible. If no
       ;; heading is found, then don't attempt to read anything.
       (setq done (not (verb--back-to-heading)))
       ;; If there's at least one heading, and SPECS is nil, then this
-      ;; is the highest level heading we'll read. Extract the name
-      ;; property.
+      ;; is the highest level heading we'll read. Extract metadata
+      ;; from heading.
       (unless (or done specs)
-	(setq req-name (verb--heading-property verb--request-name-prop)))
+	(setq req-metadata
+	      (verb--heading-properties verb--metadata-prefix)))
       ;; If there's at least one heading above us, go up through the
       ;; headings tree taking a request specification from each level.
       (while (not done)
@@ -750,8 +762,8 @@ all the request specs in SPECS, in the order they were passed in."
 	      ;; 3, then with 4, etc.
 	      (setq final-spec (verb-request-spec-override final-spec
 							   spec))))
-	  ;; Set the request name if any found
-	  (oset final-spec name req-name)
+	  ;; Set the request metadata if any
+	  (oset final-spec metadata req-metadata)
 	  ;; Validate and return
 	  (verb-request-spec-validate final-spec))
       (user-error (concat "No request specifications found\n"
