@@ -78,7 +78,7 @@ Content-Type: application/json
 ** GET and respond with status code
 # Send a GET request and get a specific status code
 # as a response.
-# Use embedded Lisp code in the reqeuest spec.
+# Use embedded Lisp code in the request spec.
 get /status/{{(read-number "Status: " 200)}}
 ```
 
