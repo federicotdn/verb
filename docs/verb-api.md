@@ -66,6 +66,8 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
     Request headers (alist).
   - Slot: **body** \
     Request body (string).
+  - Slot: **name** \
+    User-defined request name (string).
 - Class: **verb-response** \
   Represents an HTTP response.
   - Slot: **request** \

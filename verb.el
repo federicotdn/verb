@@ -282,6 +282,10 @@ E = Error.")
 (defconst verb--http-header-regexp "^\\([[:alnum:]-]+:\\).*$"
   "Regexp for font locking HTTP headers.")
 
+(defconst verb--request-name-prop "Verb-Name"
+  "Property key for request name in Org heading properties.
+Matching is case insensitive.")
+
 (defvar-local verb-http-response nil
   "HTTP response for this response buffer (`verb-response' object).
 The decoded body contents of the response are included in the buffer
@@ -474,7 +478,11 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
    (body :initarg :body
 	 :initform nil
 	 :type (or null string)
-	 :documentation "Request body."))
+	 :documentation "Request body.")
+   (name :initarg :name
+	 :initform nil
+	 :type (or null string)
+	 :documentation "User-defined request name."))
   "Represents an HTTP request to be made.")
 
 (defclass verb-response ()
@@ -692,14 +700,19 @@ Note that the entire buffer will be considered when generating the
 request spec, not only the section contained by the source block."
   (save-excursion
     (goto-char pos)
-    (let ((rs (verb-request-spec-from-string body)))
+    (let ((rs (verb-request-spec-from-string body))
+	  (req-name (verb--heading-property verb--request-name-prop)))
       ;; Go up one level first. Do this to avoid re-reading the
       ;; request in the current level (contained in the source block)
       (verb--up-heading)
       ;; Continue reading requests from the headings
       ;; hierarchy. Pre-include the one we read from the source block
       ;; at the end of the list.
-      (verb--request-spec-from-hierarchy rs))))
+      (setq rs (verb--request-spec-from-hierarchy rs))
+      ;; If we found a name for the request in the heading where the
+      ;; source block is, use it
+      (oset rs name req-name)
+      rs)))
 
 (defun verb--request-spec-from-hierarchy (&rest specs)
   "Return a request spec generated from the headings hierarchy.
@@ -710,11 +723,16 @@ Once all the request specs have been collected, override them in
 inverse order according to the rules described in
 `verb-request-spec-override'.  After that, override that result with
 all the request specs in SPECS, in the order they were passed in."
-  (let (done final-spec)
+  (let (done final-spec req-name)
     (save-excursion
       ;; First, go back to the current heading, if possible. If no
       ;; heading is found, then don't attempt to read anything.
       (setq done (not (verb--back-to-heading)))
+      ;; If there's at least one heading, and SPECS is nil, then this
+      ;; is the highest level heading we'll read. Extract the name
+      ;; property.
+      (unless (or done specs)
+	(setq req-name (verb--heading-property verb--request-name-prop)))
       ;; If there's at least one heading above us, go up through the
       ;; headings tree taking a request specification from each level.
       (while (not done)
@@ -732,6 +750,9 @@ all the request specs in SPECS, in the order they were passed in."
 	      ;; 3, then with 4, etc.
 	      (setq final-spec (verb-request-spec-override final-spec
 							   spec))))
+	  ;; Set the request name if any found
+	  (oset final-spec name req-name)
+	  ;; Validate and return
 	  (verb-request-spec-validate final-spec))
       (user-error (concat "No request specifications found\n"
 			  "Remember to tag your headlines with :%s:")

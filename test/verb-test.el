@@ -287,6 +287,22 @@
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy))))
 
+(ert-deftest test-request-spec-from-hierarchy-name ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+			":properties:"
+			":Verb-Name: X"
+			":end:"
+			"** Test"
+			":properties:"
+			":Verb-Name: JOHN"
+			":end:"
+			"get http://foobar.com"))
+    (setq req-spec (verb--request-spec-from-hierarchy))
+    (should (equal (oref req-spec name) "JOHN"))))
+
 (ert-deftest test-nonempty-string ()
   (should (string= (verb--nonempty-string "hello") "hello"))
   (should-not (verb--nonempty-string "")))
@@ -1646,6 +1662,23 @@
 			"#+end_src"))
     (re-search-backward "template")
     (should-error (org-ctrl-c-ctrl-c))))
+
+(ert-deftest test-babel-request-name ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test"
+			":properties:"
+			":Verb-name: JOHN"
+			":end:"
+			""
+			"#+begin_src verb"
+			"get http://localhost:8000/basic"
+			"#+end_src"))
+    (re-search-backward "get")
+    (org-ctrl-c-ctrl-c)
+    (should (string= (oref (oref verb-last request) name)
+		     "JOHN"))))
 
 (ert-deftest test-babel-invalid-op ()
   (with-temp-buffer
