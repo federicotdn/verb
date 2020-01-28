@@ -507,6 +507,18 @@ To see a listing of Verb's public symbols (hooks, functions, variables, classes,
 
 The [docs/](docs) directory contains various `.org` files which showcase different features of the package.
 
+## Troubleshooting
+**Problem**: When trying to send a request, an error is shown: "No request specifications found".
+**Fix**: Tag the headings containing request specifications with `:verb:`. Tags are inherited by default, so in most cases you can just tag the lowest-level heading (i.e. the one with least `*`).
+
+**Problem**: URL elements containing underscores such as `page_size` are shown as subscripts [Issue #3](https://github.com/federicotdn/verb/issues/3).
+**Fix**: Set the `org-use-sub-superscripts` variable to `{}` or `nil`. You can do this file-locally by adding the following at the end of the file:
+```
+# Local Variables:
+# org-use-sub-superscripts: {}
+# End:
+```
+
 ## Changelog
 
 The changelog for this project can be found in [CHANGELOG.md](CHANGELOG.md).
