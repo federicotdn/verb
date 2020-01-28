@@ -366,7 +366,7 @@ The `verb-json-get` function takes a JSON-formatted text as its first argument a
 
 ### Storing Responses by Key
 
-When writing a request specification, you may add properties via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
+When writing a request specification, you may add [properties](https://orgmode.org/manual/Property-syntax.html) via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
 
 The `Verb-Store` property has a special meaning. When this property is set, Verb will automatically store the request's response under the specified value. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
 
@@ -391,6 +391,8 @@ Accept: application/json
 ```
 
 After the "Create a user" request has been sent at least once, the result will be stored internally under "new-user". It can then be used later at any time. Sending the request again will overwrite the previous value. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always set `verb-last` globally.
+
+**Note**: When reading heading properties, Verb ignores parent headings, so no properties are inherited.
 
 ### Body Lines starting with `*`
 
@@ -455,6 +457,7 @@ Once that's done, simply wrap your HTTP request specifications with `#+begin_src
 * Make a request to an API
 #+begin_src verb :wrap src ob-verb-response
 get https://api.kanye.rest
+Accept: application/json
 #+end_src
 ```
 
@@ -466,7 +469,7 @@ To send the request, move the point to the source block and press <kbd>C-c C-c</
 
 After the request has been sent, Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
 
-**Note:** when Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways.
+**Note:** when Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
 
 **Note:** the heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
@@ -482,6 +485,7 @@ So for example, if you wanted to export the previous example to `curl`, you woul
 * Export request to curl
 #+begin_src verb :op export curl
 get https://api.kanye.rest
+Accept: application/json
 #+end_src
 ```
 
