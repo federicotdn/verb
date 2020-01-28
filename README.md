@@ -55,12 +55,9 @@ Both cases will set <kbd>C-c C-r</kbd> as the prefix key for all Verb commands i
 
 Here's a quick example in case you want to get started without reading the [Usage Guide](#usage-guide). Place the following on an `example.org` file:
 ```
-#+FILETAGS: :verb:
-
-* Quick Start for Verb
+* Quick Start for Verb                       :verb:
 # Comments start with '#'. You can only place
 # comments before the URL and in the headers.
-# Verb file for https://docs.postman-echo.com/
 template https://postman-echo.com
 Accept: application/json
 

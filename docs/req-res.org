@@ -1,6 +1,4 @@
-#+FILETAGS: :verb:
-
-* REQ|RES
+* REQ|RES                                                                            :verb:
 # Test your front-end against a real API
 # A hosted REST-API ready to respond to your AJAX requests.
 # https://reqres.in/

@@ -1,6 +1,4 @@
-#+FILETAGS: :verb:
-
-* Binary content type tests
+* Binary content type tests                                                          :verb:
 # Each subheading specifies a request for a binary content type
 # (non-text), like PDF documents, images, etc.
 template https://www.gnu.org

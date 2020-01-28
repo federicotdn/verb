@@ -1,7 +1,5 @@
-* Example .org file
-# Although this file has a .org extension, you can still load it with
-# Verb mode by specifying the 'mode' file local variable. See first
-# line of the file.
+* Misc Example file
+# This file contains examples for two different APIs.
 
 ** Ipify API                                                                         :verb:
 :PROPERTIES:
@@ -36,3 +34,4 @@ Content-Encoding: gzip
 ** Tasks
 - [ ] Find my IPv4 address
 - [ ] Find my IPv6 address
+- [ ] Fetch more quotes
