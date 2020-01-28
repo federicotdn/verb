@@ -358,9 +358,11 @@ If you wish to access the last response's attributes, use the `verb-last` variab
 # Extract the "id" value from the previous
 # JSON response body.
 
-get /{{(cdr (assoc-string "id" (json-read-from-string (oref verb-last body))))}}
+get /{{(verb-json-get (oref verb-last body) "id")}}
 Accept: application/json
 ```
+
+The `verb-json-get` function takes a JSON-formatted text as its first argument and a key as its second, and returns the value under that key in the JSON text.
 
 ### Storing Responses by Key
 

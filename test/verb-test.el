@@ -1536,6 +1536,11 @@
       (should (= (count-lines (point-min) (point-max))
 		 (length headers))))))
 
+(ert-deftest test-json-get ()
+  (should (= 42 (verb-json-get "{\"a\": 42}" "a")))
+  (should (string= "test" (verb-json-get "{\"a\": \"test\"}" "a")))
+  (should-not (verb-json-get "{\"a\": \"test\"}" "foo")))
+
 (ert-deftest test-verb-last ()
   (server-test "basic")
   (should (string= (oref verb-last body) "Hello, World!"))

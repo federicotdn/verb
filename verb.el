@@ -607,6 +607,12 @@ If `verb-enable-log' is nil, do not log anything."
       nil
     s))
 
+(defun verb-json-get (text key)
+  "Interpret TEXT as a JSON object and return value under KEY.
+The outermost JSON element in TEXT must be an object.  KEY must be
+string.  Return nil if no value exists under KEY."
+  (cdr (assoc-string key (json-read-from-string text))))
+
 (defun verb--buffer-string-no-properties ()
   "Return the contents of the current buffer as a string.
 Do not include text properties."
