@@ -21,10 +21,16 @@ Accept: application/json
 template /search.json
 
 *** By Title
+#+BEGIN_SRC verb :wrap src ob-verb-response
 get ?title={{(read-string "Title: ")}}
+#+END_SRC
 
 *** By Author
 get ?author={{(read-string "Author: ")}}
+
+** Subjects
+# This API is experimental. Please be aware that this may change in future.
+get /subjects/{{(read-string "Subject: ")}}.json
 
 ** Books
 :properties:
@@ -33,30 +39,11 @@ get ?author={{(read-string "Author: ")}}
 # The API allows requesting information on one or more books using
 # ISBNs, OCLC Numbers, LCCNs and OLIDs (Open Library IDs).
 
-#+BEGIN_SRC verb :wrap src ob-verb-response
 get /api/books?bibkeys=ISBN:{{(verb-var isbn)}}&format=json
-#+END_SRC
 
-#+RESULTS:
-#+BEGIN_src ob-verb-response
-HTTP/1.1 200 OK
-Server: nginx/1.4.6 (Ubuntu)
-Date: Tue, 28 Jan 2020 21:15:49 GMT
-Content-Type: application/json
-Transfer-Encoding: chunked
-Connection: keep-alive
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Method: GET, OPTIONS
-Access-Control-Max-Age: 86400
-X-OL-Stats: "IB 1 0.062 MC 1 0.002 TT 0 0.066"
-
-{
-  "ISBN:9780465026562": {
-    "bib_key": "ISBN:9780465026562",
-    "preview": "noview",
-    "thumbnail_url": "https://covers.openlibrary.org/b/id/8148459-S.jpg",
-    "preview_url": "http://openlibrary.org/books/OL26435358M/Gödel_Escher_Bach_an_eternal_golden_braid",
-    "info_url": "http://openlibrary.org/books/OL26435358M/Gödel_Escher_Bach_an_eternal_golden_braid"
-  }
-}
-#+END_src
+** Book Cover
+# Get a book's cover based on the value of (verb-var isbn) and the
+# "book" stored response. To set those, make sure to execute "Books"
+# request at least once.
+get {{(verb-json-get (oref (verb-stored-response "book") body) (concat "ISBN:" (verb-var isbn)) "thumbnail_url")}}
+Accept: image/jpeg
