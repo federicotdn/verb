@@ -1536,10 +1536,44 @@
       (should (= (count-lines (point-min) (point-max))
 		 (length headers))))))
 
+(setq test-json (join-lines "{"
+			    "  \"foo\": {"
+			    "    \"test\": \"Hello, World!\","
+			    "    \"nested\": {\"x\": 99}"
+			    "  },"
+			    "  \"bar\": [42, 100, true, false, null],"
+			    "  \"empty-array\":  [],"
+			    "  \"empty-object\": {}"
+			    "}"))
+
 (ert-deftest test-json-get ()
-  (should (= 42 (verb-json-get "{\"a\": 42}" "a")))
-  (should (string= "test" (verb-json-get "{\"a\": \"test\"}" "a")))
-  (should-not (verb-json-get "{\"a\": \"test\"}" "foo")))
+  (should-error (verb-json-get test-json))
+  (should-error (verb-json-get test-json 1.0))
+  (should-error (verb-json-get test-json '(1 2 3)))
+
+  (should (string= (verb-json-get test-json "foo" "test")
+		   "Hello, World!"))
+
+  (should (= (verb-json-get test-json "foo" "nested" "x")
+	     99))
+
+  (should (= (verb-json-get test-json "foo" 'nested 'x)
+	     99))
+
+  (should-not (verb-json-get test-json "foo" "nested" "abc"))
+
+  (should (= (verb-json-get test-json "bar" 0) 42))
+  (should (= (verb-json-get test-json "bar" 1) 100))
+
+  (should (verb-json-get test-json "bar" 2))
+  (should-error (verb-json-get test-json "bar" 999))
+  (should (eq (verb-json-get test-json "bar" 3) :json-false))
+  (should-not (verb-json-get test-json "bar" 4))
+
+  (should-not (verb-json-get test-json "asfdasdfsaf"))
+
+  (should (equal (verb-json-get test-json "empty-array") []))
+  (should-not (verb-json-get test-json "empty-object")))
 
 (ert-deftest test-verb-last ()
   (server-test "basic")

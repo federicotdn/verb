@@ -607,11 +607,57 @@ If `verb-enable-log' is nil, do not log anything."
       nil
     s))
 
-(defun verb-json-get (text key)
-  "Interpret TEXT as a JSON object and return value under KEY.
-The outermost JSON element in TEXT must be an object.  KEY must be
-string.  Return nil if no value exists under KEY."
-  (cdr (assoc-string key (json-read-from-string text))))
+(defun verb-json-get (text &rest path)
+  "Interpret TEXT as a JSON object and return value under PATH.
+The outermost JSON element in TEXT must be an object.
+PATH must be a list of strings, symbols (which will be converted to
+strings), or integers.  The PATH list will be traversed from beginning
+to end, using each item to access a sub-value in the current JSON
+element (and setting the current JSON element to that new value).
+
+For example, for the following TEXT:
+{
+  \"test\": {
+    \"foo\": [\"apples\", \"oranges\"]
+  }
+}
+
+Using PATH (\"test\" \"foo\" 1) will yield \"oranges\"."
+  (unless path
+    (user-error "%s" "No path specified for JSON value"))
+  (let ((obj (json-read-from-string text)))
+    (dolist (key path)
+      (setq
+       obj
+       (cond
+	(;; Path element is a string (or symbol)
+	 (or (stringp key) (symbolp key))
+	 (when (symbolp key)
+	   (setq key (symbol-name key)))
+	 ;; Obj may be an alist, plist or hash-table
+	 (pcase json-object-type
+	   ('alist
+	    (cdr (assoc-string key obj)))
+	   ('plist
+	    (plist-get obj (intern (concat ":" key))))
+	   ('hash-table
+	    (gethash key obj))
+	   (_
+	    (user-error "%s" "Unknown value for `json-object-type'"))))
+	(;; Path element is an integer
+	 (integerp key)
+	 ;; Obj may be a list or a vector
+	 (pcase json-array-type
+	   ('list
+	    (nth key obj))
+	   ('vector
+	    (aref obj key))
+	   (_
+	    (user-error "%s" "Unknown value for `json-array-type'"))))
+	(;; Invalid key type
+	 t
+	 (user-error "Invalid key: %s" key)))))
+    obj))
 
 (defun verb--buffer-string-no-properties ()
   "Return the contents of the current buffer as a string.
