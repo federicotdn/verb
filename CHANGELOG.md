@@ -1,4 +1,7 @@
 # Verb Changelog
+### master
+- Added `verb-trim-body-end` variable.
+
 ## **2.4.0** - 2020-01-29
 - Heading properties starting with `Verb-` will now be added to requests (and responses) automatically as metadata.
 - Added mechanism for automatically storing responses by key.

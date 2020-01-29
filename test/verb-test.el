@@ -482,6 +482,25 @@
 		 (list (cons "Foo-Bar" "text")
 		       (cons "Referer" "host.com")))))
 
+(ert-deftest test-request-spec-from-text-body-trailing-chars ()
+  (setq aux (text-as-spec-nl "GET example.com"
+			     "Accept: text"
+			     ""
+			     "hello"
+			     ""
+			     " "))
+  (should (string= (oref aux :body) "hello\n\n "))
+
+  (let ((verb-trim-body-end "[ \t\n\r]+"))
+    (setq aux (text-as-spec-nl "GET example.com"
+			       "Accept: text"
+			       ""
+			       "  hello   "
+			       ""
+			       " "
+			       ""))
+    (should (string= (oref aux :body) "  hello"))))
+
 (ert-deftest test-request-spec-from-text-body ()
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"))

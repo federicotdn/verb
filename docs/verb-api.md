@@ -104,3 +104,4 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-json-max-pretty-print-size**
 - User Option: **verb-babel-timeout**
 - User Option: **verb-base-headers**
+- User Option: **verb-trim-body-end**

@@ -220,6 +220,15 @@ that tag as well.  This can be changed via the
   :type '(choice (string :tag "verb")
 		 (const :tag "All" t)))
 
+(defcustom verb-trim-body-end nil
+  "When set to a regexp, use it to trim request body endings.
+If set to nil, read request bodies as they appear on the buffer.  In
+that case, if any whitespace is present between the body end and the
+next heading (or buffer end), it will be included in the body."
+  :type '(choice (regexp :tag "Other regexp")
+		 (const :tag "All whitespace" "[ \t\n\r]+")
+		 (const :tag "Disable" nil)))
+
 (defcustom verb-base-headers nil
   "Set of HTTP headers used as base when reading request specs.
 These headers will be included by default in requests, but still may
@@ -1990,11 +1999,15 @@ signal an error."
 
       ;; The rest of the buffer is the request body
       (let ((rest (buffer-substring (point) (point-max))))
+	;; Only read body if it isn't comprised entirely of
+	;; whitespace, but if it's not and has leading/trailing
+	;; whitespace, include itP
 	(unless (string-empty-p (string-trim rest))
-	  ;; Only read body if it isn't comprised entirely of
-	  ;; whitespace, but if it's not and has leading/trailing
-	  ;; whitespace, include it
-	  (setq body rest)))
+	  ;; Now we know body isn't comprised entirely of whitespace,
+	  ;; check if the user wants to delete any trailing characters
+	  (setq body (if verb-trim-body-end
+			 (string-trim-right rest verb-trim-body-end)
+		       rest))))
       ;; Return a `verb-request-spec'
       (verb-request-spec :method method
 			 :url (unless (string-empty-p (or url ""))
