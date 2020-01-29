@@ -43,6 +43,10 @@ string OPERATION to decide what to do with the code block.  Valid
 options are:
 
   \"send\": Send the HTTP request specified in the source block.
+  \"send get-headers\": Send the HTTP request specified in the source
+    block, but only return the response headers.
+  \"send get-body\": Send the HTTP request specified in the source
+    block, but only return the response body.
   \"export curl\": Export request spec to curl format.
   \"export human\": Export request spec to human-readable format.
   \"export verb\": Export request spec to verb format.
@@ -53,8 +57,9 @@ The default value for OPERATION is \"send\"."
 	 (op (or (cdr (assoc :op processed-params))
 		"send")))
     (pcase op
-      ("send"
-       (ob-verb--send-request rs))
+      ((guard (or (string-prefix-p "send " op)
+		  (string= "send" op)))
+       (ob-verb--send-request rs (nth 1 (split-string op))))
       ((guard (string-prefix-p "export " op))
        (ob-verb--export-request rs (nth 1 (split-string op))))
       (_
@@ -81,14 +86,25 @@ Called when :op `export' is passed to `org-babel-execute:verb'."
     (_
      (user-error "Invalid export function: %s" name))))
 
-(defun ob-verb--send-request (rs)
+(defun ob-verb--send-request (rs &optional part)
   "Send the request specified by the selected Babel source block.
 RS should contain the request spec extracted from the source block.
+
+PART should describe what part of the response should be returned.  If
+set to nil, return the whole response, if set to \"get-body\", return
+only the response body and if set to \"get-headers\", return only the
+response headers.  In any case, the value returned will be a string.
+Note that the status line (containing HTTP/1.X and the status code) will
+only be returned when PART is nil.
+
 Note that Emacs will be blocked while waiting for a response.  The
 timeout for this can be configured via the `verb-babel-timeout'
-variable.  Return the contents of the response as a string.
+variable.
 
-Called when :op `send' is passed to `org-babel-execute:verb'."
+Called when :op `send' is passed to `org-babel-execute:verb'.  An
+optional argument may follow `send'."
+  (when (and part (not (member part '("get-body" "get-headers"))))
+    (user-error "Invalid send argument: %s" part))
   (let* ((start (time-to-seconds))
 	 (buf (verb--request-spec-send rs nil)))
     (while (and (eq (buffer-local-value 'verb-http-response buf) t)
@@ -98,7 +114,13 @@ Called when :op `send' is passed to `org-babel-execute:verb'."
       (if (eq verb-http-response t)
 	  (format "(Request timed out after %.4g seconds)"
 		  (- (time-to-seconds) start))
-	(verb-response-to-string verb-http-response buf)))))
+	(pcase part
+	  ('nil (verb-response-to-string verb-http-response buf))
+	  ("get-body" (verb--buffer-string-no-properties))
+	  ("get-headers" (let ((headers (oref verb-http-response headers)))
+			   (with-temp-buffer
+			     (verb--insert-header-contents headers)
+			     (verb--buffer-string-no-properties)))))))))
 
 ;;;###autoload
 (define-derived-mode ob-verb-response-mode special-mode "ob-verb"

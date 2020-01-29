@@ -462,7 +462,7 @@ Accept: application/json
 #+end_src
 ```
 
-Babel source blocks in Verb mode accept a header argument called `:op`. Its default value is `:op send`.
+Babel source blocks in Verb mode accept a header argument called `:op`. Its default value is `send` (this means adding `:op send` is equivalent to not adding it at all).
 
 #### Sending Requests (`:op send`)
 
@@ -473,6 +473,18 @@ After the request has been sent, Emacs will be blocked until the response has ar
 **Note:** when Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
 
 **Note:** the heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
+
+#### Send with Partial Retrieval (`:op send ...`)
+
+Instead of specifying just `:op send`, you may add an additional argument: `get-headers` or `get-body`. Using the former will change the result of executing the source block to just the response headers. Using the latter will do the same, but for the respnse body. Here's an example:
+
+```
+* Make a request to an API (get body only)
+#+begin_src verb :wrap src ob-verb-response :op send get-body
+get https://api.kanye.rest
+Accept: application/json
+#+end_src
+```
 
 #### Exporting Requests (`:op export ...`)
 

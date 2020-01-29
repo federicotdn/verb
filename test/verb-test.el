@@ -1765,7 +1765,17 @@
     (re-search-backward "get")
     (should-error (org-ctrl-c-ctrl-c))))
 
-(ert-deftest test-babel-non-verb-block ()
+(ert-deftest test-babel-invalid-send-arg ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "#+begin_src verb :op send foo"
+			"get http://localhost:8000/basic"
+			"#+end_src"))
+    (re-search-backward "get")
+    (should-error (org-ctrl-c-ctrl-c))))
+
+(ert-deftest test-babel-non-verb-block-in-hierarchy ()
   (with-temp-buffer
     (org-mode)
     (verb-mode)
@@ -1822,6 +1832,23 @@
 			  "  \"foo\": true,"
 			  "  \"hello\": \"world\""
 			  "}")))
+
+(ert-deftest test-babel-send-get-body ()
+  (babel-test (join-lines "* Heading 1"
+			"#+begin_src verb :op send get-body"
+			"get http://localhost:8000/basic"
+			"#+end_src")
+	      (join-lines "Hello, World!")))
+
+(ert-deftest test-babel-send-get-headers ()
+  (babel-test (join-lines "* Heading 1"
+			"#+begin_src verb :op send get-headers"
+			"get http://localhost:8000/basic-json"
+			"#+end_src")
+	      (join-lines "Connection: keep-alive"
+			  "Keep-Alive: 5"
+			  "Content-Length: 28"
+			  "Content-Type: application/json")))
 
 (ert-deftest test-babel-base-headers ()
   (let ((verb-base-headers '(("Foo" . "Bar")
