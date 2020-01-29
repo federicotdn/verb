@@ -1,5 +1,5 @@
 # Verb Changelog
-### master
+## master
 - Added `verb-trim-body-end` variable.
 
 ## **2.4.0** - 2020-01-29
