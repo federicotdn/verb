@@ -83,9 +83,9 @@ Then, move the point to one of the level 2 headings (marked with `**`), and pres
 
 ## Screenshots
 
-![Screenshot from 2020-01-11 21-52-28](https://user-images.githubusercontent.com/6868935/72210619-5b650880-34be-11ea-8916-f03d151ccc9e.png)
-
-![Screenshot from 2020-01-11 21-55-10](https://user-images.githubusercontent.com/6868935/72210620-5bfd9f00-34be-11ea-9f4a-6e3339a84d40.png)
+![n2](https://user-images.githubusercontent.com/6868935/73489132-6bc81f00-43aa-11ea-9815-2d482cb60a40.png)
+![n3](https://user-images.githubusercontent.com/6868935/73489133-6bc81f00-43aa-11ea-84c3-d9c1695145d0.png)
+![n1](https://user-images.githubusercontent.com/6868935/73489131-6b2f8880-43aa-11ea-82bd-45142b942055.png)
 
 ## Usage Guide
 
