@@ -26,6 +26,7 @@
 
 ;;; Code:
 
+(require 'ert-x)
 (require 'verb)
 (require 'ob-verb)
 
@@ -1398,7 +1399,9 @@
      (let ((inhibit-message t))
        (with-current-buffer (verb-send-request-on-point 'same-window)
 	 (while (eq verb-http-response t)
-	   (sleep-for req-sleep-time))
+	   (sleep-for req-sleep-time)
+	   (when (eq verb-url-retrieve-function #'url-queue-retrieve)
+	     (ert-run-idle-timers)))
 	 ,@body))))
 
 (defun should-log-contain (s)
@@ -1426,6 +1429,11 @@
     (should (string= (buffer-string) ""))
     (with-current-buffer (verb-re-send-request)
       (sleep-for 0.25)
+      (should (string= (buffer-string) "Hello, World!")))))
+
+(ert-deftest test-server-basic-queue ()
+  (let ((verb-url-retrieve-function #'url-queue-retrieve))
+    (server-test "basic"
       (should (string= (buffer-string) "Hello, World!")))))
 
 (ert-deftest test-server-basic ()
