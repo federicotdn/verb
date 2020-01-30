@@ -1,6 +1,6 @@
 # Verb API
 
-All hooks, variables, functions and classes starting with `verb-` but not starting with `verb--` are part of the package's public API. They are listed below. Make sure to check each symbol's documentation for more information.
+All hooks, variables, functions and classes starting with `verb-` but not starting with `verb--` are part of the package's public API. They are listed below. **Make sure to check each symbol's documentation for more information.**
 
 - Hook: **verb-mode-hook** \
   Run when Verb mode is activated (e.g. when executing M-x verb-mode).

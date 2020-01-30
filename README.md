@@ -20,13 +20,13 @@ Verb has been tested on Emacs 26 and 27.
 - Organize request specifications using Org mode.
 - Easily define common attributes (URLs, query string, headers, etc.) for many requests.
 - Correctly handle text encodings (charsets) for requests and responses.
-- View PDF, PNG, JPEG, BMP, GIF and SVG responses inside Emacs.
+- Display PDF, PNG, JPEG, BMP, GIF and SVG responses.
 - Evaluate and substitute Emacs Lisp expressions in specifications text.
 - Can export requests to `curl` format.
 - Integrates with Babel.
-- Includes mouse support (menu bar and mode line)
+- Includes mouse support (menu bar and mode line).
 - Supports uploading files on requests.
-- Optionally uses `url-queue.el` backend.
+- Optionally uses `url-queue` backend.
 - Easy to use! (hopefully).
 
 ## Installation
@@ -565,6 +565,11 @@ $ make setup-check
 After that, run the checks:
 ```bash
 $ make check
+```
+
+It's a good idea to test your changes on a vanilla Emacs instance (`-q` flag). To easily do this, use the `run` recipe:
+```bash
+$ make run
 ```
 
 ## Related Packages
