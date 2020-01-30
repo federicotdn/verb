@@ -504,6 +504,9 @@ Accept: application/json
 
 And then execute the source block again with <kbd>C-c C-c</kbd>, which will execute the export and insert the results below.
 
+### Proxies
+To use an HTTP(S) proxy with Verb, refer to the Emacs documentation for [Proxies and Gatewaying](https://www.gnu.org/software/emacs/manual/html_node/url/Proxies.html).
+
 ### Customization
 
 To see all aspects of Verb that may be customized, use <kbd>M-x</kbd> `customize-group` <kbd>RET</kbd> `verb` <kbd>RET</kbd>.

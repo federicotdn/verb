@@ -115,12 +115,6 @@ request."
   "If non-nil, do not send or receive cookies when sending requests."
   :type 'boolean)
 
-(defcustom verb-using-proxy nil
-  "Either nil or the fully qualified proxy URL in use.
-See also: `url-using-proxy'."
-  :type '(choice (string :tag "Proxy URL")
-		 (const :tag "No proxy" nil)))
-
 (defcustom verb-advice-url t
   "Whether to advice url.el functions or not.
 If non-nil, the following url.el functions will be adviced in order to
@@ -1522,7 +1516,6 @@ be loaded into."
 	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers
 				     (oref rs headers)))
-	 (url-using-proxy verb-using-proxy)
 	 (url-max-redirections verb-max-redirections)
 	 (content-type (verb--headers-content-type
 			url-request-extra-headers))

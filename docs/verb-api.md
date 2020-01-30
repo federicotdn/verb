@@ -70,8 +70,8 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
     Request headers (alist).
   - Slot: **body** \
     Request body (string).
-  - Slot: **name** \
-    User-defined request name (string).
+  - Slot: **metadata** \
+    User-defined request metadata (string). Won't be included in the sent request.
 - Class: **verb-response** \
   Represents an HTTP response.
   - Slot: **request** \
@@ -94,7 +94,6 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-auto-kill-response-buffers**
 - User Option: **verb-auto-show-headers-buffer**
 - User Option: **verb-inhibit-cookies**
-- User Option: **verb-using-proxy**
 - User Option: **verb-advice-url**
 - User Option: **verb-enable-log**
 - User Option: **verb-tag**
