@@ -76,11 +76,11 @@ Called when :op `export' is passed to `org-babel-execute:verb'."
     ("human"
      (save-window-excursion
        (with-current-buffer (verb--export-to-human rs)
-	 (buffer-string))))
+	 (verb--buffer-string-no-properties))))
     ("verb"
      (save-window-excursion
        (with-current-buffer (verb--export-to-verb rs)
-	 (buffer-string))))
+	 (verb--buffer-string-no-properties))))
     ("curl"
      (verb--export-to-curl rs t t))
     (_
