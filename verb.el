@@ -59,39 +59,40 @@ This variable is only used when the charset isn't specified in the
 header value (\"charset=utf-8\")."
   :type 'string)
 
-(defcustom verb-text-content-type-handlers
-  '(("text/html" . html-mode)
+(defcustom verb-content-type-handlers
+  '(;; Text handlers
+    ("text/html" . html-mode)
     ("application/xml" . xml-mode)
     ("application/xhtml+xml" . xml-mode)
     ("application/json" . verb--handler-json)
     ("application/javascript" . js-mode)
     ("application/css" . css-mode)
-    ("text/plain" . text-mode))
-  "Alist of text content type handlers.
-Handlers are functions to be called without any arguments.  Text
-handlers, specifically, are called after the text contents of the
-response have been decoded into a multibyte buffer (with that buffer
-as the current buffer).
-Note: if a content type is listed in
-`verb-binary-content-type-handlers', then its binary handler will be
-used instead of any handler specified here.  This behaviour can't be
-disabled."
-  :type '(alist :key-type string :value-type function))
+    ("text/plain" . text-mode)
+    ;; Binary handlers
+    ("application/pdf" . (doc-view-mode . t))
+    ("image/png" . (image-mode . t))
+    ("image/svg+xml" . (image-mode . t))
+    ("image/x-windows-bmp" . (image-mode . t))
+    ("image/gif" . (image-mode . t))
+    ("image/jpeg" . (image-mode . t)))
+  "Alist of content type handlers.
+Handlers are functions to be called without any arguments.  There are
+two types of handlers: text and binary.
 
-(defcustom verb-binary-content-type-handlers
-  '(("application/pdf" . doc-view-mode)
-    ("image/png" . image-mode)
-    ("image/svg+xml" . image-mode)
-    ("image/x-windows-bmp" . image-mode)
-    ("image/gif" . image-mode)
-    ("image/jpeg" . image-mode))
-  "Alist of binary content type handlers.
-Handlers are functions to be called without any arguments.  Binary
-handlers, specifically, are called after the binary contents of the
-response have been inserted into a unibyte buffer (with that buffer as
-the current buffer).
-See also: `verb-text-content-type-handlers'."
-  :type '(alist :key-type string :value-type function))
+Text handlers are called after the text contents of the response have
+been decoded into a multibyte buffer (with that buffer as the current
+buffer).
+
+Binary handlers, on the other hand, are called after the binary
+contents of the response have been inserted into a unibyte buffer
+\(with that buffer as the current buffer).
+
+Entries of the alist must have the form (CONTENT-TYPE . HANDLER).
+HANDLER must be either a function, in which case it will be used as a
+text handler, or (FN . t), in which case FN will be used as a binary
+handler function.  CONTENT-TYPE must be a string containing a valid
+content type."
+  :type '(alist :key-type string))
 
 (defcustom verb-export-functions
   '(("human" . verb--export-to-human)
@@ -1191,10 +1192,12 @@ present, return (nil . nil)."
 		(match-string 1 value)))
       (cons nil nil))))
 
-(defun verb--get-handler (content-type handlers-list)
-  "Get a handler from HANDLERS-LIST for a specific CONTENT-TYPE.
+(defun verb--get-handler (content-type)
+  "Get a handler from `verb-content-type-handlers' for a CONTENT-TYPE.
 CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
-  (cdr (assoc-string (car content-type) handlers-list t)))
+  (cdr (assoc-string (car content-type)
+		     verb-content-type-handlers
+		     t)))
 
 (defun verb--maybe-store-response (response)
   "Store RESPONSE depending on its request metadata.
@@ -1289,17 +1292,23 @@ view the HTTP response in a user-friendly way."
 
     ;; Read Content-Type and charset
     (setq content-type (verb--headers-content-type headers))
+    (setq charset (or (cdr content-type) verb-default-response-charset))
 
     ;; Try to get a buffer handler function for this content type
-    ;; Binary handlers have priority over text handlers
-    (setq binary-handler (verb--get-handler content-type
-					    verb-binary-content-type-handlers))
+    (let ((handler (verb--get-handler content-type)))
+      (unless handler
+	;; Default handler is fundamental mode (text)
+	(setq handler #'fundamental-mode))
 
-    (unless binary-handler
-      (setq text-handler (or (verb--get-handler content-type
-						verb-text-content-type-handlers)
-			     #'fundamental-mode))
-      (setq charset (or (cdr content-type) verb-default-response-charset)))
+      (if (functionp handler)
+	  ;; Text handler
+	  (setq text-handler handler)
+	;; Binary handler (maybe)
+	(unless (and (consp handler)
+		     (functionp (car handler))
+		     (eq (cdr handler) t))
+	  (user-error "Invalid content handler: %s" handler))
+	(setq binary-handler (car handler))))
 
     ;; Remove headers and blank line from buffer
     ;; All left should be the content

@@ -1298,20 +1298,16 @@
 		       "http://hello.com/user/test?foo&a=2&a=3&quux#baz"))
 
 (ert-deftest test-get-handler ()
-  (should (equal (verb--get-handler (cons "image/png" nil)
-				    verb-binary-content-type-handlers)
-		 #'image-mode))
+  (should (equal (verb--get-handler (cons "image/png" nil))
+		 '(image-mode . t)))
 
-  (should (equal (verb--get-handler (cons "application/pdf" nil)
-				    verb-binary-content-type-handlers)
-		 #'doc-view-mode))
+  (should (equal (verb--get-handler (cons "application/pdf" nil))
+		 '(doc-view-mode . t)))
 
-  (should (equal (verb--get-handler (cons "application/xml" nil)
-				    verb-text-content-type-handlers)
+  (should (equal (verb--get-handler (cons "application/xml" nil))
 		 #'xml-mode))
 
-  (should-not (verb--get-handler (cons "application/foobar" nil)
-				 verb-binary-content-type-handlers)))
+  (should-not (verb--get-handler (cons "application/foobar" nil))))
 
 (ert-deftest test-encode-http-body ()
   (should (string= (verb--encode-http-body "hello" "utf-8") "hello"))
@@ -1459,10 +1455,16 @@
     (should (= 13 (length (oref verb-http-response body))))
     (should (= 13 (buffer-size)))))
 
+(define-derived-mode fake-handler-mode fundamental-mode "fake"
+  "docs")
+
 (ert-deftest test-binary-image ()
   ;; Can't really display images during testing, mock the handler
-  (let ((verb-binary-content-type-handlers '(("image/png" . fundamental-mode))))
+  (let ((verb-content-type-handlers '(("image/png" . (fake-handler-mode . t)))))
+    (should (equal (verb--get-handler (cons "image/png" nil))
+		   '(fake-handler-mode . t)))
     (server-test "image"
+      (should (equal major-mode 'fake-handler-mode))
       (should (= (oref verb-http-response body-bytes) 4959))
       (should-not enable-multibyte-characters))))
 

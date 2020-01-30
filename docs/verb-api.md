@@ -88,8 +88,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
     Number of bytes in the response body (integer).
 - User Option: **verb-default-response-charset**
 - User Option: **verb-default-request-charset**
-- User Option: **verb-text-content-type-handlers**
-- User Option: **verb-binary-content-type-handlers**
+- User Option: **verb-content-type-handlers**
 - User Option: **verb-export-functions**
 - User Option: **verb-auto-kill-response-buffers**
 - User Option: **verb-auto-show-headers-buffer**

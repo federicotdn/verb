@@ -4,6 +4,7 @@
 - Extended `:op send` so that it now accepts an optional, additional `get-headers` or `get-body` argument.
 - Added "Customize Verb" button.
 - Removed `verb-using-proxy` variable, as it wasn't working as intended.
+- Combined `verb-binary-content-type-handlers` and `verb-text-content-type-handlers` variables into a unified one, `verb-content-type-handlers`.
 
 ## **2.4.0** - 2020-01-29
 - Heading properties starting with `Verb-` will now be added to requests (and responses) automatically as metadata.
