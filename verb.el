@@ -1318,7 +1318,7 @@ view the HTTP response in a user-friendly way."
 
     ;; Current buffer should be unibyte
     (when enable-multibyte-characters
-      (error "Expected a unibyte buffer for HTTP response"))
+      (error "%s" "Expected a unibyte buffer for HTTP response"))
 
     ;; Store details of request and response
     ;; `verb-http-response' is a permanent buffer local variable
@@ -1790,7 +1790,7 @@ body
 
 Neither request specification is modified, a new one is returned."
   (unless (object-of-class-p other 'verb-request-spec)
-    (error "%s" "Argument OTHER must be a `verb-request-spec'."))
+    (user-error "%s" "Argument OTHER must be a `verb-request-spec'"))
   (verb-request-spec :method (or (oref other method)
 				 (oref original method))
 		     :url (verb--override-url (oref original url)
