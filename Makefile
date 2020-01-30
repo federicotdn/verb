@@ -54,6 +54,7 @@ lint-file:
 check: clean
 	make lint-file filename=verb.el
 	make lint-file filename=ob-verb.el
+	test $$(cat *.el | grep Package-Version | uniq | wc -l) -eq 1
 
 run: clean server-bg
 	$(EMACS) -Q -L . \
