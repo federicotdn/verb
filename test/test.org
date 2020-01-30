@@ -93,5 +93,7 @@ ACCEPT: hello-world2
 *** repeated-sorted-headers
 template
 MIME-Version: foobar
+** image
+get /image.png
 * connection-fail-test
 get http://localhost:1234/test

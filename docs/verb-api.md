@@ -71,7 +71,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
   - Slot: **body** \
     Request body (string).
   - Slot: **metadata** \
-    User-defined request metadata (string). Won't be included in the sent request.
+    User-defined request metadata (alist). Won't be included in the sent request.
 - Class: **verb-response** \
   Represents an HTTP response.
   - Slot: **request** \

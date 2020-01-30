@@ -1459,6 +1459,12 @@
     (should (= 13 (length (oref verb-http-response body))))
     (should (= 13 (buffer-size)))))
 
+(ert-deftest test-binary-image ()
+  (server-test "image"
+    ;; image-mode isn't enabled in testing for some reason
+    (should (= (oref verb-http-response body-bytes) 4959))
+    (should-not enable-multibyte-characters)))
+
 (ert-deftest test-repeated-header ()
   (server-test "repeated-sorted-headers"
     (should-log-contain "Header \"MIME-Version\" will appear duplicated")))

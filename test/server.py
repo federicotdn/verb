@@ -9,29 +9,29 @@ logger.setLevel(logging.CRITICAL)
 
 
 @app.route("/basic")
-async def test1(request: Request):
+async def test1(request: Request) -> None:
     return response.text("Hello, World!")
 
 
 @app.route("/headers-test")
-async def headers_test(request: Request):
+async def headers_test(request: Request) -> None:
     return response.text(
         "HeadersTest", headers={"x-test-1": "foo", "OTHER-TEST": "bar"}
     )
 
 
 @app.route("/basic-json")
-async def test1(request: Request):
+async def basic_json(request: Request) -> None:
     return response.json({"hello": "world", "foo": True}, sort_keys=True)
 
 
 @app.route("/error-400")
-async def test2(request: Request):
+async def test2(request: Request) -> None:
     return response.text("", 400)
 
 
 @app.route("/error-401")
-async def test_401(request: Request):
+async def test_401(request: Request) -> None:
     return response.text("", 401)
 
 
@@ -40,14 +40,14 @@ async def test_401(request: Request):
 
 
 @app.route("/response-latin-1")
-async def test3(request: Request):
+async def test3(request: Request) -> None:
     return response.raw(
         "ñáéíóúß".encode("latin1"), content_type="text/plain; charset=latin1"
     )
 
 
 @app.route("/request-latin-1", methods=["POST"])
-async def test_request_latin_1(request: Request):
+async def test_request_latin_1(request: Request) -> None:
     if request.headers["Content-Type"] != "text/plain; charset=latin1":
         return response.text("FAIL")
 
@@ -58,7 +58,7 @@ async def test_request_latin_1(request: Request):
 
 
 @app.route("/request-utf-8-default", methods=["POST"])
-async def test_request_utf_8_default(request: Request):
+async def test_request_utf_8_default(request: Request) -> None:
     if request.headers["Content-Type"] != "text/plain; charset=utf-8":
         return response.text("FAIL")
 
@@ -69,7 +69,7 @@ async def test_request_utf_8_default(request: Request):
 
 
 @app.route("/request-utf-8-default-2", methods=["POST"])
-async def test_request_utf_8_default_2(request: Request):
+async def test_request_utf_8_default_2(request: Request) -> None:
     if request.body.decode("utf-8") != "áéíóúñü":
         return response.text("FAIL")
 
@@ -77,18 +77,18 @@ async def test_request_utf_8_default_2(request: Request):
 
 
 @app.route("/response-utf-8-default")
-async def test4(request: Request):
+async def test4(request: Request) -> None:
     # Do not specify charset=
     return response.raw("ñáéíóúß".encode("utf-8"), content_type="text/plain")
 
 
 @app.route("/response-big5")
-async def test5(request: Request):
+async def test5(request: Request) -> None:
     return response.raw("常用字".encode("big5"), content_type="text/plain; charset=big5")
 
 
 @app.route("")
-async def test6(request: Request):
+async def test6(request: Request) -> None:
     if request.args.get("foo") == "bar":
         return response.text("OK")
 
@@ -96,27 +96,27 @@ async def test6(request: Request):
 
 
 @app.route("/redirect-301")
-async def test_redirect_301(request: Request):
+async def test_redirect_301(request: Request) -> None:
     return response.redirect("/basic", status=301)
 
 
 @app.route("/redirect-302")
-async def test_redirect_302(request: Request):
+async def test_redirect_302(request: Request) -> None:
     return response.redirect("/basic", status=302)
 
 
 @app.route("/redirect-308-2", methods=["POST"])
-async def test_redirect_308_2(request: Request):
+async def test_redirect_308_2(request: Request) -> None:
     return response.text("Redirect successful")
 
 
 @app.route("/redirect-308", methods=["POST"])
-async def test_redirect_308(request: Request):
+async def test_redirect_308(request: Request) -> None:
     return response.redirect("/redirect-308-2", status=308)
 
 
 @app.route("/no-user-agent")
-async def no_user_agent(request: Request):
+async def no_user_agent(request: Request) -> None:
     if "User-Agent" in request.headers:
         return response.text("FAIL")
 
@@ -124,7 +124,7 @@ async def no_user_agent(request: Request):
 
 
 @app.route("/content-length", methods=["POST"])
-async def content_length(request: Request):
+async def content_length(request: Request) -> None:
     if "Content-Length" not in request.headers:
         return response.text("FAIL")
 
@@ -135,19 +135,22 @@ async def content_length(request: Request):
 
 
 @app.route("/echo", methods=["POST"])
-async def echo(request: Request):
+async def echo(request: Request) -> None:
     return response.text(request.body.decode("utf-8"))
 
 
 @app.route("/zero-bytes-json")
-async def zero_bytes_json(request: Request):
+async def zero_bytes_json(request: Request) -> None:
     return response.text("", headers={"Content-Type": "application/json"})
 
 
 @app.route("/sorted-headers")
-async def sorted_headers(request: Request):
+async def sorted_headers(request: Request) -> None:
     headers = sorted(k.lower() + ": " + v for k, v in request.headers.items())
     return response.text("\n".join(headers), headers={"Content-Type": "text/plain"})
+
+
+app.static("/image.png", "test/image.png")
 
 
 if __name__ == "__main__":
