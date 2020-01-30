@@ -1460,10 +1460,11 @@
     (should (= 13 (buffer-size)))))
 
 (ert-deftest test-binary-image ()
-  (server-test "image"
-    ;; image-mode isn't enabled in testing for some reason
-    (should (= (oref verb-http-response body-bytes) 4959))
-    (should-not enable-multibyte-characters)))
+  ;; Can't really display images during testing, mock the handler
+  (let ((verb-binary-content-type-handlers '(("image/png" . fundamental-mode))))
+    (server-test "image"
+      (should (= (oref verb-http-response body-bytes) 4959))
+      (should-not enable-multibyte-characters))))
 
 (ert-deftest test-repeated-header ()
   (server-test "repeated-sorted-headers"
