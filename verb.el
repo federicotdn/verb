@@ -392,6 +392,7 @@ comfortably.  All commands listed in this keymap automatically enable
 	["Export request to human-readable" verb-export-request-on-point-human]
 	["Export request to Verb" verb-export-request-on-point-verb]
 	"--"
+	["Customize Verb" verb-customize-group]
 	["View log" verb-view-log]))
     map)
   "Keymap for `verb-mode'.")
@@ -569,6 +570,11 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
   "Switch to the *Verb Log* buffer."
   (interactive)
   (switch-to-buffer (get-buffer-create verb--log-buffer-name)))
+
+(defun verb-customize-group ()
+  "Show the Customize menu buffer for the Verb package group."
+  (interactive)
+  (customize-group "verb"))
 
 (defun verb--log (request level &rest args)
   "Log a message in the *Verb Log* buffer.

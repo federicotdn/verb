@@ -58,6 +58,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-toggle-show-headers**
 - Command: **verb-set-var** *var*
 - Command: **verb-view-log**
+- Command: **verb-customize-group**
 - Macro: **verb-var** *var*
 - Class: **verb-request-spec** \
   Represents an HTTP request specification.

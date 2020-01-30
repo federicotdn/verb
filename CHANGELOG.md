@@ -2,6 +2,7 @@
 ## master
 - Added `verb-trim-body-end` variable.
 - Extended `:op send` so that it now accepts an optional, additional `get-headers` or `get-body` argument.
+- Added "Customize Verb" button.
 
 ## **2.4.0** - 2020-01-29
 - Heading properties starting with `Verb-` will now be added to requests (and responses) automatically as metadata.
