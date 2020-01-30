@@ -176,6 +176,50 @@
     (goto-char (point-min))
     (should-error (verb--heading-contents))))
 
+(ert-deftest test-request-spec-from-hierarchy-babel-blocks-above ()
+  (setq tgt-spec (verb-request-spec :method "GET"
+				    :url (verb--clean-url
+					  "http://hello.com")))
+
+  (setq outline-test
+	(join-lines "* Test :verb:"
+		    "#+begin_src verb"
+		    "template http://hello.com"
+		    "#+end_src"
+		    "** Test2"
+		    "get"))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert outline-test)
+    (should (equal (verb--request-spec-from-hierarchy) tgt-spec)))
+
+  (setq outline-test
+	(join-lines "* Test :verb:"
+		    "#+begin_src            verb"
+		    "template http://hello.com"
+		    "#+end_src"
+		    "** Test2"
+		    "get"))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert outline-test)
+    (should (equal (verb--request-spec-from-hierarchy) tgt-spec)))
+
+  (setq outline-test
+	(join-lines "* Test :verb:"
+		    "#+begin_src python"
+		    "print('hellooooo')"
+		    "#+end_src"
+		    "** Test2"
+		    "get"))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert outline-test)
+    (should-error (verb--request-spec-from-hierarchy))))
+
 (ert-deftest test-request-spec-from-hierarchy-ignore-nontagged ()
   (setq test-rs (verb-request-spec :method "GET"
 				   :url (verb--clean-url "http://hello.com")))

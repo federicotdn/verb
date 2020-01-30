@@ -753,7 +753,7 @@ If no Babel source blocks are found, return TEXT."
     (let ((case-fold-search t)
 	  start result)
       (when (search-forward "#+begin_src" nil t)
-	(unless (looking-at " verb")
+	(unless (looking-at " +verb")
 	  (user-error "%s" (concat "Found a non-verb Babel source block\n"
 				   "Make sure all source blocks in the "
 				   "hierarchy use \"verb\" as language")))
