@@ -1873,6 +1873,17 @@
 			  "-X POST \\"
 			  "--data-raw '{}'")))
 
+(ert-deftest test-babel-human ()
+  (babel-test (join-lines "#+begin_src verb :op export human"
+			  "delete http://example.org"
+			  "#+end_src")
+	      (join-lines "HTTP Method: DELETE"
+			  "URL: http://example.org"
+			  "Headers:"
+			  "    No headers defined."
+			  ""
+			  "No body defined.")))
+
 (ert-deftest test-babel-send ()
   (babel-test (join-lines "* Heading 1    :verb:"
 			"template http://localhost:8000"

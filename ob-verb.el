@@ -73,14 +73,16 @@ with the contents of the exported request.
 
 Called when :op `export' is passed to `org-babel-execute:verb'."
   (pcase name
-    ("human"
+    ((or "human" "verb")
      (save-window-excursion
-       (with-current-buffer (verb--export-to-human rs)
-	 (verb--buffer-string-no-properties))))
-    ("verb"
-     (save-window-excursion
-       (with-current-buffer (verb--export-to-verb rs)
-	 (verb--buffer-string-no-properties))))
+       (let (result)
+	 (with-current-buffer (funcall (if (string= name "human")
+					   #'verb--export-to-human
+					 #'verb--export-to-verb)
+				       rs)
+	   (setq result (verb--buffer-string-no-properties))
+	   (kill-buffer)
+	   result))))
     ("curl"
      (verb--export-to-curl rs t t))
     (_
