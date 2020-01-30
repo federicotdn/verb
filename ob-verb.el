@@ -75,11 +75,11 @@ Called when :op `export' is passed to `org-babel-execute:verb'."
   (pcase name
     ((or "human" "verb")
      (save-window-excursion
-       (let (result)
-	 (with-current-buffer (funcall (if (string= name "human")
-					   #'verb--export-to-human
-					 #'verb--export-to-verb)
-				       rs)
+       (let ((fn (if (string= name "human")
+		     #'verb--export-to-human
+		   #'verb--export-to-verb))
+	     result)
+	 (with-current-buffer (funcall fn rs)
 	   (setq result (verb--buffer-string-no-properties))
 	   (kill-buffer)
 	   result))))
