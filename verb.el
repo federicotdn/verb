@@ -781,17 +781,33 @@ request spec, not only the section contained by the source block."
   (save-excursion
     (goto-char pos)
     (let ((rs (verb-request-spec-from-string body))
-	  (req-metadata (verb--heading-properties verb--metadata-prefix)))
-      ;; Go up one level first. Do this to avoid re-reading the
-      ;; request in the current level (contained in the source block)
-      (verb--up-heading)
-      ;; Continue reading requests from the headings
-      ;; hierarchy. Pre-include the one we read from the source block
-      ;; at the end of the list.
-      (setq rs (verb--request-spec-from-hierarchy rs))
-      ;; Set the request metadata if any
-      (oset rs metadata req-metadata)
-      rs)))
+	  (metadata (verb--heading-properties verb--metadata-prefix)))
+      ;; Go up one level first, if possible. Do this to avoid
+      ;; re-reading the request in the current level (contained in the
+      ;; source block). If no more levels exist, skip the call to
+      ;; `verb--request-spec-from-hierarchy'.
+      (when (verb--up-heading)
+	;; Continue reading requests from the headings
+	;; hierarchy. Pre-include the one we read from the source block
+	;; at the end of the list.
+	(setq rs (verb--request-spec-from-hierarchy rs)))
+      (verb--request-spec-post-process rs metadata))))
+
+(defun verb--request-spec-post-process (rs rs-metadata)
+  "Validate and prepare request spec RS to be used.
+- Run validations with `verb-request-spec-validate'.
+- Set the RS's metadata slot to RS-METADATA.
+- Check if `verb-base-headers' needs to be applied.
+Return another request spec corresponding to RS."
+  ;; Set metadata
+  (oset rs metadata rs-metadata)
+  ;; Use `verb-base-headers' if necessary
+  (when verb-base-headers
+    (setq rs (verb-request-spec-override
+	      (verb-request-spec :headers verb-base-headers)
+	      rs)))
+  ;; Validate and return
+  (verb-request-spec-validate rs))
 
 (defun verb--request-spec-from-hierarchy (&rest specs)
   "Return a request spec generated from the headings hierarchy.
@@ -802,7 +818,7 @@ Once all the request specs have been collected, override them in
 inverse order according to the rules described in
 `verb-request-spec-override'.  After that, override that result with
 all the request specs in SPECS, in the order they were passed in."
-  (let (done final-spec req-metadata)
+  (let (done final-spec metadata)
     (save-excursion
       ;; First, go back to the current heading, if possible. If no
       ;; heading is found, then don't attempt to read anything.
@@ -811,8 +827,7 @@ all the request specs in SPECS, in the order they were passed in."
       ;; is the highest level heading we'll read. Extract metadata
       ;; from heading.
       (unless (or done specs)
-	(setq req-metadata
-	      (verb--heading-properties verb--metadata-prefix)))
+	(setq metadata (verb--heading-properties verb--metadata-prefix)))
       ;; If there's at least one heading above us, go up through the
       ;; headings tree taking a request specification from each level.
       (while (not done)
@@ -821,8 +836,6 @@ all the request specs in SPECS, in the order they were passed in."
 	(setq done (not (verb--up-heading)))))
     (if specs
 	(progn
-	  (when verb-base-headers
-	    (push (verb-request-spec :headers verb-base-headers) specs))
 	  (setq final-spec (car specs))
 	  (when (< 1 (length specs))
 	    (dolist (spec (cdr specs))
@@ -830,10 +843,8 @@ all the request specs in SPECS, in the order they were passed in."
 	      ;; 3, then with 4, etc.
 	      (setq final-spec (verb-request-spec-override final-spec
 							   spec))))
-	  ;; Set the request metadata if any
-	  (oset final-spec metadata req-metadata)
-	  ;; Validate and return
-	  (verb-request-spec-validate final-spec))
+	  ;; Process and return
+	  (verb--request-spec-post-process final-spec metadata))
       (user-error (concat "No request specifications found\n"
 			  "Remember to tag your headlines with :%s:")
 		  verb-tag))))

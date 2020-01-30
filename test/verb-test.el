@@ -1840,6 +1840,13 @@
 			"#+end_src")
 	      (join-lines "Hello, World!")))
 
+(ert-deftest test-babel-send-get-body-tagged ()
+  (babel-test (join-lines "* Heading 1            :verb:"
+			"#+begin_src verb :op send get-body"
+			"get http://localhost:8000/basic"
+			"#+end_src")
+	      (join-lines "Hello, World!")))
+
 (ert-deftest test-babel-send-get-headers ()
   (babel-test (join-lines "* Heading 1"
 			"#+begin_src verb :op send get-headers"
