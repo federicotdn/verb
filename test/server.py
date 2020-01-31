@@ -9,7 +9,7 @@ logger.setLevel(logging.CRITICAL)
 
 
 @app.route("/basic")
-async def test1(request: Request) -> None:
+async def basic(request: Request) -> None:
     return response.text("Hello, World!")
 
 
@@ -26,28 +26,24 @@ async def basic_json(request: Request) -> None:
 
 
 @app.route("/error-400")
-async def test2(request: Request) -> None:
+async def error_400(request: Request) -> None:
     return response.text("", 400)
 
 
 @app.route("/error-401")
-async def test_401(request: Request) -> None:
+async def error_401(request: Request) -> None:
     return response.text("", 401)
 
 
-# Charset list:
-# https://www.w3.org/International/O-charset-list.html
-
-
 @app.route("/response-latin-1")
-async def test3(request: Request) -> None:
+async def response_latin_1(request: Request) -> None:
     return response.raw(
         "ñáéíóúß".encode("latin1"), content_type="text/plain; charset=latin1"
     )
 
 
 @app.route("/request-latin-1", methods=["POST"])
-async def test_request_latin_1(request: Request) -> None:
+async def request_latin_1(request: Request) -> None:
     if request.headers["Content-Type"] != "text/plain; charset=latin1":
         return response.text("FAIL")
 
@@ -58,7 +54,7 @@ async def test_request_latin_1(request: Request) -> None:
 
 
 @app.route("/request-utf-8-default", methods=["POST"])
-async def test_request_utf_8_default(request: Request) -> None:
+async def request_utf_8_default(request: Request) -> None:
     if request.headers["Content-Type"] != "text/plain; charset=utf-8":
         return response.text("FAIL")
 
@@ -69,7 +65,7 @@ async def test_request_utf_8_default(request: Request) -> None:
 
 
 @app.route("/request-utf-8-default-2", methods=["POST"])
-async def test_request_utf_8_default_2(request: Request) -> None:
+async def request_utf_8_default_2(request: Request) -> None:
     if request.body.decode("utf-8") != "áéíóúñü":
         return response.text("FAIL")
 
@@ -77,18 +73,18 @@ async def test_request_utf_8_default_2(request: Request) -> None:
 
 
 @app.route("/response-utf-8-default")
-async def test4(request: Request) -> None:
+async def response_utf_8_default(request: Request) -> None:
     # Do not specify charset=
     return response.raw("ñáéíóúß".encode("utf-8"), content_type="text/plain")
 
 
 @app.route("/response-big5")
-async def test5(request: Request) -> None:
+async def response_big_5(request: Request) -> None:
     return response.raw("常用字".encode("big5"), content_type="text/plain; charset=big5")
 
 
-@app.route("")
-async def test6(request: Request) -> None:
+@app.route("/")
+async def root(request: Request) -> None:
     if request.args.get("foo") == "bar":
         return response.text("OK")
 
@@ -96,22 +92,22 @@ async def test6(request: Request) -> None:
 
 
 @app.route("/redirect-301")
-async def test_redirect_301(request: Request) -> None:
+async def redirect_301(request: Request) -> None:
     return response.redirect("/basic", status=301)
 
 
 @app.route("/redirect-302")
-async def test_redirect_302(request: Request) -> None:
+async def redirect_302(request: Request) -> None:
     return response.redirect("/basic", status=302)
 
 
 @app.route("/redirect-308-2", methods=["POST"])
-async def test_redirect_308_2(request: Request) -> None:
+async def redirect_308_2(request: Request) -> None:
     return response.text("Redirect successful")
 
 
 @app.route("/redirect-308", methods=["POST"])
-async def test_redirect_308(request: Request) -> None:
+async def redirect_308(request: Request) -> None:
     return response.redirect("/redirect-308-2", status=308)
 
 
@@ -153,10 +149,14 @@ async def sorted_headers(request: Request) -> None:
 app.static("/image.png", "test/image.png")
 
 
-if __name__ == "__main__":
+def main() -> None:
     if "SKIP_PIDFILE" not in os.environ:
         pidfile = os.path.join(os.path.dirname(__file__), "server.pid")
         with open(pidfile, "w") as f:
             f.write(str(os.getpid()))
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "8000")), access_log=False)
+
+
+if __name__ == "__main__":
+    main()
