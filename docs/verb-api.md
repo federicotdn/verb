@@ -96,7 +96,6 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-advice-url**
 - User Option: **verb-enable-log**
 - User Option: **verb-tag**
-- User Option: **verb-max-redirections**
 - User Option: **verb-show-timeout-warning**
 - User Option: **verb-code-tag-delimiters**
 - User Option: **verb-url-retrieve-function**

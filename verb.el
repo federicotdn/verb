@@ -128,11 +128,6 @@ Note that the functions will be adviced only during the duration of
 the HTTP requests made."
   :type 'boolean)
 
-(defcustom verb-max-redirections url-max-redirections
-  "Max number of redirection requests to honor in an HTTP connection.
-See also: `url-max-redirections'."
-  :type 'integer)
-
 (defcustom verb-auto-show-headers-buffer nil
   "Automatically show headers buffer after receiving an HTTP response.
 Value nil means never show the headers buffer.
@@ -1525,7 +1520,6 @@ be loaded into."
 	 (url-request-method (verb--to-ascii (oref rs method)))
 	 (url-request-extra-headers (verb--prepare-http-headers
 				     (oref rs headers)))
-	 (url-max-redirections verb-max-redirections)
 	 (content-type (verb--headers-content-type
 			url-request-extra-headers))
 	 (url-request-data (verb--encode-http-body (oref rs body)

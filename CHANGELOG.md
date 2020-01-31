@@ -1,4 +1,7 @@
 # Verb Changelog
+## master
+- Removed `verb-max-redirections` variable, as it wasn't working as intended. Use `url-max-redirections` instead.
+
 ## **2.5.0** - 2020-01-30
 - Added `verb-trim-body-end` variable.
 - Extended `:op send` so that it now accepts an optional, additional `get-headers` or `get-body` argument.
