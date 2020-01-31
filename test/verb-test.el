@@ -826,7 +826,11 @@
 (ert-deftest test-verb-var ()
   (setq test-var-1 "xyz")
   (should (string= (verb--eval-lisp-code-in-string "{{(verb-var test-var-1)}}")
-		   "xyz")))
+		   "xyz"))
+
+  (should (string= (verb--eval-lisp-code-in-string "{{(verb-var test-var-2 \"foo\")}}")
+		   "foo"))
+  (should (string= test-var-2 "foo")))
 
 (ert-deftest test-verb-set-var-error ()
   (setq verb--vars nil)

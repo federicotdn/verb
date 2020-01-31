@@ -32,34 +32,34 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Variable: **verb-command-map** \
   Keymap for Verb mode commands.
 - Variable: **verb-response-headers-mode-map**
-- Function: **org-babel-execute:verb** *body* *params*
+- Function: **org-babel-execute:verb** *body params*
 - Function: **verb-read-file** *file*
 - Function: **verb-stored-response** *key* \
   Retrieve a previously stored HTTP response.
-- Function: **verb-json-get** *text* *path*
-- Function: **verb-response-to-string** *resp* *buf*
+- Function: **verb-json-get** *text &rest path*
+- Function: **verb-response-to-string** *resp buf*
 - Function: **verb-request-spec-validate** *rs*
 - Function: **verb-request-spec-url-to-string** *rs*
 - Function: **verb-request-spec-to-string** *rs*
 - Function: **verb-request-spec-from-string** *text*
-- Function: **verb-request-spec-override** *original* *other*
+- Function: **verb-request-spec-override** *original other*
 - Error: **verb-empty-spec**
 - Command: **verb-send-request-on-point** *where*
 - Command: **verb-send-request-on-point-other-window**
 - Command: **verb-send-request-on-point-other-window-stay**
 - Command: **verb-re-send-request**
-- Command: **verb-kill-all-response-buffers** *keep-windows*
+- Command: **verb-kill-all-response-buffers** *&optional keep-windows*
 - Command: **verb-export-request-on-point** *name*
 - Command: **verb-export-request-on-point-verb**
 - Command: **verb-export-request-on-point-human**
 - Command: **verb-export-request-on-point-curl**
-- Command: **verb-kill-response-buffer-and-window** *keep-window*
+- Command: **verb-kill-response-buffer-and-window** *&optional keep-window*
 - Command: **verb-kill-buffer-and-window**
 - Command: **verb-toggle-show-headers**
-- Command: **verb-set-var** *var*
+- Command: **verb-set-var** *&optional var*
 - Command: **verb-view-log**
 - Command: **verb-customize-group**
-- Macro: **verb-var** *var*
+- Macro: **verb-var** *&optional var default*
 - Class: **verb-request-spec** \
   Represents an HTTP request specification.
   - Slot: **method** \
