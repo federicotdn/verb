@@ -389,11 +389,11 @@ Content-Type: application/json
 }
 
 ** Get last created user
-get /{{(cdr (assoc-string "id" (json-read-from-string (oref (verb-stored-response "new-user") body))))}}
+get /{{(verb-json-get (oref (verb-stored-response "new-user") body) "id")}}
 Accept: application/json
 ```
 
-After the "Create a user" request has been sent at least once, the result will be stored internally under "new-user". It can then be used later at any time. Sending the request again will overwrite the previous value. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always set `verb-last` globally.
+After the "Create a user" request has been sent at least once, the result will be stored internally under "new-user". It can then be used later at any time. Sending the request again will overwrite the previous value. Killing the response buffer will not erase the stored response. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always set `verb-last` globally.
 
 **Note**: When reading heading properties, Verb ignores parent headings, so no properties are inherited.
 
