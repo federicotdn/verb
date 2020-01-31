@@ -2,7 +2,7 @@ SHELL = bash
 EMACS ?= emacs
 PORT ?= 8000
 NOOUTPUT = { ! grep '^'; }
-PACKAGE_LINT = package-lint
+VENDOR = vendor
 FONT_SIZE ?= 180
 ENV ?= env
 ACTIVATE = source $(ENV)/bin/activate
@@ -40,7 +40,11 @@ test: clean server-bg
 	exit $$ret
 
 setup-check:
-	git clone https://github.com/purcell/package-lint.git $(PACKAGE_LINT)
+	rm -rf $(VENDOR)
+	mkdir $(VENDOR)
+	git clone https://github.com/purcell/package-lint.git $(VENDOR)/package-lint
+	git clone https://github.com/mattiase/xr.git $(VENDOR)/xr
+	git clone https://github.com/mattiase/relint.git $(RELINT) $(VENDOR)/relint
 
 lint-file:
 	$(EMACS) --batch -L . \
@@ -48,8 +52,10 @@ lint-file:
 	yes n | $(EMACS) --batch \
 			 --eval '(find-file "$(filename)")' \
 			 --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
-	$(EMACS) --batch -l $(PACKAGE_LINT)/package-lint.el \
+	$(EMACS) --batch -l $(VENDOR)/package-lint/package-lint.el \
 			 -f package-lint-batch-and-exit "$(filename)"
+	$(EMACS) --batch -l $(VENDOR)/xr/xr.el -l $(VENDOR)/relint/relint.el \
+			 -f relint-batch "$(filename)"
 
 check: clean
 	make lint-file filename=verb.el

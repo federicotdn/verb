@@ -1188,7 +1188,7 @@ present, return (nil . nil)."
 						     value ";"))))))
     (if (and value type-subtype)
 	(cons type-subtype
-	      (when (string-match "charset=\\([[:alnum:]-.]+\\)" value)
+	      (when (string-match "charset=\\([[:alnum:]-]+\\)" value)
 		(match-string 1 value)))
       (cons nil nil))))
 

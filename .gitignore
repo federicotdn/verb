@@ -17,8 +17,8 @@
 # Test server pidfile
 test/server.pid
 
-# package-lint installation directory
-/package-lint
+# linting packages installation directory
+/vendor
 
 # autoloads
 verb-autoloads.el
