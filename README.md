@@ -102,7 +102,7 @@ Accept: application/json
 # heading, there's no need to repeat it here.
 # We can also add more headers.
 post /post
-Content-Type: application/json
+Content-Type: application/json; charset=utf-8
 
 {
     "foo": "bar"
@@ -260,7 +260,9 @@ The body will include everything starting from the line next to the blank line a
 
 **Note**: By default, all whitespace present will be included in the request body. You can control this behaviour with the `verb-trim-body-end` variable, for example, set it to `"[ \t\n\r]+"` to trim all trailing whitespace. This is useful if you wish to leave some blank lines between request specifications for increased readability.
 
-To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header of the request. If the header is present but `charset` is not defined, or if the header is not present, the charset `verb-default-request-charset` will be used (default: `utf-8`). Note that the current buffer's encoding has no effect on how the request body is encoded.
+To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header of the request. If the header is present but `charset` is not defined, or if the header is not present, the charset `verb-default-request-charset` will be used (default: `utf-8`). Note that the current buffer's file encoding has no effect on how the request body is encoded.
+
+If your body contains binary data (i.e. raw bytes that do not correspond to any particular character), that data will be sent without any encoding.
 
 ### Extend and Override Requests
 
@@ -275,7 +277,7 @@ Content-Language: de-DE
 * Create a user          :verb:
 post https://reqres.in/api/users
 Accept: application/json
-Content-Type: application/json
+Content-Type: application/json; charset=utf-8
 
 {
     "name": "John",
@@ -296,7 +298,7 @@ Content-Language: de-DE
 
 ** Create a user
 post
-Content-Type: application/json
+Content-Type: application/json; charset=utf-8
 
 {
     "name": "John",
@@ -331,7 +333,7 @@ template /users
 
 *** Create a user
 post
-Content-Type: application/json
+Content-Type: application/json; charset=utf-8
 
 {
     "name": "John",
@@ -376,7 +378,7 @@ Content-Language: de-DE
 
 ** Create a user
 post
-Content-Type: application/json
+Content-Type: application/json; charset=utf-8
 
 {
     "name": "{{(user-full-name)}}",
@@ -417,7 +419,7 @@ So, for example, we could modify our create/retrieve user endpoints like so:
 :Verb-Store: new-user
 :end:
 post
-Content-Type: application/json
+Content-Type: application/json; charset=utf-8
 
 {
     "name": "{{(user-full-name)}}",
@@ -440,7 +442,7 @@ You may have noticed that because headings start with `*`, you cannot include li
 ```
 ** Upload file to user storage
 post /{{(verb-var user-id)}}/upload
-Content-Type: text/markdown
+Content-Type: text/markdown; charset=utf-8
 
 # Sample Markdown file
 
@@ -455,12 +457,14 @@ To upload a file, you can use the included `verb-read-file` function. This funct
 ```
 ** Upload file to user storage
 post /{{(verb-var user-id)}}/upload
-Content-Type: text/markdown
+Content-Type: text/markdown; charset=utf-8
 
 {{(verb-read-file "documents/myfile.md")}}
 ```
 
 Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this for you. This will let the server know how to interpret the contents of the request.
+
+**Note**: If uploading binary files (e.g. a PNG image), it's a good idea to set `verb-read-file`'s second argument (`coding-system`) to `'binary`. This will instruct Emacs to insert the file contents into the request buffer as raw bytes.
 
 ### Base Headers
 
