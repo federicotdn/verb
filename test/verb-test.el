@@ -825,10 +825,10 @@
 
 (ert-deftest test-verb-var ()
   (setq test-var-1 "xyz")
-  (should (string= (verb--eval-lisp-code-in-string "{{(verb-var test-var-1)}}")
+  (should (string= (verb--eval-code-tags-in-string "{{(verb-var test-var-1)}}")
 		   "xyz"))
 
-  (should (string= (verb--eval-lisp-code-in-string "{{(verb-var test-var-2 \"foo\")}}")
+  (should (string= (verb--eval-code-tags-in-string "{{(verb-var test-var-2 \"foo\")}}")
 		   "foo"))
   (should (string= test-var-2 "foo")))
 
@@ -837,24 +837,24 @@
   (should-error (verb-set-var "test")))
 
 (ert-deftest test-verb-eval-lisp-code-in ()
-  (should (string= (verb--eval-lisp-code-in-string "1 {{1}}")
+  (should (string= (verb--eval-code-tags-in-string "1 {{1}}")
 		   "1 1"))
 
-  (should (string= (verb--eval-lisp-code-in-string "{{}}--")
+  (should (string= (verb--eval-code-tags-in-string "{{}}--")
 		   "--"))
 
-  (should (string= (verb--eval-lisp-code-in-string "1 {{(+ 1 1)}}")
+  (should (string= (verb--eval-code-tags-in-string "1 {{(+ 1 1)}}")
 		   "1 2"))
 
   (setq hello 99)
-  (should (string= (verb--eval-lisp-code-in-string "1 {{(+ 1 hello)}}")
+  (should (string= (verb--eval-code-tags-in-string "1 {{(+ 1 hello)}}")
 		   "1 100"))
 
-  (should (string= (verb--eval-lisp-code-in-string "{{\"{{\"}}")
+  (should (string= (verb--eval-code-tags-in-string "{{\"{{\"}}")
   		   "{{"))
 
   (setq num-buffers (length (buffer-list)))
-  (should (string= (verb--eval-lisp-code-in-string "{{(verb-read-file \"test/test.txt\")}}")
+  (should (string= (verb--eval-code-tags-in-string "{{(verb-read-file \"test/test.txt\")}}")
   		   "Example text!\n"))
   (should (= (length (buffer-list)) num-buffers))
 
@@ -863,16 +863,16 @@
   (with-current-buffer testbuf
     (insert "TEST"))
 
-  (should (string= (verb--eval-lisp-code-in-string "this is a {{(get-buffer \"testbuffer\")}}")
+  (should (string= (verb--eval-code-tags-in-string "this is a {{(get-buffer \"testbuffer\")}}")
   		   "this is a TEST"))
 
   (should (buffer-live-p testbuf))
   (kill-buffer testbuf)
 
-  (should (string= (verb--eval-lisp-code-in-string "{{\"}\"}}{{\"}\"}}")
+  (should (string= (verb--eval-code-tags-in-string "{{\"}\"}}{{\"}\"}}")
   		   "}}"))
 
-  (should-error (verb--eval-lisp-code-in-string "Hello {{asdfasdf}}")))
+  (should-error (verb--eval-code-tags-in-string "Hello {{asdfasdf}}")))
 
 (ert-deftest test-url-port ()
   (should (null (verb--url-port (verb--clean-url "http://hello.com"))))

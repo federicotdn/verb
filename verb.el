@@ -1808,7 +1808,7 @@ As a special case, if S is the empty string, return the empty string."
       (save-match-data
 	(eval (car (read-from-string (format "(progn %s)" s))) t)))))
 
-(defun verb--eval-lisp-code-in-buffer (buf)
+(defun verb--eval-code-tags-in-buffer (buf)
   "Evalue and replace Lisp code within code tags in buffer BUF.
 Code tags are delimited with `verb-code-tag-delimiters'."
   (when buf
@@ -1830,13 +1830,13 @@ Code tags are delimited with `verb-code-tag-delimiters'."
 	   (t
 	    (replace-match (format "%s" result)))))))))
 
-(defun verb--eval-lisp-code-in-string (s)
-  "Like `verb--eval-lisp-code-in-buffer', but in a string S.
+(defun verb--eval-code-tags-in-string (s)
+  "Like `verb--eval-code-tags-in-buffer', but in a string S.
 Return a modified string."
   (with-temp-buffer
     (insert s)
     (goto-char (point-min))
-    (verb--eval-lisp-code-in-buffer (current-buffer))
+    (verb--eval-code-tags-in-buffer (current-buffer))
     (verb--buffer-string-no-properties)))
 
 (defun verb--clean-url (url)
@@ -1943,7 +1943,7 @@ signal an error."
       ;; Read HTTP method and URL line
       ;; First, expand any code tags on it (if any)
       (let ((case-fold-search t)
-	    (line (verb--eval-lisp-code-in-string
+	    (line (verb--eval-code-tags-in-string
 		   (buffer-substring-no-properties (point)
 						   (line-end-position)))))
 	(if (string-match (concat "^\\s-*\\("
@@ -1983,7 +1983,7 @@ signal an error."
 				   (string-trim-left line))
 	    ;; Check if line matches KEY: VALUE after evaluating any
 	    ;; present code tags
-	    (setq line (verb--eval-lisp-code-in-string line))
+	    (setq line (verb--eval-code-tags-in-string line))
 	    (if (string-match "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\(.*\\)$"
 			      line)
 		;; Line matches, trim KEY and VALUE and store them
@@ -1999,7 +1999,7 @@ signal an error."
 
       ;; Expand code tags in the rest of the buffer (if any)
       (save-excursion
-	(verb--eval-lisp-code-in-buffer (current-buffer)))
+	(verb--eval-code-tags-in-buffer (current-buffer)))
 
       ;; Skip blank line after headers
       (unless (eobp) (forward-char))
