@@ -734,10 +734,11 @@ If not on a heading, signal an error."
   (when (or (member verb-tag (verb--heading-tags))
 	    (eq verb-tag t))
     (let ((text (verb--maybe-extract-babel-src-block
-		 (verb--heading-contents))))
+		 (verb--heading-contents)))
+	  (metadata (verb--heading-properties verb--metadata-prefix)))
       (unless (string-empty-p text)
 	(condition-case nil
-	    (verb-request-spec-from-string text)
+	    (verb-request-spec-from-string text metadata)
 	  (verb-empty-spec nil))))))
 
 (defun verb--maybe-extract-babel-src-block (text)
@@ -776,8 +777,8 @@ Note that the entire buffer will be considered when generating the
 request spec, not only the section contained by the source block."
   (save-excursion
     (goto-char pos)
-    (let ((rs (verb-request-spec-from-string body))
-	  (metadata (verb--heading-properties verb--metadata-prefix)))
+    (let* ((metadata (verb--heading-properties verb--metadata-prefix))
+	   (rs (verb-request-spec-from-string body metadata)))
       ;; Go up one level first, if possible. Do this to avoid
       ;; re-reading the request in the current level (contained in the
       ;; source block). If no more levels exist, skip the call to
@@ -787,16 +788,13 @@ request spec, not only the section contained by the source block."
 	;; hierarchy. Pre-include the one we read from the source block
 	;; at the end of the list.
 	(setq rs (verb--request-spec-from-hierarchy rs)))
-      (verb--request-spec-post-process rs metadata))))
+      (verb--request-spec-post-process rs))))
 
-(defun verb--request-spec-post-process (rs rs-metadata)
+(defun verb--request-spec-post-process (rs)
   "Validate and prepare request spec RS to be used.
-- Run validations with `verb-request-spec-validate'.
-- Set the RS's metadata slot to RS-METADATA.
 - Check if `verb-base-headers' needs to be applied.
+- Run validations with `verb-request-spec-validate'.
 Return another request spec corresponding to RS."
-  ;; Set metadata
-  (oset rs metadata rs-metadata)
   ;; Use `verb-base-headers' if necessary
   (when verb-base-headers
     (setq rs (verb-request-spec-override
@@ -814,16 +812,11 @@ Once all the request specs have been collected, override them in
 inverse order according to the rules described in
 `verb-request-spec-override'.  After that, override that result with
 all the request specs in SPECS, in the order they were passed in."
-  (let (done final-spec metadata)
+  (let (done final-spec)
     (save-excursion
       ;; First, go back to the current heading, if possible. If no
       ;; heading is found, then don't attempt to read anything.
       (setq done (not (verb--back-to-heading)))
-      ;; If there's at least one heading, and SPECS is nil, then this
-      ;; is the highest level heading we'll read. Extract metadata
-      ;; from heading.
-      (unless (or done specs)
-	(setq metadata (verb--heading-properties verb--metadata-prefix)))
       ;; If there's at least one heading above us, go up through the
       ;; headings tree taking a request specification from each level.
       (while (not done)
@@ -840,7 +833,7 @@ all the request specs in SPECS, in the order they were passed in."
 	      (setq final-spec (verb-request-spec-override final-spec
 							   spec))))
 	  ;; Process and return
-	  (verb--request-spec-post-process final-spec metadata))
+	  (verb--request-spec-post-process final-spec))
       (user-error (concat "No request specifications found\n"
 			  "Remember to tag your headlines with :%s:")
 		  verb-tag))))
@@ -1778,6 +1771,10 @@ body
 
   Use OTHER's body if it is non-nil, otherwise use ORIGINAL's.
 
+metadata
+
+  Always use OTHER's metadata.
+
 Neither request specification is modified, a new one is returned."
   (unless (object-of-class-p other 'verb-request-spec)
     (user-error "%s" "Argument OTHER must be a `verb-request-spec'"))
@@ -1787,7 +1784,8 @@ Neither request specification is modified, a new one is returned."
 					      (oref other url))
 		     :headers (verb--override-headers (oref original headers)
 						      (oref other headers))
-		     :body (or (oref other body) (oref original body))))
+		     :body (or (oref other body) (oref original body))
+		     :metadata (oref other metadata)))
 
 (defun verb--http-methods-regexp ()
   "Return a regexp to match an HTTP method.
@@ -1809,30 +1807,32 @@ As a special case, if S is the empty string, return the empty string."
 	(eval (car (read-from-string (format "(progn %s)" s))) t)))))
 
 (defun verb--eval-code-tags-in-buffer (buf)
-  "Evalue and replace Lisp code within code tags in buffer BUF.
-Code tags are delimited with `verb-code-tag-delimiters'."
-  (when buf
-    (with-current-buffer buf
-      (while (re-search-forward (concat (car verb-code-tag-delimiters)
-					"\\(.*?\\)"
-					(cdr verb-code-tag-delimiters))
-				nil t)
-	(let ((result (verb--eval-string (match-string 1))))
-	  (cond
-	   ((stringp result)
-	    (replace-match result))
-	   ((bufferp result)
-	    (goto-char (match-beginning 0))
-	    (delete-region (match-beginning 0) (match-end 0))
-	    (insert-buffer-substring result)
-	    (when (buffer-local-value 'verb-kill-this-buffer result)
-	      (kill-buffer result)))
-	   (t
-	    (replace-match (format "%s" result)))))))))
+  "Evalue code tags within buffer BUF.
+Replace the code tags with the results of their own evaluations.  Code
+tags are delimited with `verb-code-tag-delimiters'.
+BUF's coding system and/or use of multibyte may be modified by this
+function."
+  (with-current-buffer buf
+    (while (re-search-forward (concat (car verb-code-tag-delimiters)
+				      "\\(.*?\\)"
+				      (cdr verb-code-tag-delimiters))
+			      nil t)
+      (let ((result (verb--eval-string (match-string 1))))
+	(cond
+	 ((stringp result)
+	  (replace-match result))
+	 ((bufferp result)
+	  (goto-char (match-beginning 0))
+	  (delete-region (match-beginning 0) (match-end 0))
+	  (insert-buffer-substring result)
+	  (when (buffer-local-value 'verb-kill-this-buffer result)
+	    (kill-buffer result)))
+	 (t
+	  (replace-match (format "%s" result))))))))
 
 (defun verb--eval-code-tags-in-string (s)
   "Like `verb--eval-code-tags-in-buffer', but in a string S.
-Return a modified string."
+Return a new string with the code tags expanded."
   (with-temp-buffer
     (insert s)
     (goto-char (point-min))
@@ -1874,7 +1874,7 @@ and fragment component of a URL with no host or schema defined."
 (define-error 'verb-empty-spec
   "Request specification has no contents.")
 
-(defun verb-request-spec-from-string (text)
+(defun verb-request-spec-from-string (text &optional metadata)
   "Create and return a request specification from string TEXT.
 
 The text format for request specifications is the following:
@@ -1910,6 +1910,10 @@ string, VALUE can be the nonempty string.
 
 BODY can contain arbitrary text.  Note that there must be a blank
 line between the HEADER list and BODY.
+
+Before returning the request specification, set its metadata to
+METADATA.  Additionally, METADATA may be used to modify other
+components of the returned value.
 
 As a special case, if the text specification consists exclusively of
 comments and/or whitespace, or is the empty string, signal
@@ -2020,7 +2024,8 @@ signal an error."
 			 :url (unless (string-empty-p (or url ""))
 				(verb--clean-url url))
 			 :headers headers
-			 :body body))))
+			 :body body
+			 :metadata metadata))))
 
 (provide 'verb)
 ;;; verb.el ends here
