@@ -1406,23 +1406,13 @@ view the HTTP response in a user-friendly way."
 Add/modify/remove the following headers if they are not already
 present/incomplete:
 
-Content-Type:
-  Add \"charset=\" to it if not already present.
-
 Accept:
   Remove header from list (will be set via `url-mime-accept-string').
 
 Uses `verb--to-ascii' to ensure all added text is unibyte.
 Returns a new alist, does not modify HEADERS."
   (let* ((headers (copy-alist headers))
-	 (content-type (assoc-string "Content-Type" headers t))
 	 (accept (assoc-string "Accept" headers t)))
-    ;; Content-Type
-    (when (and content-type
-	       (not (string-match-p "charset=" (cdr content-type))))
-      (setcdr content-type (concat (cdr content-type)
-				   "; charset="
-				   verb-default-request-charset)))
     ;; ;; Accept
     (when accept
       (setq headers (cl-delete "Accept" headers

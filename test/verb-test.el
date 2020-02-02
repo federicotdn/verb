@@ -1350,13 +1350,6 @@
 
   (should (equal (verb--prepare-http-headers '(("A" . "test")
 					       ("B" . "test")
-					       ("Content-Type" . "text")))
-		 '(("A" . "test")
-		   ("B" . "test")
-		   ("Content-Type" . "text; charset=utf-8"))))
-
-  (should (equal (verb--prepare-http-headers '(("A" . "test")
-					       ("B" . "test")
 					       ("Content-Type" . "text; charset=hello")))
 		 '(("A" . "test")
 		   ("B" . "test")
@@ -1534,7 +1527,7 @@
   (server-test "request-utf-8-default"
     (should (string= (buffer-string) "OK"))))
 
-(ert-deftest test-server-request-utf-8-default ()
+(ert-deftest test-server-request-utf-8-default-2 ()
   (server-test "request-utf-8-default-2"
     (should (string= (buffer-string) "OK"))))
 

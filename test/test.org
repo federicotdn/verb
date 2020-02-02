@@ -42,13 +42,13 @@ Content-Type: text/plain; charset=latin1
 
 áéíóúñü
 ** request-utf-8-default
-# No not set charset=
+# No set charset=
 post /request-utf-8-default
 Content-Type: text/plain
 
 áéíóúñü
 ** request-utf-8-default-2
-# No not set Content-Type
+# No set Content-Type
 post /request-utf-8-default-2
 
 áéíóúñü

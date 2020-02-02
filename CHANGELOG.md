@@ -2,6 +2,7 @@
 ## master
 - Removed `verb-max-redirections` variable, as it wasn't working as intended. Use `url-max-redirections` instead.
 - Add `default` argument to `verb-var`.
+- Removed automatic addition of `charset=` value in `Content-Type` request headers.
 
 ## **2.5.0** - 2020-01-30
 - Added `verb-trim-body-end` variable.

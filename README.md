@@ -260,7 +260,7 @@ The body will include everything starting from the line next to the blank line a
 
 **Note**: By default, all whitespace present will be included in the request body. You can control this behaviour with the `verb-trim-body-end` variable, for example, set it to `"[ \t\n\r]+"` to trim all trailing whitespace. This is useful if you wish to leave some blank lines between request specifications for increased readability.
 
-To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header. If the header is present but `charset` is not defined, the charset `verb-default-request-charset` will be used (default: `utf-8`) and added to the header value. If the header is not present, the charset `verb-default-request-charset` will be used, but no `Content-Type` header will be sent. Note that the current buffer's encoding has no effect on how the request body is encoded.
+To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header of the request. If the header is present but `charset` is not defined, or if the header is not present, the charset `verb-default-request-charset` will be used (default: `utf-8`). Note that the current buffer's encoding has no effect on how the request body is encoded.
 
 ### Extend and Override Requests
 

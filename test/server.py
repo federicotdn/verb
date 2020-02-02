@@ -55,7 +55,7 @@ async def request_latin_1(request: Request) -> None:
 
 @app.route("/request-utf-8-default", methods=["POST"])
 async def request_utf_8_default(request: Request) -> None:
-    if request.headers["Content-Type"] != "text/plain; charset=utf-8":
+    if request.headers["Content-Type"] != "text/plain":
         return response.text("FAIL")
 
     if request.body.decode("utf-8") != "áéíóúñü":
