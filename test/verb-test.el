@@ -1415,6 +1415,17 @@
       (goto-char (point-min))
       (should (search-forward s)))))
 
+(defun test-log ()
+  (clear-log)
+
+  (verb--log nil 'I "Hello, World!")
+  (should-log-contain "- I Hello, World!")
+
+  (verb--log 1 'I "Hello, World!")
+  (should-log-contain "1 I Hello, World!")
+
+  (should-error (verb--log 1 'X "foo")))
+
 (defun get-response-buffers ()
   (seq-filter (lambda (b) (buffer-local-value 'verb-http-response b))
 	      (buffer-list)))
@@ -1682,10 +1693,13 @@
   (should-error (verb-stored-response "adfsadfsadf")))
 
 (ert-deftest test-connection-error ()
+  (clear-log)
   (setq num-buffers (length (buffer-list)))
   (ignore-errors
     (server-test "connection-fail-test"))
-  (should (= num-buffers (length (buffer-list)))))
+  (should (= num-buffers (length (buffer-list))))
+  (should-log-contain "Request error")
+  (should-log-contain "Error details"))
 
 (defun should-curl (rs-text &rest lines)
   (should (string= (verb--export-to-curl

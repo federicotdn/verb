@@ -1258,9 +1258,11 @@ view the HTTP response in a user-friendly way."
 			  (cadr error-info)))
       (kill-buffer (current-buffer))
       (kill-buffer response-buf)
-      (verb--log num 'E "Connection error: %s" http-error)
-      (user-error "Failed to connect to host %s (port: %s)"
-		  (url-host url) (url-port url))))
+      (let ((msg (format "Request error: could not connect to %s:%s"
+			 (url-host url) (url-port url))))
+	(verb--log num 'E msg)
+	(verb--log num 'E "Error details: %s" http-error)
+	(user-error msg))))
 
   ;; No errors, continue to read response
   (let ((elapsed (- (time-to-seconds) start))
