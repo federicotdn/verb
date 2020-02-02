@@ -99,10 +99,10 @@ get /image.png
 post /body-md5
 Content-Type: image/png
 
-{{(verb-read-file "image.png")}}
+{{(verb-read-file "image.png" 'binary)}}
 ** upload-binary
 post /body-md5
 
-{{(verb-read-file "test.bin")}}
+{{(verb-read-file "test.bin" 'binary)}}
 * connection-fail-test
 get http://localhost:1234/test

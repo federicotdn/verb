@@ -1343,6 +1343,8 @@ view the HTTP response in a user-friendly way."
 	  (with-current-buffer response-buf
 	    (fundamental-mode)
 	    (set-buffer-multibyte nil)
+	    (set-buffer-file-coding-system 'binary)
+
 	    (buffer-disable-undo)
 	    ;; Copy bytes into RESPONSE-BUF
 	    (insert-buffer-substring original-buffer)
@@ -1350,11 +1352,6 @@ view the HTTP response in a user-friendly way."
 	    (funcall binary-handler)))
 
       ;; Response content is text:
-
-      ;; Convert buffer to multibyte, contents are still raw bytes from
-      ;; the response
-      (set-buffer-multibyte 'to)
-      (set-buffer-file-coding-system 'binary)
 
       ;; Choose corresponding coding system for charset
       (setq coding-system (or (mm-charset-to-coding-system charset)

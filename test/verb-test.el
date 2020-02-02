@@ -1481,7 +1481,8 @@
     (server-test "image"
       (should (equal major-mode 'fake-handler-mode))
       (should (= (oref verb-http-response body-bytes) 4959))
-      (should-not enable-multibyte-characters))))
+      (should-not enable-multibyte-characters)
+      (should (coding-system-equal buffer-file-coding-system 'binary)))))
 
 (ert-deftest test-repeated-header ()
   (clear-log)
