@@ -130,9 +130,21 @@ async def content_length(request: Request) -> None:
     return response.text("OK")
 
 
+@app.route("/body-md5", methods=["POST"])
+async def body_md5(request: Request) -> None:
+    import hashlib
+    return response.text(hashlib.md5(request.body).hexdigest())
+
+
 @app.route("/echo", methods=["POST"])
 async def echo(request: Request) -> None:
-    return response.text(request.body.decode("utf-8"))
+    charset = "utf-8"
+    if "Content-Type" in request.headers:
+        ct = request.headers["Content-Type"]
+        if "charset=" in ct:
+            charset = ct.split("charset=")[-1].strip()
+
+    return response.text(request.body.decode(charset))
 
 
 @app.route("/zero-bytes-json")

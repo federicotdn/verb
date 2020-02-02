@@ -95,5 +95,14 @@ template
 MIME-Version: foobar
 ** image
 get /image.png
+** upload-image
+post /body-md5
+Content-Type: image/png
+
+{{(verb-read-file "image.png")}}
+** upload-binary
+post /body-md5
+
+{{(verb-read-file "test.bin")}}
 * connection-fail-test
 get http://localhost:1234/test

@@ -338,6 +338,7 @@
     (verb-mode)
     (insert (join-lines "* test :verb:"
 			":properties:"
+			":Verb-Foo: xyz"
 			":Verb-Name: X"
 			":end:"
 			"** Test"
@@ -1314,9 +1315,10 @@
   (should-not (verb--get-handler (cons "application/foobar" nil))))
 
 (ert-deftest test-encode-http-body ()
-  (should (string= (verb--encode-http-body "hello" "utf-8") "hello"))
+  (should (string= (verb--encode-http-body "helló" "utf-8") "hell\303\263"))
+  (should (string= (verb--encode-http-body "helló" nil) "hell\303\263"))
   (should (string= (verb--encode-http-body "hello" nil) "hello"))
-  (should-error (verb--encode-http-body "hello" "foobar")))
+  (should-error (verb--encode-http-body "helló" "foobar")))
 
 (ert-deftest test-headers-content-type ()
   (should (equal (verb--headers-content-type
@@ -1568,6 +1570,16 @@
   ;; default user agent from url.el should not be included
   (server-test "no-user-agent"
     (should (string= (buffer-string) "OK"))))
+
+(ert-deftest test-image-upload-md5 ()
+  (server-test "upload-image"
+    (should (string= (buffer-string)
+                     "935ef9d8ab56be5b6265becf6135e1d9"))))
+
+(ert-deftest test-bin-upload-md5 ()
+  (server-test "upload-binary"
+    (should (string= (buffer-string)
+                     "aa0f16d7831947b778dac603c29871fd"))))
 
 (ert-deftest test-content-length-request ()
   (server-test "content-length-1"

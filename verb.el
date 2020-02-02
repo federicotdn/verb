@@ -911,12 +911,15 @@ been set once with `verb-var'."
 				nil t))))
     (set (intern v) (read-string (format "Set value for %s: " v)))))
 
-(defun verb-read-file (file)
+(defun verb-read-file (file &optional coding-system)
   "Return a buffer with the contents of FILE.
+If CODING-SYSTEM system is a valid coding system, use it when reading
+the file contents (see `coding-system-for-read' for more information).
 Set the buffer's `verb-kill-this-buffer' variable to t."
   (with-current-buffer (generate-new-buffer " *verb-temp*")
     (buffer-disable-undo)
-    (insert-file-contents file)
+    (let ((coding-system-for-read coding-system))
+      (insert-file-contents file))
     (setq verb-kill-this-buffer t)
     (current-buffer)))
 
@@ -1912,8 +1915,7 @@ BODY can contain arbitrary text.  Note that there must be a blank
 line between the HEADER list and BODY.
 
 Before returning the request specification, set its metadata to
-METADATA.  Additionally, METADATA may be used to modify other
-components of the returned value.
+METADATA.
 
 As a special case, if the text specification consists exclusively of
 comments and/or whitespace, or is the empty string, signal
