@@ -29,6 +29,42 @@ Verb has been tested on Emacs 26 and 27.
 - Optionally uses `url-queue` backend.
 - Easy to use! (hopefully).
 
+## Table of Contents
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Screenshots](#screenshots)
+- [Usage Guide](#usage-guide)
+  - [Writing Request Specifications](#writing-request-specifications)
+  - [Enabling Verb in Org Buffers](#enabling-verb-in-org-buffers)
+  - [Sending Requests](#sending-requests)
+  - [The Response Body Buffer](#the-response-body-buffer)
+  - [Re-sending requests](#re-sending-requests)
+  - [The Response Headers Buffer](#the-response-headers-buffer)
+  - [Specifying HTTP Headers](#specifying-http-headers)
+  - [Adding a Body](#adding-a-body)
+  - [Extend and Override Requests](#extend-and-override-requests)
+  - [Emacs Lisp Code Tags](#emacs-lisp-code-tags)
+  - [Last Response](#last-response)
+  - [Storing Responses by Key](#storing-responses-by-key)
+  - [Body Lines starting with `*`](#body-lines-starting-with-)
+  - [File Uploads](#file-uploads)
+  - [Base Headers](#base-headers)
+  - [Export Requests](#export-requests)
+  - [Babel Integration](#babel-integration)
+    - [Sending Requests](#sending-requests-op-send)
+    - [Send with Partial Retrieval](#send-with-partial-retrieval-op-send-)
+    - [Exporting Requests](#exporting-requests-op-export-)
+  - [Proxies](#proxies)
+  - [Customization](#customization)
+  - [Verb Log](#verb-log)
+- [Hooks, Variables, Functions](#hooks-variables-functions)
+- [Examples](#examples)
+- [Troubleshooting](#troubleshooting)
+- [Changelog](#changelog)
+- [Contributing](#contributing)
+- [Related Packages](#related-packages)
+- [License](#license)
+
 ## Installation
 You can install Verb by using the `package-install` command (make sure either [MELPA](https://melpa.org/) or [MELPA Stable](https://stable.melpa.org/) are included in your package sources):
 
