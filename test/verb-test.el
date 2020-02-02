@@ -1404,6 +1404,11 @@
 	     (ert-run-idle-timers)))
 	 ,@body))))
 
+(defun clear-log ()
+  (with-current-buffer verb--log-buffer-name
+    (let ((inhibit-read-only t))
+      (erase-buffer))))
+
 (defun should-log-contain (s)
   (with-current-buffer verb--log-buffer-name
     (save-excursion
@@ -1473,6 +1478,7 @@
       (should-not enable-multibyte-characters))))
 
 (ert-deftest test-repeated-header ()
+  (clear-log)
   (server-test "repeated-sorted-headers"
     (should-log-contain "Header \"MIME-Version\" will appear duplicated")))
 
