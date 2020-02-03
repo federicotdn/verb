@@ -333,6 +333,8 @@ here under its value.")
     (define-key map (kbd "C-k") #'verb-kill-all-response-buffers)
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
     (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
+    (define-key map (kbd "C-b") #'verb-export-request-on-point-verb)
+    (define-key map (kbd "C-n") #'verb-export-request-on-point-human)
     (define-key map (kbd "C-v") #'verb-set-var)
     map)
   "Keymap for `verb-mode' commands.
