@@ -886,7 +886,7 @@ Delete the window only if it isn't the only window in the frame."
   (ignore-errors
     (delete-window)))
 
-(defmacro verb-var (&optional var default)
+(defmacro verb-var (var &optional default)
   "Return value of variable VAR.
 If VAR is unbound, use `read-string' to set its value first, unless
 DEFAULT is non-nil, in which case that value is used instead."
