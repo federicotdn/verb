@@ -22,15 +22,15 @@ template /search.json
 
 *** By Title
 #+BEGIN_SRC verb :wrap src ob-verb-response
-get ?title={{(read-string "Title: ")}}
+get ?title={{(verb-var title)}}
 #+END_SRC
 
 *** By Author
-get ?author={{(read-string "Author: ")}}
+get ?author={{(verb-var author "Frank Herbert")}}
 
 ** Subjects
 # This API is experimental. Please be aware that this may change in future.
-get /subjects/{{(read-string "Subject: ")}}.json
+get /subjects/{{(verb-var subject)}}.json
 
 ** Books
 :properties:
