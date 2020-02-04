@@ -1698,14 +1698,20 @@
 (ert-deftest test-no-stored-response ()
   (should-error (verb-stored-response "adfsadfsadf")))
 
-(ert-deftest test-connection-error ()
+(ert-deftest test-connection-error-port ()
   (clear-log)
   (setq num-buffers (length (buffer-list)))
-  (ignore-errors
-    (server-test "connection-fail-test"))
+  (should-error (server-test "connection-fail-port"))
   (should (= num-buffers (length (buffer-list))))
   (should-log-contain "Request error")
   (should-log-contain "Error details"))
+
+(ert-deftest test-connection-error-host ()
+  (clear-log)
+  (setq num-buffers (length (buffer-list)))
+  (should-error (server-test "connection-fail-host"))
+  (should (= num-buffers (length (buffer-list))))
+  (should-log-contain "Error sending request"))
 
 (defun should-curl (rs-text &rest lines)
   (should (string= (verb--export-to-curl

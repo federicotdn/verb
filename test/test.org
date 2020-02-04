@@ -104,5 +104,9 @@ Content-Type: image/png
 post /body-md5
 
 {{(verb-read-file "test.bin" 'binary)}}
-* connection-fail-test
+* connection-fail-port
+# Valid host but invalid port
 get http://localhost:1234/test
+* connection-fail-host
+# Invalid host
+get http://foobarfoobarfoobarfoobarabcdefg/test

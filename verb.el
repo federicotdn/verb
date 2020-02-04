@@ -1535,31 +1535,32 @@ be loaded into."
 		   h)))
 
     ;; Send the request!
-    (let ((err t))
-      (unwind-protect
-	  (progn
-	    (funcall verb-url-retrieve-function
-		     url
-		     #'verb--request-spec-callback
-		     (list rs
-			   response-buf
-			   (time-to-seconds)
-			   timeout-timer
-			   where
-			   num)
-		     t verb-inhibit-cookies)
-	    (setq err nil))
-	;; If an error occurred while sending the request, do some
-	;; cleanup as the callback won't be called
-	(when err
-	  ;; Cancel timer
-	  (when timeout-timer
-	    (cancel-timer timeout-timer)
-	    (setq timeout-timer nil))
-	  ;; Kill response buffer
-	  (kill-buffer response-buf)
-	  ;; Undo advice
-	  (verb--unadvice-url))))
+    (condition-case err
+	(funcall verb-url-retrieve-function
+		 url
+		 #'verb--request-spec-callback
+		 (list rs
+		       response-buf
+		       (time-to-seconds)
+		       timeout-timer
+		       where
+		       num)
+		 t verb-inhibit-cookies)
+      (error (progn
+	       ;; Cancel timer
+	       (when timeout-timer
+		 (cancel-timer timeout-timer)
+		 (setq timeout-timer nil))
+	       ;; Kill response buffer
+	       (kill-buffer response-buf)
+	       ;; Undo advice
+	       (verb--unadvice-url)
+
+	       (let ((msg (format "Error sending request: %s" (cadr err))))
+		 ;; Log the error
+		 (verb--log num 'E msg)
+		 ;; Signal it
+		 (user-error msg)))))
 
     ;; Show user some quick information
     (message "%s request sent to %s"
