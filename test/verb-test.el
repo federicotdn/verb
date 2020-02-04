@@ -1707,6 +1707,7 @@
   (should-log-contain "Error details"))
 
 (ert-deftest test-connection-error-host ()
+  (skip-unless (eq system-type 'darwin))
   (clear-log)
   (setq num-buffers (length (buffer-list)))
   (should-error (server-test "connection-fail-host"))
