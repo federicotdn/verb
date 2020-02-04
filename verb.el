@@ -318,8 +318,8 @@ Responses are stored only when the corresponding HTTP request contains
 a nonempty \"Verb-Store\" metadata field.  The response will be stored
 here under its value.")
 
-(defvar verb--vars nil
-  "List of variables set with `verb-var'.")
+(defvar-local verb--vars nil
+  "List of values set with `verb-var', with their corresponding names.")
 
 (defvar verb--requests-count 0
   "Number of HTTP requests sent in the past.")
@@ -889,29 +889,37 @@ Delete the window only if it isn't the only window in the frame."
     (delete-window)))
 
 (defmacro verb-var (var &optional default)
-  "Return value of variable VAR.
-If VAR is unbound, use `read-string' to set its value first, unless
-DEFAULT is non-nil, in which case that value is used instead."
-  (unless (boundp var)
-    (set var (or default
-		 (read-string (format "(verb-var) Set value for %s: "
-				      var)))))
-  (add-to-list 'verb--vars var)
-  (symbol-value var))
+  "Return value of Verb variable VAR.
+If VAR is has no value yet, use `read-string' to set its value first,
+unless DEFAULT is non-nil, in which case that value is used instead."
+  (let ((val (assoc-string var verb--vars)))
+    (unless val
+      (setq val (cons var
+		      (or default
+			  (read-string (format "(verb-var) Set value for %s: "
+					       var)))))
+      (push val verb--vars))
+    (cdr val)))
 
-(defun verb-set-var (&optional var)
+(defun verb-set-var (&optional var value)
   "Set new value for variable VAR previously set with `verb-var'.
 When called interactively, prompt the user for a variable that has
-been set once with `verb-var'."
+been set once with `verb-var', and then prompt for VALUE."
   (interactive)
   (verb--ensure-verb-mode)
   (unless verb--vars
     (user-error "%s" (concat "No variables have been initialized yet\n"
 			     "Run a {{(verb-var my-var)}} code tag first")))
-  (let ((v (or var
-	       (completing-read "Variable: " (mapcar #'symbol-name verb--vars)
-				nil t))))
-    (set (intern v) (read-string (format "Set value for %s: " v)))))
+  (let* ((v (or var
+	       (completing-read "Variable: " (mapcar (lambda (e)
+						       (symbol-name (car e)))
+						     verb--vars)
+				nil t)))
+	 (val (or value (read-string (format "Set value for %s: " v))))
+	 (elem (assoc-string v verb--vars)))
+    (if elem
+	(setcdr elem val)
+      (user-error "Variable does not exist: %s" v))))
 
 (defun verb-read-file (file &optional coding-system)
   "Return a buffer with the contents of FILE.
@@ -1800,27 +1808,29 @@ Additionally, allow matching `verb--template-keyword'."
 			     (downcase verb--template-keyword)))))
     (mapconcat #'identity terms "\\|")))
 
-(defun verb--eval-string (s)
+(defun verb--eval-string (s &optional context)
   "Eval S as Lisp code and return the result.
-As a special case, if S is the empty string, return the empty string."
+When evaluating the code, use buffer CONTEXT as the current buffer.
+If CONTEXT is nil, use the already current buffer as context.  As a
+special case, if S is the empty string, return the empty string."
   (if (string-empty-p s)
       ""
     (save-mark-and-excursion
       (save-match-data
-	(eval (car (read-from-string (format "(progn %s)" s))) t)))))
+	(with-current-buffer (or context (current-buffer))
+	  (eval (car (read-from-string (format "(progn %s)" s))) t))))))
 
-(defun verb--eval-code-tags-in-buffer (buf)
+(defun verb--eval-code-tags-in-buffer (buf context)
   "Evalue code tags within buffer BUF.
+When evaluating the code, use buffer CONTEXT as the current buffer.
 Replace the code tags with the results of their own evaluations.  Code
-tags are delimited with `verb-code-tag-delimiters'.
-BUF's coding system and/or use of multibyte may be modified by this
-function."
+tags are delimited with `verb-code-tag-delimiters'."
   (with-current-buffer buf
     (while (re-search-forward (concat (car verb-code-tag-delimiters)
 				      "\\(.*?\\)"
 				      (cdr verb-code-tag-delimiters))
 			      nil t)
-      (let ((result (verb--eval-string (match-string 1))))
+      (let ((result (verb--eval-string (match-string 1) context)))
 	(cond
 	 ((stringp result)
 	  (replace-match result))
@@ -1833,13 +1843,15 @@ function."
 	 (t
 	  (replace-match (format "%s" result))))))))
 
-(defun verb--eval-code-tags-in-string (s)
+(defun verb--eval-code-tags-in-string (s &optional context)
   "Like `verb--eval-code-tags-in-buffer', but in a string S.
-Return a new string with the code tags expanded."
+Use buffer CONTEXT as the current buffer, or a temporal one if CONTEXT
+is nil.  Return a new string with the code tags expanded."
   (with-temp-buffer
     (insert s)
     (goto-char (point-min))
-    (verb--eval-code-tags-in-buffer (current-buffer))
+    (verb--eval-code-tags-in-buffer (current-buffer)
+				    (or context (current-buffer)))
     (verb--buffer-string-no-properties)))
 
 (defun verb--clean-url (url)
@@ -1923,7 +1935,8 @@ comments and/or whitespace, or is the empty string, signal
 
 If TEXT does not conform to the request specification text format,
 signal an error."
-  (let (method url headers body)
+  (let ((context (current-buffer))
+	method url headers body)
     (with-temp-buffer
       (insert text)
       (goto-char (point-min))
@@ -1951,7 +1964,8 @@ signal an error."
       (let ((case-fold-search t)
 	    (line (verb--eval-code-tags-in-string
 		   (buffer-substring-no-properties (point)
-						   (line-end-position)))))
+						   (line-end-position))
+		   context)))
 	(if (string-match (concat "^\\s-*\\("
 				  (verb--http-methods-regexp)
 				  "\\)\\s-+\\(.+\\)$")
@@ -1989,7 +2003,7 @@ signal an error."
 				   (string-trim-left line))
 	    ;; Check if line matches KEY: VALUE after evaluating any
 	    ;; present code tags
-	    (setq line (verb--eval-code-tags-in-string line))
+	    (setq line (verb--eval-code-tags-in-string line context))
 	    (if (string-match "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\(.*\\)$"
 			      line)
 		;; Line matches, trim KEY and VALUE and store them
@@ -2005,7 +2019,7 @@ signal an error."
 
       ;; Expand code tags in the rest of the buffer (if any)
       (save-excursion
-	(verb--eval-code-tags-in-buffer (current-buffer)))
+	(verb--eval-code-tags-in-buffer (current-buffer) context))
 
       ;; Skip blank line after headers
       (unless (eobp) (forward-char))

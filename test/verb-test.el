@@ -825,17 +825,48 @@
   (should (string= (verb--eval-string "") "")))
 
 (ert-deftest test-verb-var ()
-  (setq test-var-1 "xyz")
-  (should (string= (verb--eval-code-tags-in-string "{{(verb-var test-var-1)}}")
-		   "xyz"))
-
-  (should (string= (verb--eval-code-tags-in-string "{{(verb-var test-var-2 \"foo\")}}")
-		   "foo"))
-  (should (string= test-var-2 "foo")))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (should (string= (verb--eval-string "(verb-var test-var-1 \"hello\")"
+					(current-buffer))
+		     "hello"))
+    (verb-set-var "test-var-1" "bye")
+    (should (string= (verb--eval-string "(verb-var test-var-1)"
+					(current-buffer))
+		     "bye"))
+    (should (= (length verb--vars) 1))
+    (should-error (verb-set-var "test-foo" "1")))
+  (with-temp-buffer
+    (should-not verb--vars)))
 
 (ert-deftest test-verb-set-var-error ()
-  (setq verb--vars nil)
-  (should-error (verb-set-var "test")))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (setq verb--vars nil)
+    (should-error (verb-set-var "test"))))
+
+(ert-deftest test-eval-code-tags-context ()
+  (with-temp-buffer
+    (should (string= (buffer-name)
+		     (verb--eval-code-tags-in-string "{{(buffer-name)}}"
+						     (current-buffer))))))
+
+(ert-deftest test-eval-code-tags-context-2 ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (setq fill-column 9000) ; buffer local
+    (insert (join-lines "* H1 :verb:"
+			"get http://example.com/{{fill-column}}"))
+    (should (equal (verb--request-spec-from-hierarchy)
+		   (verb-request-spec :method "GET"
+				      :url (verb--clean-url
+					    "http://example.com/9000")))))
+  (with-temp-buffer
+    ;; yep!
+    (should (= fill-column 70))))
 
 (ert-deftest test-verb-eval-lisp-code-in ()
   (should (string= (verb--eval-code-tags-in-string "1 {{1}}")

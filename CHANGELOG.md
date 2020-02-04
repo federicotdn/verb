@@ -2,6 +2,8 @@
 ## master
 - Bind `verb-export-request-on-point-verb` to `C-b` in the Verb command map.
 - Bind `verb-export-request-on-point-human` to `C-n` in the Verb command map.
+- Variables created with `verb-var` are now buffer-local, and are not defined as global values.
+- Code tags are now evaluated with the current `.org` buffer as the current buffer.
 
 ## **2.6.0** - 2020-02-03
 - Removed `verb-max-redirections` variable, as it wasn't working as intended. Use `url-max-redirections` instead.
