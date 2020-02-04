@@ -1684,6 +1684,19 @@
 			    "  \"empty-object\": {}"
 			    "}"))
 
+(ert-deftest test-headers-get ()
+  (setq test-headers '(("Content-Type" . "application/json")
+		       ("Accept" . "")))
+  (should (string= (verb-headers-get test-headers "Content-Type")
+		   "application/json"))
+  (should (string= (verb-headers-get test-headers "Content-type")
+		   "application/json"))
+  (should (string= (verb-headers-get test-headers "content-Type")
+		   "application/json"))
+  (should (string= (verb-headers-get test-headers "accept")
+		   ""))
+  (should-error (verb-headers-get "foo")))
+
 (ert-deftest test-json-get ()
   (should-error (verb-json-get test-json))
   (should-error (verb-json-get test-json 1.0))

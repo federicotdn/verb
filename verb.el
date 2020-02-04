@@ -614,6 +614,15 @@ If `verb-enable-log' is nil, do not log anything."
       nil
     s))
 
+(defun verb-headers-get (headers name)
+  "Return value for HTTP header under NAME in HEADERS.
+HEADERS must be an alist of (KEY . VALUE) elements.  NAME and KEY will
+be compared ignoring case.  If no value is present under NAME, signal
+an error."
+  (if-let ((val (assoc-string name headers t)))
+      (cdr val)
+    (user-error "HTTP header has no value for \"%s\"" name)))
+
 (defun verb-json-get (text &rest path)
   "Interpret TEXT as a JSON object and return value under PATH.
 The outermost JSON element in TEXT must be an object.

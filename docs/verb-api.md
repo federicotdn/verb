@@ -37,6 +37,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Function: **verb-stored-response** *key* \
   Retrieve a previously stored HTTP response.
 - Function: **verb-json-get** *text &rest path*
+- Function: **verb-headers-get** *headers name*
 - Function: **verb-response-to-string** *resp buf*
 - Function: **verb-request-spec-validate** *rs*
 - Function: **verb-request-spec-url-to-string** *rs*

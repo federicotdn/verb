@@ -127,6 +127,8 @@ Then, move the point to one of the level 2 headings (marked with `**`), and pres
 
 This guide assumes that you're using <kbd>C-c C-r</kbd> as the prefix key for all Verb commands, and that you're also getting started with Org mode.
 
+All public (and private) variables and functions in the Verb package are documented. If you wish to know more about one of them, use <kbd>C-h v</kbd> and <kbd>C-h f</kbd> respectively.
+
 ### Writing Request Specifications
 After setting up Verb, begin by creating a new `guide.org` file. In the example file, add the following contents:
 
@@ -405,6 +407,8 @@ Accept: application/json
 
 The `verb-json-get` function takes a JSON-formatted text as its first argument and a list of keys as the rest, and returns the value under those keys in the JSON text (similar to how [JSONPath](https://goessner.net/articles/JsonPath/) works). This function is useful for using previous responses' contents, check its documentation for more details.
 
+If you wish to use the last response's headers instead, you can use the `verb-headers-get` function. An example call may look like: `(verb-headers-get (oref verb-last headers) "Content-Type")`, which will return the string contents of the `Content-Type` response header.
+
 ### Storing Responses by Key
 
 When writing a request specification, you may add [properties](https://orgmode.org/manual/Property-syntax.html) via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
@@ -431,7 +435,7 @@ get /{{(verb-json-get (oref (verb-stored-response "new-user") body) "id")}}
 Accept: application/json
 ```
 
-After the "Create a user" request has been sent at least once, the result will be stored internally under "new-user". It can then be used later at any time. Sending the request again will overwrite the previous value. Killing the response buffer will not erase the stored response. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always set `verb-last` globally.
+After the "Create a user" request has been sent at least once, the result will be stored internally under "new-user". It can then be used later at any time. Sending the request again will overwrite the previous value, and killing the response buffer will not erase the stored response. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always re-set `verb-last` globally.
 
 **Note**: When reading heading properties, Verb ignores parent headings, so no properties are inherited.
 
