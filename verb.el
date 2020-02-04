@@ -621,6 +621,8 @@ PATH must be a list of strings, symbols (which will be converted to
 strings), or integers.  The PATH list will be traversed from beginning
 to end, using each item to access a sub-value in the current JSON
 element (and setting the current JSON element to that new value).
+This is supposed to work in a similar way JSONPath does, more info at
+URL `https://goessner.net/articles/JsonPath/'.
 
 For example, for the following TEXT:
 {

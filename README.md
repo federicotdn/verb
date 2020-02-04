@@ -403,7 +403,7 @@ get /{{(verb-json-get (oref verb-last body) "id")}}
 Accept: application/json
 ```
 
-The `verb-json-get` function takes a JSON-formatted text as its first argument and a list of keys as the rest, and returns the value under those keys in the JSON text. This function is useful for using previous responses' contents, check its documentation for more details.
+The `verb-json-get` function takes a JSON-formatted text as its first argument and a list of keys as the rest, and returns the value under those keys in the JSON text (similar to how [JSONPath](https://goessner.net/articles/JsonPath/) works). This function is useful for using previous responses' contents, check its documentation for more details.
 
 ### Storing Responses by Key
 
