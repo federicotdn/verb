@@ -771,7 +771,7 @@
   (should (string= (verb-request-spec-url-to-string aux)
 		   "hello/world")))
 
-(ert-deftest test-override-url ()
+(ert-deftest test-override-url-nil ()
   (should (equal (verb--override-url nil nil) nil))
 
   (setq url1 (url-generic-parse-url "http://test.com"))
