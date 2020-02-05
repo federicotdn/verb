@@ -7,15 +7,31 @@ FONT_SIZE ?= 180
 ENV ?= env
 ACTIVATE = source $(ENV)/bin/activate
 
-.PHONY: test package-lint
+.PHONY: test
 
-setup-tests:
+# This recipe should be at the top.
+help: ## Display this help message.
+	@printf 'These are the recipes this Makefile contains:\n\n'
+	@grep '##' Makefile | grep -v grep | column -t -s '##'
+	@echo
+
+setup-tests:  ## Install everything required for testing (Python dependencies).
 	test -d $(ENV) || python3 -m venv $(ENV)
 	$(ACTIVATE) && \
 	pip install -U pip wheel && \
 	pip install -r test/requirements-dev.txt
 
-server:
+test: ## Run all ERT tests.
+test: clean server-bg
+	sleep 0.5
+	$(EMACS) --batch -L . \
+		 -l test/verb-test.el \
+		 -f ert-run-tests-batch-and-exit; \
+	ret=$$?; \
+	make server-kill; \
+	exit $$ret
+
+server: ## Run a testing HTTP server on port 8000 (default).
 	$(ACTIVATE) && \
 	SKIP_PIDFILE=1 PORT=$(PORT) python3 test/server.py
 
@@ -26,20 +42,11 @@ server-bg:
 server-kill:
 	kill $$(cat test/server.pid)
 
-clean:
+clean: ## Clean up all temporary files created during testing/linting.
 	rm -f verb-autoloads.el test/server.pid
 	find . -name "*.elc" -type f -delete
 
-test: clean server-bg
-	sleep 0.5
-	$(EMACS) --batch -L . \
-		 -l test/verb-test.el \
-		 -f ert-run-tests-batch-and-exit; \
-	ret=$$?; \
-	make server-kill; \
-	exit $$ret
-
-setup-check:
+setup-check: ## Install everything required for linting (package-lint and relint).
 	rm -rf $(VENDOR)
 	mkdir $(VENDOR)
 	git clone https://github.com/purcell/package-lint.git $(VENDOR)/package-lint
@@ -57,11 +64,13 @@ lint-file:
 	$(EMACS) --batch -l $(VENDOR)/xr/xr.el -l $(VENDOR)/relint/relint.el \
 			 -f relint-batch "$(filename)"
 
+check: ## Lint all Emacs Lisp files in the package.
 check: clean
 	make lint-file filename=verb.el
 	make lint-file filename=ob-verb.el
 	test $$(cat *.el | grep Package-Version | uniq | wc -l) -eq 1
 
+run: ## Run emacs -Q with the working version of verb.el loaded.
 run: clean server-bg
 	$(EMACS) -Q -L . \
 		 --eval "(progn \

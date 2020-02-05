@@ -618,6 +618,8 @@ It's a good idea to test your changes on a vanilla Emacs instance (`-q` flag). T
 $ make run
 ```
 
+Finally, a list of all recipes and their descriptions can be obtained using `make help` or simply `make`.
+
 ## Related Packages
 
 - [restclient](https://github.com/pashky/restclient.el): Verb is an attempt to improve upon the core idea of the `restclient` package: writing request specifications on a buffer, and receiving the responses on another. The most important differences between the two packages are:
