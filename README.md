@@ -561,7 +561,7 @@ To see all aspects of Verb that may be customized, use <kbd>M-x</kbd> `customize
 
 When you send a request or receive a response, some information is logged in the `*Verb Log*` buffer. You can use this log to get some more details on any errors that might have happened and other internal stuff. You can disable logging by setting the `verb-enable-log` variable to `nil`. While reading the log, you can press <kbd>q</kbd> to go back to the previous buffer.
 
-The Emacs `url` also keeps its own internal log - it can be useful for debugging requests that are not working as expected. To enable `url` logging, set `url-debug` to `t` (by default, it's disabled). After sending a request, switch to the `*URL-DEBUG*` buffer to read any logged information.
+The Emacs `url` library also keeps its own internal log - it can be useful for debugging requests that are not working as expected. To enable `url` logging, set `url-debug` to `t` (by default, it's disabled). After sending a request, switch to the `*URL-DEBUG*` buffer to read any logged information.
 
 ## Hooks, Variables, Functions
 
