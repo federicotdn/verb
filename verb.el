@@ -264,7 +264,8 @@ Should be set to the same character Org uses to comment lines.")
 					  "Connection"
 					  "Host"
 					  "Accept-Encoding"
-					  "Extension")
+					  "Extension"
+					  "Content-Length")
   "List of HTTP headers which are automatically added by url.el.
 The values of these headers can't be easily modified by Verb, so a
 warning will be shown to the user if they set any of them (as they
@@ -1545,7 +1546,7 @@ be loaded into."
     ;; Advice url.el functions
     (verb--advice-url)
 
-    ;; Look for headers that might get duplicated by ur.el
+    ;; Look for headers that might get duplicated by url.el
     (dolist (h verb--url-pre-defined-headers)
       (when (assoc-string h url-request-extra-headers t)
 	(verb--log num 'W (concat "Header \"%s\" will appear duplicated "

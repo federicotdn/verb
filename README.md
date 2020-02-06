@@ -233,6 +233,7 @@ All headers must be written immediately after the method + URL line, without any
 A certain set of headers will **always** be included in sent requests, even if they haven't been specified. Some of them are due to requirements of the HTTP standard, and others due to limitations of the `url` Emacs library. They are the following:
 - `MIME-Version`: `1.0`
 - `Connection`: `close` or `keep-alive`
+- `Content-Length`: *number of bytes in request body* (only when body is present)
 - `Host`: *URL host*
 - `Accept`: `*/*` (default value, but may be overwritten by the user)
 - `Accept-Encoding`: `gzip`

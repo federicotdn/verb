@@ -85,7 +85,9 @@ test
 ** zero-bytes-json
 get /zero-bytes-json
 ** sorted-headers
-get /sorted-headers
+post /sorted-headers
+
+foobar
 *** accept-sorted-headers
 template
 accept: hello-world

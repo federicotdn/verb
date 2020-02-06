@@ -1671,6 +1671,7 @@
   (server-test "sorted-headers"
     (let ((headers '("mime-version"
 		     "connection"
+		     "content-length"
 		     "host"
 		     "accept"
 		     "accept-encoding"

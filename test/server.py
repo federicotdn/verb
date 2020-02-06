@@ -152,7 +152,7 @@ async def zero_bytes_json(request: Request) -> None:
     return response.text("", headers={"Content-Type": "application/json"})
 
 
-@app.route("/sorted-headers")
+@app.route("/sorted-headers", methods=["GET", "POST"])
 async def sorted_headers(request: Request) -> None:
     headers = sorted(k.lower() + ": " + v for k, v in request.headers.items())
     return response.text("\n".join(headers), headers={"Content-Type": "text/plain"})
