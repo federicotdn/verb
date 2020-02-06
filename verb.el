@@ -92,7 +92,9 @@ HANDLER must be either a function, in which case it will be used as a
 text handler, or (FN . t), in which case FN will be used as a binary
 handler function.  CONTENT-TYPE must be a string containing a valid
 content type."
-  :type '(alist :key-type string))
+  :type '(alist :key-type string
+		:value-type (choice function
+				    (cons function (const t)))))
 
 (defcustom verb-export-functions
   '(("human" . verb--export-to-human)
