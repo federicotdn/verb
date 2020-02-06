@@ -961,6 +961,13 @@
   (should (string= (url-recreate-url (verb--clean-url "/foo/bar?a#b"))
 		   "/foo/bar?a#b")))
 
+(ert-deftest test-clean-url-url-encoding ()
+  ;; Non-ascii example
+  (should (equal (url-path-and-query (verb--clean-url "http://example.com?a=ñ"))
+		 (cons "/" "a=%C3%B1")))
+  (should (equal (url-path-and-query (verb--clean-url "http://example.com?a=hello world"))
+		 (cons "/" "a=hello%20world"))))
+
 (ert-deftest test-override-specs ()
   (override-specs '("GET http://test.com")
 		  '("TEMPLATE")
