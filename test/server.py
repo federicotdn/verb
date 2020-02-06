@@ -3,47 +3,48 @@ import logging
 from sanic import Sanic, response
 from sanic.log import logger
 from sanic.request import Request
+from sanic.response import HTTPResponse
 
 app = Sanic()
 logger.setLevel(logging.CRITICAL)
 
 
 @app.route("/basic")
-async def basic(request: Request) -> None:
+async def basic(request: Request) -> HTTPResponse:
     return response.text("Hello, World!")
 
 
 @app.route("/headers-test")
-async def headers_test(request: Request) -> None:
+async def headers_test(request: Request) -> HTTPResponse:
     return response.text(
         "HeadersTest", headers={"x-test-1": "foo", "OTHER-TEST": "bar"}
     )
 
 
 @app.route("/basic-json")
-async def basic_json(request: Request) -> None:
+async def basic_json(request: Request) -> HTTPResponse:
     return response.json({"hello": "world", "foo": True}, sort_keys=True)
 
 
 @app.route("/error-400")
-async def error_400(request: Request) -> None:
+async def error_400(request: Request) -> HTTPResponse:
     return response.text("", 400)
 
 
 @app.route("/error-401")
-async def error_401(request: Request) -> None:
+async def error_401(request: Request) -> HTTPResponse:
     return response.text("", 401)
 
 
 @app.route("/response-latin-1")
-async def response_latin_1(request: Request) -> None:
+async def response_latin_1(request: Request) -> HTTPResponse:
     return response.raw(
         "ñáéíóúß".encode("latin1"), content_type="text/plain; charset=latin1"
     )
 
 
 @app.route("/request-latin-1", methods=["POST"])
-async def request_latin_1(request: Request) -> None:
+async def request_latin_1(request: Request) -> HTTPResponse:
     if request.headers["Content-Type"] != "text/plain; charset=latin1":
         return response.text("FAIL")
 
@@ -54,7 +55,7 @@ async def request_latin_1(request: Request) -> None:
 
 
 @app.route("/request-utf-8-default", methods=["POST"])
-async def request_utf_8_default(request: Request) -> None:
+async def request_utf_8_default(request: Request) -> HTTPResponse:
     if request.headers["Content-Type"] != "text/plain":
         return response.text("FAIL")
 
@@ -65,7 +66,7 @@ async def request_utf_8_default(request: Request) -> None:
 
 
 @app.route("/request-utf-8-default-2", methods=["POST"])
-async def request_utf_8_default_2(request: Request) -> None:
+async def request_utf_8_default_2(request: Request) -> HTTPResponse:
     if request.body.decode("utf-8") != "áéíóúñü":
         return response.text("FAIL")
 
@@ -73,18 +74,18 @@ async def request_utf_8_default_2(request: Request) -> None:
 
 
 @app.route("/response-utf-8-default")
-async def response_utf_8_default(request: Request) -> None:
+async def response_utf_8_default(request: Request) -> HTTPResponse:
     # Do not specify charset=
     return response.raw("ñáéíóúß".encode("utf-8"), content_type="text/plain")
 
 
 @app.route("/response-big5")
-async def response_big_5(request: Request) -> None:
+async def response_big_5(request: Request) -> HTTPResponse:
     return response.raw("常用字".encode("big5"), content_type="text/plain; charset=big5")
 
 
 @app.route("/")
-async def root(request: Request) -> None:
+async def root(request: Request) -> HTTPResponse:
     if request.args.get("foo") == "bar":
         return response.text("OK")
 
@@ -92,27 +93,27 @@ async def root(request: Request) -> None:
 
 
 @app.route("/redirect-301")
-async def redirect_301(request: Request) -> None:
+async def redirect_301(request: Request) -> HTTPResponse:
     return response.redirect("/basic", status=301)
 
 
 @app.route("/redirect-302")
-async def redirect_302(request: Request) -> None:
+async def redirect_302(request: Request) -> HTTPResponse:
     return response.redirect("/basic", status=302)
 
 
 @app.route("/redirect-308-2", methods=["POST"])
-async def redirect_308_2(request: Request) -> None:
+async def redirect_308_2(request: Request) -> HTTPResponse:
     return response.text("Redirect successful")
 
 
 @app.route("/redirect-308", methods=["POST"])
-async def redirect_308(request: Request) -> None:
+async def redirect_308(request: Request) -> HTTPResponse:
     return response.redirect("/redirect-308-2", status=308)
 
 
 @app.route("/no-user-agent")
-async def no_user_agent(request: Request) -> None:
+async def no_user_agent(request: Request) -> HTTPResponse:
     if "User-Agent" in request.headers:
         return response.text("FAIL")
 
@@ -120,7 +121,7 @@ async def no_user_agent(request: Request) -> None:
 
 
 @app.route("/content-length", methods=["POST"])
-async def content_length(request: Request) -> None:
+async def content_length(request: Request) -> HTTPResponse:
     if "Content-Length" not in request.headers:
         return response.text("FAIL")
 
@@ -131,13 +132,14 @@ async def content_length(request: Request) -> None:
 
 
 @app.route("/body-md5", methods=["POST"])
-async def body_md5(request: Request) -> None:
+async def body_md5(request: Request) -> HTTPResponse:
     import hashlib
+
     return response.text(hashlib.md5(request.body).hexdigest())
 
 
 @app.route("/echo", methods=["POST"])
-async def echo(request: Request) -> None:
+async def echo(request: Request) -> HTTPResponse:
     charset = "utf-8"
     if "Content-Type" in request.headers:
         ct = request.headers["Content-Type"]
@@ -148,12 +150,12 @@ async def echo(request: Request) -> None:
 
 
 @app.route("/zero-bytes-json")
-async def zero_bytes_json(request: Request) -> None:
+async def zero_bytes_json(request: Request) -> HTTPResponse:
     return response.text("", headers={"Content-Type": "application/json"})
 
 
 @app.route("/sorted-headers", methods=["GET", "POST"])
-async def sorted_headers(request: Request) -> None:
+async def sorted_headers(request: Request) -> HTTPResponse:
     headers = sorted(k.lower() + ": " + v for k, v in request.headers.items())
     return response.text("\n".join(headers), headers={"Content-Type": "text/plain"})
 
