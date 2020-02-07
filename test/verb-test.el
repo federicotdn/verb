@@ -1679,6 +1679,10 @@
       (dolist (h headers)
 	(goto-char (point-min))
 	(should (search-forward (concat h ": "))))
+
+      (goto-char (point-min))
+      (delete-matching-lines "cookie") ; ignore cookie header
+
       (should (= (count-lines (point-min) (point-max))
 		 (length headers))))))
 
@@ -1746,6 +1750,36 @@
     (setq stored-resp (verb-stored-response "foobar"))
     (should (string= (oref stored-resp body)
 		     "Hello, World!"))))
+
+(ert-deftest test-cookies ()
+  (setq verb-inhibit-cookies nil)
+
+  (server-test "get-cookies"
+    (should (= (buffer-size) 0)))
+
+  (server-test "set-cookies"
+    (should (string= (buffer-string) "OK")))
+
+  (server-test "get-cookies"
+    (should (string= (buffer-string) "foo=bar\nabc=123\n")))
+
+  (server-test "delete-cookies"
+    (should (string= (buffer-string) "OK")))
+
+  (server-test "get-cookies"
+    (should (= (buffer-size) 0))))
+
+(ert-deftest test-cookies-disabled ()
+  (setq verb-inhibit-cookies t)
+
+  (server-test "get-cookies"
+    (should (= (buffer-size) 0)))
+
+  (server-test "set-cookies"
+    (should (string= (buffer-string) "OK")))
+
+  (server-test "get-cookies"
+    (should (= (buffer-size) 0))))
 
 (ert-deftest test-no-stored-response ()
   (should-error (verb-stored-response "adfsadfsadf")))

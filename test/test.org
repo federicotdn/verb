@@ -106,6 +106,12 @@ Content-Type: image/png
 post /body-md5
 
 {{(verb-read-file "test.bin" 'binary)}}
+** set-cookies
+get /set-cookies?foo=bar&abc=123
+** get-cookies
+get /get-cookies
+** delete-cookies
+get /delete-cookies?foo=t&abc=t
 * connection-fail-port
 # Valid host but invalid port
 get http://localhost:1234/test

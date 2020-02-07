@@ -163,6 +163,32 @@ async def sorted_headers(request: Request) -> HTTPResponse:
 app.static("/image.png", "test/image.png")
 
 
+@app.route("/set-cookies")
+async def set_cookies(request: Request) -> HTTPResponse:
+    resp = response.text("OK")
+    for key in request.args:
+        val = request.args.get(key)
+        resp.cookies[key] = val
+
+    return resp
+
+
+@app.route("/get-cookies")
+async def get_cookies(request: Request) -> HTTPResponse:
+    val = "".join(f"{key}={val}\n" for key, val in request.cookies.items())
+    return response.text(val)
+
+
+@app.route("/delete-cookies")
+async def delete_cookies(request: Request) -> HTTPResponse:
+    resp = response.text("OK")
+    for key in request.args:
+        if key in request.cookies:
+            del resp.cookies[key]
+
+    return resp
+
+
 def main() -> None:
     if "SKIP_PIDFILE" not in os.environ:
         pidfile = os.path.join(os.path.dirname(__file__), "server.pid")
