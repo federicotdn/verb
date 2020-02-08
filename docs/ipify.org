@@ -1,0 +1,22 @@
+* ipify API                                                            :verb:
+# A Simple Public IP Address API
+# https://www.ipify.org/
+# https://github.com/rdegges/ipify-api
+
+** IPv4
+template https://api.ipify.org
+
+*** JSON
+get ?format=json
+
+*** Text
+get ?format=text
+
+** IPv6
+template https://api6.ipify.org
+
+*** JSON
+get ?format=json
+
+*** Text
+get ?format=text
