@@ -1,5 +1,5 @@
 # Verb Changelog
-## master
+## **2.7.0** - 2020-02-09
 - Bind `verb-export-request-on-point-verb` to `C-b` in the Verb command map.
 - Bind `verb-export-request-on-point-human` to `C-n` in the Verb command map.
 - Variables created with `verb-var` are now buffer-local, and are not defined as global values.
