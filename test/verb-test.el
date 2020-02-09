@@ -1352,6 +1352,19 @@
 
   (should-not (verb--get-handler (cons "application/foobar" nil))))
 
+(ert-deftest test-get-handler-regexp ()
+  (should (equal (verb--get-handler (cons "image/jpg" nil))
+		 '(image-mode . t)))
+
+  (should (equal (verb--get-handler (cons "image/jpeg" nil))
+		 '(image-mode . t)))
+
+  (should (equal (verb--get-handler (cons "text/xml" nil))
+		 #'xml-mode))
+
+  (should (equal (verb--get-handler (cons "application/xml" nil))
+		 #'xml-mode)))
+
 (ert-deftest test-encode-http-body ()
   (should (string= (verb--encode-http-body "helló" "utf-8") "hell\303\263"))
   (should (string= (verb--encode-http-body "helló" nil) "hell\303\263"))

@@ -62,7 +62,7 @@ header value (\"charset=utf-8\")."
 (defcustom verb-content-type-handlers
   '(;; Text handlers
     ("text/html" . html-mode)
-    ("application/xml" . xml-mode)
+    ("\\(application\\|text\\)/xml" . xml-mode)
     ("application/xhtml+xml" . xml-mode)
     ("application/json" . verb--handler-json)
     ("application/javascript" . js-mode)
@@ -74,7 +74,7 @@ header value (\"charset=utf-8\")."
     ("image/svg+xml" . (image-mode . t))
     ("image/x-windows-bmp" . (image-mode . t))
     ("image/gif" . (image-mode . t))
-    ("image/jpeg" . (image-mode . t)))
+    ("image/jpe?g" . (image-mode . t)))
   "Alist of content type handlers.
 Handlers are functions to be called without any arguments.  There are
 two types of handlers: text and binary.
@@ -88,11 +88,16 @@ contents of the response have been inserted into a unibyte buffer
 \(with that buffer as the current buffer).
 
 Entries of the alist must have the form (CONTENT-TYPE . HANDLER).
-HANDLER must be either a function, in which case it will be used as a
-text handler, or (FN . t), in which case FN will be used as a binary
-handler function.  CONTENT-TYPE must be a string containing a valid
-content type."
-  :type '(alist :key-type string
+CONTENT-TYPE must be a regexp which can match any number of valid
+content types, or a string containing a content type.  HANDLER must be
+either a function, in which case it will be used as a text handler, or
+\(FN . t), in which case FN will be used as a binary handler function.
+
+To choose a handler, Verb will try to match the received content type
+with each CONTENT-TYPE in the alist (sequentially) using
+`string-match-p'.  The handler for the first CONTENT-TYPE to match
+will be used."
+  :type '(alist :key-type regexp
 		:value-type (choice function
 				    (cons function (const t)))))
 
@@ -1212,9 +1217,13 @@ present, return (nil . nil)."
 (defun verb--get-handler (content-type)
   "Get a handler from `verb-content-type-handlers' for a CONTENT-TYPE.
 CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
-  (cdr (assoc-string (car content-type)
-		     verb-content-type-handlers
-		     t)))
+  (catch 'end
+    (dolist (key-value verb-content-type-handlers)
+      (let ((case-fold-search t)
+	    (regexp (car key-value))
+	    (handler (cdr key-value)))
+	(when (string-match-p regexp (car content-type))
+	  (throw 'end handler))))))
 
 (defun verb--maybe-store-response (response)
   "Store RESPONSE depending on its request metadata.

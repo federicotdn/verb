@@ -183,7 +183,7 @@ This text indicates the status of the HTTP response, the time in seconds it took
 The contents of the response body will be shown on the buffer. To choose how they will be actually shown, the following steps are followed:
 
 1. The content type is extracted from the `Content-Type` header. If the header is not present, the content type is defined as `nil`.
-2. A content handler is chosen for this content type. There are two types of handlers: handlers for text content types (such as JSON, XML, etc.) and handlers for binary content types (such as PNG, PDF, etc.). If no handler matched the content type (or if the content type is `nil`), choose `fundamental-mode` by default (as a text content type handler).
+2. A content handler is chosen for this content type. There are two types of handlers: handlers for text content types (such as JSON, XML, etc.) and handlers for binary content types (such as PNG, PDF, etc.). These handlers are listed in the `verb-content-type-handlers` variable. If no handler matched the content type (or if the content type is `nil`), choose `fundamental-mode` by default (as a text content type handler).
 3. Depending on the content type handler chosen: \
    **Text:** If the chosen handler is for text, decode the response body using the charset described in the `Content-Type` header. If no charset was specified, use the one specified by `verb-default-response-charset` (default: `utf-8`). After that is done, call the handler (e.g. `xml-mode`). \
    **Binary:** If the chosen handler is for a binary type, call the handler directly after loading the raw bytes into the buffer (e.g. `doc-view-mode`).
