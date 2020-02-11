@@ -1,12 +1,10 @@
 import os
-import logging
 from sanic import Sanic, response
-from sanic.log import logger
 from sanic.request import Request
 from sanic.response import HTTPResponse
+from sanic.exceptions import NotFound, MethodNotSupported
 
-app = Sanic()
-logger.setLevel(logging.CRITICAL)
+app = Sanic(name="test server")
 
 
 @app.route("/basic")
@@ -187,6 +185,16 @@ async def delete_cookies(request: Request) -> HTTPResponse:
             del resp.cookies[key]
 
     return resp
+
+
+@app.exception(NotFound)
+async def not_found(request: Request, exception: NotFound) -> HTTPResponse:
+    return response.text("Not found", status=404)
+
+
+@app.exception(MethodNotSupported)
+async def not_supported(request: Request, MethodNotSupported: NotFound) -> HTTPResponse:
+    return response.text("Method not supported", status=405)
 
 
 def main() -> None:
