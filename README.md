@@ -570,7 +570,7 @@ To see a listing of Verb's public symbols (hooks, functions, variables, classes,
 
 ## Examples
 
-The [docs/](docs) directory contains various `.org` files which showcase different features of the package.
+The [examples/](examples) directory contains various `.org` files which showcase different features of the package.
 
 ## Troubleshooting
 **Problem**: When trying to send a request, an error is shown: "No request specifications found".
