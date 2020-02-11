@@ -255,10 +255,6 @@ hierarchy."
 (defface verb-log-error '((t :inherit error))
   "Face for highlighting E entries in the log buffer.")
 
-(defconst verb--comment-character "#"
-  "Character to use to mark commented lines.
-Should be set to the same character Org uses to comment lines.")
-
 (defconst verb--http-methods '("GET" "POST" "DELETE" "PUT"
 			       "OPTIONS" "HEAD" "PATCH"
 			       "TRACE" "CONNECT")
@@ -1924,10 +1920,10 @@ METHOD [URL]
 
 [BODY]
 
-Each COMMENT must start with `verb--comment-character' or \":\" (see
-Org headline property syntax).  All comments will be discarded after
-being read (they are not part of the returned value).  COMMENT may
-also be a blank line.
+Each COMMENT must start with \"#\" or \":\" (see Org mode comments and
+headline property syntax).  All comments will be discarded after being
+read (they are not part of the returned value).  COMMENT may also be a
+blank line.
 
 METHOD must be a method matched by `verb--http-methods-regexp' (that
 is, an HTTP method or the value of `verb--template-keyword').
@@ -1940,9 +1936,9 @@ Therefore, using just \"example.org\" (note no schema present) as URL
 will result in a URL with its path set to \"example.org\", not as its
 host.
 
-Each HEADER must be in the form of KEY: VALUE. KEY must be a nonempty
+Each HEADER must be in the form of KEY: VALUE.  KEY must be a nonempty
 string, VALUE can be the empty string.  HEADER may also start with
-`verb--comment-character', in which case it will be ignored.
+\"#\", in which case it will be ignored.
 
 BODY can contain arbitrary data.  Note that there must be a blank
 line between the HEADER list and BODY.
@@ -1963,15 +1959,8 @@ METADATA."
       (goto-char (point-min))
 
       ;; Skip initial blank lines, comments and properties
-      (while (and (re-search-forward
-		   (concat "^\\s-*\\(\\("
-			   ;; Headline properties
-			   ":"
-			   "\\|"
-			   ;; Comments
-			   verb--comment-character
-			   "\\).*\\)?$")
-		   (line-end-position) t)
+      (while (and (re-search-forward "^\\s-*\\(\\(:\\|#\\).*\\)?$"
+				     (line-end-position) t)
 		  (not (eobp)))
 	(forward-char))
       ;; Check if the entire specification was just comments or empty
@@ -2020,8 +2009,7 @@ METADATA."
       (while (re-search-forward "^\\(.+\\)$" (line-end-position) t)
 	(let ((line (match-string 1)))
 	  ;; Process line if it doesn't start with '#'
-	  (unless (string-prefix-p verb--comment-character
-				   (string-trim-left line))
+	  (unless (string-prefix-p "#" (string-trim-left line))
 	    ;; Check if line matches KEY: VALUE after evaluating any
 	    ;; present code tags
 	    (setq line (verb--eval-code-tags-in-string line context))
