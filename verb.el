@@ -1923,41 +1923,38 @@ METHOD [URL]
 
 [BODY]
 
-Each COMMENT must be a blank line, or a line starting with
-`verb--comment-character' or \":\" (see Org headline property
-syntax).  All comments will be ignored.
+Each COMMENT must start with `verb--comment-character' or \":\" (see
+Org headline property syntax).  All comments will be discarded after
+being read (they are not part of the returned value).  COMMENT may
+also be a blank line.
 
 METHOD must be a method matched by `verb--http-methods-regexp' (that
 is, an HTTP method or the value of `verb--template-keyword').
 Matching is case-insensitive.
 
-URL can be the empty string, or a URL with an \"http\" or \"https\"
-schema.
-PARTIAL-URL can be the empty string, or the path + query string +
-fragment part of a URL.
-
 URL must be a full URL, or a part of it.  If present, the schema must
 be \"http\" or \"https\".  If the schema is not present, the URL will
 be interpreted as a path, plus (if present) query string and fragment.
 Therefore, using just \"example.org\" (note no schema present) as URL
-will result in a URL with its path set to \"example.org\", not its
+will result in a URL with its path set to \"example.org\", not as its
 host.
 
 Each HEADER must be in the form of KEY: VALUE. KEY must be a nonempty
-string, VALUE can be the nonempty string.
+string, VALUE can be the empty string.  HEADER may also start with
+`verb--comment-character', in which case it will be ignored.
 
-BODY can contain arbitrary text.  Note that there must be a blank
+BODY can contain arbitrary data.  Note that there must be a blank
 line between the HEADER list and BODY.
-
-Before returning the request specification, set its metadata to
-METADATA.
 
 As a special case, if the text specification consists exclusively of
 comments and/or whitespace, or is the empty string, signal
 `verb-empty-spec'.
 
 If TEXT does not conform to the request specification text format,
-signal an error."
+signal an error.
+
+Before returning the request specification, set its metadata to
+METADATA."
   (let ((context (current-buffer))
 	method url headers body)
     (with-temp-buffer
