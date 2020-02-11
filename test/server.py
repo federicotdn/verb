@@ -1,10 +1,13 @@
 import os
+import logging
 from sanic import Sanic, response
+from sanic.log import logger
 from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.exceptions import NotFound, MethodNotSupported
 
 app = Sanic(name="test server")
+logger.setLevel(logging.WARNING)
 
 
 @app.route("/basic")

@@ -1217,13 +1217,14 @@ present, return (nil . nil)."
 (defun verb--get-handler (content-type)
   "Get a handler from `verb-content-type-handlers' for a CONTENT-TYPE.
 CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
-  (catch 'end
-    (dolist (key-value verb-content-type-handlers)
-      (let ((case-fold-search t)
-	    (regexp (car key-value))
-	    (handler (cdr key-value)))
-	(when (string-match-p regexp (car content-type))
-	  (throw 'end handler))))))
+  (when (car content-type)
+    (catch 'end
+      (dolist (key-value verb-content-type-handlers)
+	(let ((case-fold-search t)
+	      (regexp (car key-value))
+	      (handler (cdr key-value)))
+	  (when (string-match-p regexp (car content-type))
+	    (throw 'end handler)))))))
 
 (defun verb--maybe-store-response (response)
   "Store RESPONSE depending on its request metadata.

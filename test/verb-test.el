@@ -1348,9 +1348,12 @@
 		 '(doc-view-mode . t)))
 
   (should (equal (verb--get-handler (cons "application/xml" nil))
-		 #'xml-mode))
+		 #'xml-mode)))
 
-  (should-not (verb--get-handler (cons "application/foobar" nil))))
+(ert-deftest test-get-handler-nil ()
+  (should-not (verb--get-handler (cons "application/foobar" nil)))
+  (should-not (verb--get-handler (cons nil nil)))
+  (should-not (verb--get-handler nil)))
 
 (ert-deftest test-get-handler-regexp ()
   (should (equal (verb--get-handler (cons "image/jpg" nil))
