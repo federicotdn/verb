@@ -420,7 +420,9 @@
 		     :duration 1.123
 		     :headers '(("Content-Length" . "2024"))
 		     :body-bytes 999))
-		   "test | 1.123s | - | 2.0k bytes"))
+		   (if (< emacs-major-version 27)
+		       "test | 1.123s | - | 2.0k bytes"
+		     "test | 1.123s | - | 2k bytes")))
 
   (should (string= (verb--response-header-line-string
 		    (verb-response
