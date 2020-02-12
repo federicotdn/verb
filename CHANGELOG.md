@@ -1,6 +1,7 @@
 # Verb Changelog
-## master
+## **2.7.1** - 2020-02-12
 - Use `file-size-human-readable` to format response body sizes in header lines.
+- Fix error on responses with no content type.
 
 ## **2.7.0** - 2020-02-09
 - Bind `verb-export-request-on-point-verb` to `C-b` in the Verb command map.
