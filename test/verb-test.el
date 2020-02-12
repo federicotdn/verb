@@ -418,9 +418,9 @@
 		    (verb-response
 		     :status "test"
 		     :duration 1.123
-		     :headers '(("Content-Length" . "1"))
+		     :headers '(("Content-Length" . "2024"))
 		     :body-bytes 999))
-		   "test | 1.123s | - | 1 byte"))
+		   "test | 1.123s | - | 2.0k bytes"))
 
   (should (string= (verb--response-header-line-string
 		    (verb-response
@@ -1769,6 +1769,8 @@
 
 (ert-deftest test-cookies ()
   (setq verb-inhibit-cookies nil)
+  (setq url-cookie-storage nil)
+  (setq url-cookie-secure-storage nil)
 
   (server-test "get-cookies"
     (should (= (buffer-size) 0)))

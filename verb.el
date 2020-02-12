@@ -1171,7 +1171,7 @@ non-nil, do not add the command to the kill ring."
 		       (string-to-number content-length)
 		     bytes)))
        (format " | %s byte%s"
-	       value
+	       (file-size-human-readable value)
 	       (if (= value 1) "" "s"))))))
 
 (cl-defmethod verb-request-spec-url-to-string ((rs verb-request-spec))

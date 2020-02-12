@@ -95,6 +95,6 @@ run: clean server-bg
 			   (load-theme 'wombat) \
 			   (setq url-debug t) \
 			   (toggle-debug-on-error) \
-			   (dired \"docs\") \
+			   (dired \"examples\") \
 			   (delete-other-windows))"
 	make server-kill

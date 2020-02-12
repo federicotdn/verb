@@ -1,4 +1,7 @@
 # Verb Changelog
+## master
+- Use `file-size-human-readable` to format response body sizes in header lines.
+
 ## **2.7.0** - 2020-02-09
 - Bind `verb-export-request-on-point-verb` to `C-b` in the Verb command map.
 - Bind `verb-export-request-on-point-human` to `C-n` in the Verb command map.
