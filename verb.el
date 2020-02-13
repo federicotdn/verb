@@ -1288,7 +1288,7 @@ view the HTTP response in a user-friendly way."
 			 (url-host url) (url-port url))))
 	(verb--log num 'E msg)
 	(verb--log num 'E "Error details: %s" http-error)
-	(user-error msg))))
+	(user-error "%s" msg))))
 
   ;; No errors, continue to read response
   (let ((elapsed (- (time-to-seconds) start))
@@ -1499,15 +1499,15 @@ If a validation does not pass, signal with `user-error'."
   (unless (oref rs method)
     (user-error "%s" (concat "No HTTP method specified\n"
 			     "Make sure you specify a concrete HTTP "
-			     "method (i.e. not " verb--template-keyword
+			     "method (not " verb--template-keyword
 			     ") in the heading hierarchy")))
   (let ((url (oref rs url)))
     (unless url
       (user-error "%s" (concat "No URL specified\nMake sure you specify "
 			       "a nonempty URL in the heading hierarchy")))
     (unless (url-host url)
-      (user-error "%s" (concat "URL has no host defined\n"
-			       "Make sure you specify a host "
+      (user-error "%s" (concat "URL has no schema or host defined\n"
+			       "Make sure you specify a schema and host "
 			       "(e.g. \"https://github.com\") in the "
 			       "heading hierarchy"))))
   rs)
@@ -1588,7 +1588,7 @@ be loaded into."
 		 ;; Log the error
 		 (verb--log num 'E msg)
 		 ;; Signal it
-		 (user-error msg)))))
+		 (user-error "%s" msg)))))
 
     ;; Show user some quick information
     (message "%s request sent to %s"
