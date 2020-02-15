@@ -363,12 +363,10 @@ comfortably.  All commands listed in this keymap automatically enable
      ("\\s-\\(\"[[:graph:]]+?\"\\)\\s-*:."
       (1 'verb-json-key))
      ;; {{(format "%s" "Lisp code tag")}}
-     (,(concat "^.*?\\("
-	       (car verb-code-tag-delimiters)
+     (,(concat (car verb-code-tag-delimiters)
 	       ".*?"
-	       (cdr verb-code-tag-delimiters)
-	       "\\).*$")
-      (1 'verb-code-tag))))
+	       (cdr verb-code-tag-delimiters))
+      (0 'verb-code-tag))))
   (font-lock-flush))
 
 (defvar verb-mode-map
