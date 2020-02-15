@@ -1,0 +1,40 @@
+* Hacker News API                                                                    :verb:
+# Documentation and Samples for the Official HN API 
+# https://github.com/HackerNews/API
+
+template https://hacker-news.firebaseio.com/v0
+Accept: application/json
+
+** Item
+# Stories, comments, jobs, Ask HNs and even polls are just
+# items. They're identified by their ids, which are unique integers,
+# and live under /v0/item/<id>.
+
+get /item/{{(read-string "Item ID: ")}}.json?print=pretty
+
+** User
+# Users are identified by case-sensitive ids, and live under
+# /v0/user/. Only users that have public activity (comments or story
+# submissions) on the site are available through the API.
+
+get /user/{{(read-string "User ID: ")}}.json
+
+** Live Data
+# The coolest part of Firebase is its support for change
+# notifications. While you can subscribe to individual items and
+# profiles, you'll need to use the following to observe front page
+# ranking, new items, and new profiles.
+
+*** Max Item ID
+# The current largest item id is at /v0/maxitem. You can walk backward
+# from here to discover all items.
+get /maxitem.json
+
+*** Top Stories
+get /topstories.json
+
+*** New Stories
+get /newstories.json
+
+*** Best Stories
+get /beststories.json
