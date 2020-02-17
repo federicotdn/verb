@@ -6,7 +6,7 @@
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: tools
-;; Package-Version: 2.7.1
+;; Package-Version: 2.7.2
 ;; Package-Requires: ((emacs "26"))
 
 ;; This file is NOT part of GNU Emacs.
