@@ -9,9 +9,8 @@ ACTIVATE = source $(ENV)/bin/activate
 
 .PHONY: test
 
-# This recipe should be at the top.
 help: ## Display this help message.
-	@printf 'These are the recipes this Makefile contains:\n\n'
+	@printf 'Summary of available Makefile recipes:\n\n'
 	@grep '##' Makefile | grep -v grep | column -t -s '##'
 	@echo
 
