@@ -1477,6 +1477,11 @@
 
   (should-error (verb--log 1 'X "foo")))
 
+(ert-deftest test-request-body-warning ()
+  (clear-log)
+  (server-test "get-with-body"
+    (should-log-contain "Body is present but request method is GET")))
+
 (defun get-response-buffers ()
   (seq-filter (lambda (b) (buffer-local-value 'verb-http-response b))
 	      (buffer-list)))

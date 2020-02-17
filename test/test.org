@@ -112,6 +112,11 @@ get /set-cookies?foo=bar&abc=123
 get /get-cookies
 ** delete-cookies
 get /delete-cookies?foo=t&abc=t
+** get-with-body
+get /basic
+Content-Type: text/plain
+
+Foobar
 * connection-fail-port
 # Valid host but invalid port
 get http://localhost:1234/test

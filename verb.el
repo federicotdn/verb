@@ -260,6 +260,10 @@ hierarchy."
 			       "TRACE" "CONNECT")
   "List of valid HTTP methods.")
 
+(defconst verb--bodyless-http-methods '("GET" "HEAD" "DELETE" "TRACE"
+					"OPTIONS" "CONNECT")
+  "List of HTTP methods which usually don't include bodies.")
+
 (defconst verb--log-buffer-name "*Verb Log*"
   "Default name for log buffer.")
 
@@ -1559,6 +1563,13 @@ be loaded into."
 				  "in the request, as url.el adds its "
 				  "own version of it")
 		   h)))
+
+    ;; Maybe log a warning if body is present but method usually
+    ;; doesn't take one
+    (when (and (member url-request-method verb--bodyless-http-methods)
+	       url-request-data)
+      (verb--log num 'W "Body is present but request method is %s"
+		 url-request-method))
 
     ;; Send the request!
     (condition-case err

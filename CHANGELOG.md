@@ -1,6 +1,7 @@
 # Verb Changelog
 ## master
 - Fix code tags not being fontified when having more than one of them on a single line.
+- Log a warning when sending a request with a body present on GET, HEAD, DELETE, etc.
 
 ## **2.7.1** - 2020-02-12
 - Use `file-size-human-readable` to format response body sizes in header lines.
