@@ -1,0 +1,46 @@
+* Scryfall REST API                                                                  :verb:
+# Scryfall is a powerful Magic: The Gathering card search.
+
+# Scryfall provides a REST-like API for ingesting our card data
+# programatically. The API exposes information available on the
+# regular site in easy-to-consume formats.
+# https://scryfall.com/docs/api
+
+template https://api.scryfall.com
+
+** Cards list
+# Returns a List object that contains all cards in Scryfall’s
+# database. This method is paginated, returning 175 cards at a
+# time. The cards are ordered roughly newest to oldest. Review the
+# documentation for paginating the List type.
+
+# Every card type in every language is returned, including planar
+# cards, schemes, Vanguard cards, tokens, emblems, and funny
+# cards. Make sure you’ve reviewed documentation for the Card type.
+
+# Scryfall currently has 267,162 cards, and this endpoint has 1527
+# pages. This represents more than 400 MB of JSON data: beware your
+# memory and storage limits if you are downloading the entire
+# database.
+
+get /cards
+
+*** Single card by ID
+# Returns a single card with the given Scryfall ID.
+
+get /{{(read-string "Card ID: " "4b332e3d-dcf4-4f62-8130-124ec5d23b90")}}?format=text
+
+*** Get a random card image
+# Returns a single random Card object.
+
+get /random?format=image
+
+** Sets
+# Returns a List object of all Sets on Scryfall.
+
+get /sets
+
+*** Single set by ID
+# Returns a Set with the given Scryfall ID.
+
+get /{{(read-string "Set ID: " "914a6c6d-cb3b-45e8-a2db-9978a2339faf")}}
