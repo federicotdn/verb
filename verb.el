@@ -61,21 +61,21 @@ header value (\"charset=utf-8\")."
 
 (defcustom verb-content-type-handlers
   '(;; Text handlers
-    ("text/html" . html-mode)
-    ("\\(application\\|text\\)/xml" . xml-mode)
-    ("application/xhtml+xml" . xml-mode)
-    ("application/json" . verb--handler-json)
-    ("application/javascript" . js-mode)
-    ("application/css" . css-mode)
-    ("text/plain" . text-mode)
+    ("text/html" html-mode)
+    ("\\(application\\|text\\)/xml" xml-mode)
+    ("application/xhtml+xml" xml-mode)
+    ("application/json" verb--handler-json)
+    ("application/javascript" js-mode)
+    ("application/css" css-mode)
+    ("text/plain" text-mode)
     ;; Binary handlers
-    ("application/pdf" . (doc-view-mode . t))
-    ("image/png" . (image-mode . t))
-    ("image/svg+xml" . (image-mode . t))
-    ("image/x-windows-bmp" . (image-mode . t))
-    ("image/gif" . (image-mode . t))
-    ("image/jpe?g" . (image-mode . t)))
-  "Alist of content type handlers.
+    ("application/pdf" doc-view-mode t)
+    ("image/png" image-mode t)
+    ("image/svg+xml" image-mode t)
+    ("image/x-windows-bmp" image-mode t)
+    ("image/gif" image-mode t)
+    ("image/jpe?g" image-mode t))
+  "List of content type handlers.
 Handlers are functions to be called without any arguments.  There are
 two types of handlers: text and binary.
 
@@ -87,19 +87,23 @@ Binary handlers, on the other hand, are called after the binary
 contents of the response have been inserted into a unibyte buffer
 \(with that buffer as the current buffer).
 
-Entries of the alist must have the form (CONTENT-TYPE . HANDLER).
+Both handler types should prepare the contents of the response buffer,
+so that the user can then access or modify the information received in
+a convenient way.
+
+Entries of the alist must have the form (CONTENT-TYPE HANDLER BIN?).
 CONTENT-TYPE must be a regexp which can match any number of valid
 content types, or a string containing a content type.  HANDLER must be
-either a function, in which case it will be used as a text handler, or
-\(FN . t), in which case FN will be used as a binary handler function.
+a function that takes no arguments.  BIN?, if present, must be t, in
+order to indicate that this handler is binary instead of text.
 
 To choose a handler, Verb will try to match the received content type
 with each CONTENT-TYPE in the alist (sequentially) using
 `string-match-p'.  The handler for the first CONTENT-TYPE to match
 will be used."
-  :type '(alist :key-type regexp
-		:value-type (choice function
-				    (cons function (const t)))))
+  :type '(repeat (list regexp function
+		       (choice (const :tag "Binary" t)
+			       (const :tag "Text" nil)))))
 
 (defcustom verb-export-functions
   '(("human" . verb--export-to-human)
@@ -1213,7 +1217,7 @@ present, return (nil . nil)."
       (cons nil nil))))
 
 (defun verb--get-handler (content-type)
-  "Get a handler from `verb-content-type-handlers' for a CONTENT-TYPE.
+  "Return a handler from `verb-content-type-handlers' for a CONTENT-TYPE.
 CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
   (when (car content-type)
     (catch 'end
@@ -1327,15 +1331,16 @@ view the HTTP response in a user-friendly way."
 	;; Default handler is fundamental mode (text)
 	(setq handler #'fundamental-mode))
 
-      (if (functionp handler)
+      (if (= (length handler) 1)
 	  ;; Text handler
-	  (setq text-handler handler)
+	  (setq text-handler (nth 0 handler))
 	;; Binary handler (maybe)
 	(unless (and (consp handler)
-		     (functionp (car handler))
-		     (eq (cdr handler) t))
+		     (functionp (nth 0 handler))
+		     (eq (nth 1 handler) t)
+		     (= (length handler) 2))
 	  (user-error "Invalid content handler: %s" handler))
-	(setq binary-handler (car handler))))
+	(setq binary-handler (nth 0 handler))))
 
     ;; Remove headers and blank line from buffer
     ;; All left should be the content

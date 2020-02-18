@@ -1344,13 +1344,13 @@
 
 (ert-deftest test-get-handler ()
   (should (equal (verb--get-handler (cons "image/png" nil))
-		 '(image-mode . t)))
+		 '(image-mode t)))
 
   (should (equal (verb--get-handler (cons "application/pdf" nil))
-		 '(doc-view-mode . t)))
+		 '(doc-view-mode t)))
 
   (should (equal (verb--get-handler (cons "application/xml" nil))
-		 #'xml-mode)))
+		 '(xml-mode))))
 
 (ert-deftest test-get-handler-nil ()
   (should-not (verb--get-handler (cons "application/foobar" nil)))
@@ -1359,16 +1359,16 @@
 
 (ert-deftest test-get-handler-regexp ()
   (should (equal (verb--get-handler (cons "image/jpg" nil))
-		 '(image-mode . t)))
+		 '(image-mode t)))
 
   (should (equal (verb--get-handler (cons "image/jpeg" nil))
-		 '(image-mode . t)))
+		 '(image-mode t)))
 
   (should (equal (verb--get-handler (cons "text/xml" nil))
-		 #'xml-mode))
+		 '(xml-mode)))
 
   (should (equal (verb--get-handler (cons "application/xml" nil))
-		 #'xml-mode)))
+		 '(xml-mode))))
 
 (ert-deftest test-encode-http-body ()
   (should (string= (verb--encode-http-body "helló" "utf-8") "hell\303\263"))
@@ -1536,9 +1536,9 @@
 
 (ert-deftest test-binary-image ()
   ;; Can't really display images during testing, mock the handler
-  (let ((verb-content-type-handlers '(("image/png" . (fake-handler-mode . t)))))
+  (let ((verb-content-type-handlers '(("image/png" fake-handler-mode t))))
     (should (equal (verb--get-handler (cons "image/png" nil))
-		   '(fake-handler-mode . t)))
+		   '(fake-handler-mode t)))
     (server-test "image"
       (should (equal major-mode 'fake-handler-mode))
       (should (= (oref verb-http-response body-bytes) 4959))

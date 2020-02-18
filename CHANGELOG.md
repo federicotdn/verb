@@ -1,4 +1,7 @@
 # Verb Changelog
+## master
+- Changed type of `verb-content-type-handlers` elements (to lists).
+
 ## **2.7.2** - 2020-02-17
 - Fix code tags not being fontified when having more than one of them on a single line.
 - Log a warning when sending a request with a body present on GET, HEAD, DELETE, etc.
