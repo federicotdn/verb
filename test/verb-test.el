@@ -1503,6 +1503,14 @@
       (sleep-for 0.25)
       (should (string= (buffer-string) "Hello, World!")))))
 
+(ert-deftest test-repeated-args ()
+  (server-test "repeated-args"
+    (should (string= (buffer-string)
+		     (join-lines "a=1"
+				 "a=2"
+				 "a=3"
+				 "b=42")))))
+
 (ert-deftest test-server-basic-queue ()
   (let ((verb-url-retrieve-function #'url-queue-retrieve))
     (server-test "basic"

@@ -150,6 +150,16 @@ async def echo(request: Request) -> HTTPResponse:
     return response.text(request.body.decode(charset))
 
 
+@app.route("/echo-args")
+async def echo_args(request: Request) -> HTTPResponse:
+    values = []
+    for key in request.args:
+        values.extend([f"{key}={val}" for val in request.args.getlist(key)])
+
+    values.sort()
+    return response.text("\n".join(values))
+
+
 @app.route("/zero-bytes-json")
 async def zero_bytes_json(request: Request) -> HTTPResponse:
     return response.text("", headers={"Content-Type": "application/json"})
