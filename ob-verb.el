@@ -53,12 +53,12 @@ options are:
 
 The default value for OPERATION is \"send\"."
   (let* ((rs (verb--request-spec-from-babel-src-block (point) body))
-	 (processed-params (org-babel-process-params params))
-	 (op (or (cdr (assoc :op processed-params))
-		"send")))
+         (processed-params (org-babel-process-params params))
+         (op (or (cdr (assoc :op processed-params))
+                "send")))
     (pcase op
       ((guard (or (string-prefix-p "send " op)
-		  (string= "send" op)))
+                  (string= "send" op)))
        (ob-verb--send-request rs (nth 1 (split-string op))))
       ((guard (string-prefix-p "export " op))
        (ob-verb--export-request rs (nth 1 (split-string op))))
@@ -76,13 +76,13 @@ Called when :op `export' is passed to `org-babel-execute:verb'."
     ((or "human" "verb")
      (save-window-excursion
        (let ((fn (if (string= name "human")
-		     #'verb--export-to-human
-		   #'verb--export-to-verb))
-	     result)
-	 (with-current-buffer (funcall fn rs)
-	   (setq result (verb--buffer-string-no-properties))
-	   (kill-buffer)
-	   result))))
+                     #'verb--export-to-human
+                   #'verb--export-to-verb))
+             result)
+         (with-current-buffer (funcall fn rs)
+           (setq result (verb--buffer-string-no-properties))
+           (kill-buffer)
+           result))))
     ("curl"
      (verb--export-to-curl rs t t))
     (_
@@ -110,38 +110,38 @@ optional argument may follow `send'."
     ;; `sleep-for'. Maybe we could use `ert-run-idle-timers' but that
     ;; sounds like a bad idea.
     (user-error "%s"
-		(concat "Using `url-queue-retrieve' with"
-			" Babel is currently not supported\n"
-			"Please try again using `url-retrieve'")))
+                (concat "Using `url-queue-retrieve' with"
+                        " Babel is currently not supported\n"
+                        "Please try again using `url-retrieve'")))
   (when (and part (not (member part '("get-body" "get-headers"))))
     (user-error "Invalid send argument: %s" part))
   (let* ((start (time-to-seconds))
-	 (buf (verb--request-spec-send rs nil)))
+         (buf (verb--request-spec-send rs nil)))
     (while (and (eq (buffer-local-value 'verb-http-response buf) t)
-		(< (- (time-to-seconds) start) verb-babel-timeout))
+                (< (- (time-to-seconds) start) verb-babel-timeout))
       (sleep-for 0.1))
     (with-current-buffer buf
       (if (eq verb-http-response t)
-	  (format "(Request timed out after %.4g seconds)"
-		  (- (time-to-seconds) start))
-	(pcase part
-	  ('nil (verb-response-to-string verb-http-response buf))
-	  ("get-body" (verb--buffer-string-no-properties))
-	  ("get-headers" (let ((headers (oref verb-http-response headers)))
-			   (with-temp-buffer
-			     (verb--insert-header-contents headers)
-			     (verb--buffer-string-no-properties)))))))))
+          (format "(Request timed out after %.4g seconds)"
+                  (- (time-to-seconds) start))
+        (pcase part
+          ('nil (verb-response-to-string verb-http-response buf))
+          ("get-body" (verb--buffer-string-no-properties))
+          ("get-headers" (let ((headers (oref verb-http-response headers)))
+                           (with-temp-buffer
+                             (verb--insert-header-contents headers)
+                             (verb--buffer-string-no-properties)))))))))
 
 ;;;###autoload
 (define-derived-mode ob-verb-response-mode special-mode "ob-verb"
   "Major mode for displaying HTTP responses with Babel."
   (font-lock-add-keywords
    nil `(;; HTTP/1.1 200 OK
-	 ("^HTTP/1\\.[01]\\s-+[[:digit:]]\\{3\\}.*$"
-	  (0 'verb-http-keyword))
-	 ;; Key: Value
-	 (,verb--http-header-regexp
-	  (1 'verb-header)))))
+         ("^HTTP/1\\.[01]\\s-+[[:digit:]]\\{3\\}.*$"
+          (0 'verb-http-keyword))
+         ;; Key: Value
+         (,verb--http-header-regexp
+          (1 'verb-header)))))
 
 (provide 'ob-verb)
 ;;; ob-verb.el ends here

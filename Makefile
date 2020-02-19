@@ -6,6 +6,7 @@ VENDOR = vendor
 FONT_SIZE ?= 180
 ENV ?= env
 ACTIVATE = source $(ENV)/bin/activate
+MAX_LINE_LEN = 80
 
 .PHONY: test
 
@@ -62,6 +63,7 @@ lint-file:
 			 -f package-lint-batch-and-exit "$(filename)"
 	$(EMACS) --batch -l $(VENDOR)/xr/xr.el -l $(VENDOR)/relint/relint.el \
 			 -f relint-batch "$(filename)"
+	! grep -n '.\{$(MAX_LINE_LEN)\}' "$(filename)"
 
 check: ## Lint all Emacs Lisp files in the package.
 check: clean
