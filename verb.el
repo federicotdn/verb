@@ -421,6 +421,10 @@ more details on how to use it."
 
 (defvar verb-response-headers-mode-map
   (let ((map (make-sparse-keymap)))
+    (easy-menu-define verb-mode-menu map
+      "Menu for Verb response headers mode"
+      '("Verb"
+        ["Hide response headers" verb-kill-buffer-and-window]))
     (define-key map (kbd "q") 'verb-kill-buffer-and-window)
     map)
   "Keymap for `verb-response-headers-mode'.")
