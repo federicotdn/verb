@@ -1526,9 +1526,14 @@ If a validation does not pass, signal with `user-error'."
                                "heading hierarchy"))))
   rs)
 
-(defun verb--generate-response-buffer ()
-  "Return a new buffer ready to be used as response buffer."
-  (with-current-buffer (generate-new-buffer "*HTTP Response*")
+(defun verb--generate-response-buffer (num)
+  "Return a new buffer ready to be used as response buffer.
+NUM is the request's identification number."
+  (with-current-buffer (generate-new-buffer
+                        (format "*HTTP Response%s*"
+                                (if verb-auto-kill-response-buffers
+                                    ""
+                                  (format " %s" num))))
     ;; Set `verb-http-response's value to something other than nil
     ;; so that `verb-kill-all-response-buffers' can find it even if
     ;; no response was ever received.
@@ -1556,8 +1561,8 @@ be loaded into."
          (url-request-data (verb--encode-http-body (oref rs body)
                                                    (cdr content-type)))
          (url-mime-accept-string (or accept-header "*/*"))
-         (response-buf (verb--generate-response-buffer))
          (num (setq verb--requests-count (1+ verb--requests-count)))
+         (response-buf (verb--generate-response-buffer num))
          timeout-timer)
     ;; Start the timeout warning timer
     (when verb-show-timeout-warning

@@ -1477,6 +1477,16 @@
 
   (should-error (verb--log 1 'X "foo")))
 
+(ert-deftest test-response-buffer-name ()
+  (let ((verb--requests-count 41))
+    (server-test "basic"
+      (should (string-match-p "\\*HTTP Response 42\\*"
+			      (buffer-name)))))
+
+  (let ((verb-auto-kill-response-buffers t))
+    (server-test "basic"
+      (should (string= "*HTTP Response*" (buffer-name))))))
+
 (ert-deftest test-request-body-warning ()
   (clear-log)
   (server-test "get-with-body"
@@ -1664,8 +1674,9 @@
 
 (ert-deftest test-kill-buffer-and-window ()
   (setq num-buffers (length (buffer-list)))
-  (server-test "basic")
-  (switch-to-buffer "*HTTP Response*")
+  (let ((verb--requests-count 0))
+    (server-test "basic"))
+  (switch-to-buffer "*HTTP Response 1*")
   (verb-kill-buffer-and-window)
   (should (= num-buffers (length (buffer-list)))))
 

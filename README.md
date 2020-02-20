@@ -509,11 +509,13 @@ Accept: application/json
 #+end_src
 ```
 
-Babel source blocks in Verb mode accept a header argument called `:op`. Its default value is `send` (this means adding `:op send` is equivalent to not adding it at all).
+Babel source blocks in Verb mode accept a header argument called `:op`. Depending on the value that appears after this argument, Verb will execute different actions when <kbd>C-c C-c</kbd> is pressed.
 
 #### Sending Requests (`:op send`)
 
-To send the request, move the point to the source block and press <kbd>C-c C-c</kbd>. The result of the request will appear below. The `:wrap src ob-verb-response` tells Babel to wrap the response in a source block, using `ob-verb-response-mode` as major mode for font locking.
+By default, if `:op` is not specified, Verb will assume `:op send` was intended.
+
+To send the request, move the point to a source block and press <kbd>C-c C-c</kbd>. The result of the request will appear below. Adding `:wrap src ob-verb-response` argument tells Babel to wrap the response in a source block, using `ob-verb-response-mode` as major mode for font locking.
 
 After the request has been sent, Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
 
