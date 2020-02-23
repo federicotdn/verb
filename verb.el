@@ -1045,12 +1045,14 @@ received."
   (interactive (list 'this-window current-prefix-arg))
   (verb--ensure-verb-mode)
   (let* ((verb--inhibit-code-tags-evaluation arg)
-         (rs (verb--request-spec-from-hierarchy))
-         (buffer (current-buffer))
-         (window (selected-window)))
+         (rs (verb--request-spec-from-hierarchy)))
     (if arg
         ;; If ARG is non-nil, setup a buffer to edit the request
-        (verb--setup-temp-request-buffer rs buffer window verb--vars where)
+        (verb--setup-temp-request-buffer rs
+                                         (current-buffer)
+                                         (selected-window)
+                                         verb--vars
+                                         where)
       ;; If ARG is nil, just send the request
       (verb--request-spec-send rs where))))
 

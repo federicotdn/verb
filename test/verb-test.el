@@ -1515,6 +1515,22 @@
         (sleep-for req-sleep-time))
       (should (string= (buffer-string) "Hello, World!")))))
 
+(ert-deftest test-c-u-temp-buffer-contents ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+                        "get http://example.org/{{(+ 40 2)}}/"))
+    ;; C-u M-x verb-send-request-on-point
+    (let ((current-prefix-arg '(4)))
+      (cl-letf (((symbol-function 'verb--split-window) (lambda () (selected-window))))
+        (call-interactively 'verb-send-request-on-point)))
+    (should (string= (buffer-name) "*Edit HTTP Request*"))
+    (goto-char (point-min))
+
+    ;; Code tags should not have been evaluated
+    (should (search-forward "{{(+ 40 2)}}"))))
+
 (ert-deftest test-c-u-send-request ()
   (setq verb--stored-responses nil)
   (with-temp-buffer
