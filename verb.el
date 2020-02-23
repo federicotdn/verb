@@ -936,7 +936,8 @@ unless DEFAULT is non-nil, in which case that value is used instead."
 (defun verb-set-var (&optional var value)
   "Set new value for variable VAR previously set with `verb-var'.
 When called interactively, prompt the user for a variable that has
-been set once with `verb-var', and then prompt for VALUE."
+been set once with `verb-var', and then prompt for VALUE.  Otherwise,
+use string VAR and value VALUE."
   (interactive)
   (verb--ensure-verb-mode)
   (let* ((v (or var
@@ -947,7 +948,7 @@ been set once with `verb-var', and then prompt for VALUE."
          (elem (assoc-string v verb--vars)))
     (if elem
         (setcdr elem val)
-      (push (cons v val) verb--vars))))
+      (push (cons (intern v) val) verb--vars))))
 
 (defun verb-read-file (file &optional coding-system)
   "Return a buffer with the contents of FILE.

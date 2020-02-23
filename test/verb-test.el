@@ -848,7 +848,7 @@
     (verb-mode)
     (setq verb--vars nil)
     (verb-set-var "test" "hello")
-    (should (equal verb--vars '(("test" . "hello"))))))
+    (should (equal verb--vars '((test . "hello"))))))
 
 (ert-deftest test-eval-code-tags-context ()
   (with-temp-buffer
