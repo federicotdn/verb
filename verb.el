@@ -384,9 +384,9 @@ comfortably.  All commands listed in this keymap automatically enable
       '("Verb"
         ["Send request on selected window" verb-send-request-on-point]
         ["Send request on other window & switch"
-	 verb-send-request-on-point-other-window]
+         verb-send-request-on-point-other-window]
         ["Send request on other window"
-	 verb-send-request-on-point-other-window-stay]
+         verb-send-request-on-point-other-window-stay]
         "--"
         ["Kill response buffers" verb-kill-all-response-buffers]
         "--"
@@ -1262,11 +1262,11 @@ get https://gnu.org/test"
       (cdr resp)
     (user-error (concat "No response stored under key \"%s\"\n"
                         "Make sure you've set the \"Verb-Store\""
-			" heading property and sent the request at least once")
+                        " heading property and sent the request at least once")
                 key)))
 
 (defun verb--request-spec-callback (status rs response-buf start timeout-timer
-					   where num)
+                                           where num)
   "Callback for `verb--request-spec-send' for request RS.
 More response information can be read from STATUS.
 RESPONSE-BUF points to a buffer where the response should be copied
