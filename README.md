@@ -43,7 +43,7 @@ Verb has been tested on Emacs 26 and 27.
   - [Specifying HTTP Headers](#specifying-http-headers)
   - [Adding a Body](#adding-a-body)
   - [Extend and Override Requests](#extend-and-override-requests)
-  - [Modifying Requests before Sending](#modifying-requests-before-)
+  - [Modifying Requests before Sending](#modifying-requests-before-sending)
   - [Emacs Lisp Code Tags](#emacs-lisp-code-tags)
   - [Last Response](#last-response)
   - [Storing Responses by Key](#storing-responses-by-key)
@@ -362,7 +362,7 @@ delete
 
 ### Modifying Requests before Sending
 
-As you add more and more headings with different properties, it can get hard to track what will actually be sent once you use one of the `verb-send-request-on-point-*` commands. To review a request before it is sent, use the keyboard prefix argument <kbd>C-u</kbd> before invoking one of te send commands. This will open a temporary buffer which will contain only the request that is about to be sent. In this buffer, you can actually modify the contents of the request to whatever you like. By doing this, you can try different variations of one request, without having to edit your `.org` file.
+As you add more and more headings with different properties, it can get hard to track what will actually be sent once you use one of the `verb-send-request-on-point-*` commands. To review a request before it is sent, use the keyboard prefix argument <kbd>C-u</kbd> before invoking one of the send commands. This will open a temporary buffer which will contain only the request that is about to be sent. In this buffer, you can actually modify the contents of the request in whatever way you like. By doing this, you can try different variations of one request, without having to edit your `.org` file.
 
 Once you have finished reviewing/modifying the request, press <kbd>C-c C-c</kbd> to send it. If you don't want to send the request, press <kbd>C-c C-k</kbd> to kill the buffer.
 
