@@ -1046,53 +1046,64 @@ received."
   (let* ((verb--inhibit-code-tags-evaluation arg)
          (rs (verb--request-spec-from-hierarchy))
          (buffer (current-buffer))
-         (window (selected-window))
-         (verb-variables verb--vars))
+         (window (selected-window)))
     (if arg
         ;; If ARG is non-nil, setup a buffer to edit the request
-        (progn
-          (select-window (verb--split-window))
-          (switch-to-buffer (get-buffer-create "*Edit HTTP Request*"))
-          ;; "Reset" the buffer in case it wasn't killed correctly
-          (erase-buffer)
-          (unless (derived-mode-p 'org-mode)
-            (org-mode))
-          (verb--ensure-verb-mode)
-
-          ;; Don't require tagging for this temp buffer
-          (set (make-local-variable 'verb-tag) t)
-
-          ;; Copy over verb variables
-          (setq verb--vars verb-variables)
-
-          ;; Insert the request spec
-          (insert "* Press 'C-c C-c' to send the request.\n")
-
-          (when-let (metadata (oref rs metadata))
-            (insert ":properties:\n")
-            (dolist (element metadata)
-              (insert (format ":%s: %s\n" (car element) (cdr element))))
-            (insert ":end:\n"))
-
-          (insert "# You can also press 'C-c C-k' to cancel.\n"
-                  "# Note that any changes made here won't be saved.\n"
-                  (verb-request-spec-to-string rs))
-
-          ;; Use a copy of Org mode's keymap as the local keymap, so
-          ;; that we can rebind C-c C-c freely
-          (use-local-map (copy-keymap org-mode-map))
-
-          ;; Rebind C-c C-c to send the request
-          (local-set-key (kbd "C-c C-c")
-                         (lambda ()
-                           "Send the request specified in the current buffer."
-                           (interactive)
-                           (verb--send-temp-request-on-point buffer
-                                                             window
-                                                             where)))
-          (local-set-key (kbd "C-c C-k") #'verb-kill-buffer-and-window))
+        (verb--setup-temp-request-buffer rs buffer window verb--vars where)
       ;; If ARG is nil, just send the request
       (verb--request-spec-send rs where))))
+
+(defun verb--setup-temp-request-buffer (rs source-buffer source-window
+                                           verb-variables where)
+  "Setup and show a temporary buffer for editing a request spec.
+After the user has finished modifying the buffer, they can press
+\\<org-mode-map>\\[org-ctrl-c-ctrl-c] to send the request.
+Argument RS indicates the request specification to edit.
+SOURCE-BUFFER and SOURCE-WINDOW indicate which buffer and window
+should be current/active when the request is sent.  VERB-VARIABLES
+should contain the Verb user-defined variables set in SOURCE-BUFFER.
+WHERE describes where the response should be shown in (see
+`verb-send-request-on-point' for a complete description)."
+  (select-window (verb--split-window))
+  (switch-to-buffer (get-buffer-create "*Edit HTTP Request*"))
+  ;; "Reset" the buffer in case it wasn't killed correctly
+  (erase-buffer)
+  (unless (derived-mode-p 'org-mode)
+    (org-mode))
+  (verb--ensure-verb-mode)
+
+  ;; Don't require tagging for this temp buffer
+  (set (make-local-variable 'verb-tag) t)
+
+  ;; Copy over verb variables
+  (setq verb--vars verb-variables)
+
+  ;; Insert the request spec
+  (insert "* Press 'C-c C-c' to send the request.\n")
+
+  (when-let (metadata (oref rs metadata))
+    (insert ":properties:\n")
+    (dolist (element metadata)
+      (insert (format ":%s: %s\n" (car element) (cdr element))))
+    (insert ":end:\n"))
+
+  (insert "# You can also press 'C-c C-k' to cancel.\n"
+          "# Note that any changes made here won't be saved.\n"
+          (verb-request-spec-to-string rs))
+
+  ;; Use a copy of Org mode's keymap as the local keymap, so
+  ;; that we can rebind C-c C-c freely
+  (use-local-map (copy-keymap org-mode-map))
+
+  ;; Rebind C-c C-c to send the request
+  (local-set-key (kbd "C-c C-c")
+                 (lambda ()
+                   "Send the request specified in the current buffer."
+                   (interactive)
+                   (verb--send-temp-request-on-point source-buffer
+                                                     source-window
+                                                     where)))
+  (local-set-key (kbd "C-c C-k") #'verb-kill-buffer-and-window))
 
 (defun verb--send-temp-request-on-point (source-buffer source-window where)
   "Send the request specified in the current temporary buffer.
@@ -1610,9 +1621,9 @@ NUM is the request's identification number."
 
 (cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
   "Send the HTTP request described by RS.
-Show the results according to parameter WHERE (see
-`verb-send-request-on-point').  Return the buffer the response will
-be loaded into."
+Show the results according to argument WHERE (see
+`verb-send-request-on-point').  Return the buffer the response will be
+loaded into."
   ;; If auto kill buffers is enabled, kill all previous response
   ;; buffers now
   (when verb-auto-kill-response-buffers
