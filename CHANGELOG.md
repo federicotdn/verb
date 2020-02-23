@@ -1,5 +1,7 @@
 # Verb Changelog
 ## master
+- All the `verb-send-request-on-point-*` commands now accept a prefix argument (<kbd>C-u</kbd>). When it is specified, the user can modify the request that was extracted from the headings hierarchy before it is sent, in a temporary buffer.
+- The `verb-set-var` command can now set variable values for variables that haven't been used before.
 - Changed type of `verb-content-type-handlers` elements (to lists).
 
 ## **2.7.2** - 2020-02-17

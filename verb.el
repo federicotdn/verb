@@ -336,6 +336,11 @@ here under its value.")
 (defvar verb--requests-count 0
   "Number of HTTP requests sent in the past.")
 
+(defvar verb--inhibit-code-tags-evaluation nil
+  "When non-nil, do not evaluate code tags in requests specs.
+This variable is used mostly to parse and then copy request specs to
+other buffers without actually expanding the embedded code tags.")
+
 ;;;###autoload
 (defvar verb-command-map
   (let ((map (make-sparse-keymap)))
@@ -923,7 +928,7 @@ unless DEFAULT is non-nil, in which case that value is used instead."
     (unless val
       (setq val (cons var
                       (or default
-                          (read-string (format "(verb-var) Set value for %s: "
+                          (read-string (format "[verb-var] Set value for %s: "
                                                var)))))
       (push val verb--vars))
     (cdr val)))
@@ -934,19 +939,15 @@ When called interactively, prompt the user for a variable that has
 been set once with `verb-var', and then prompt for VALUE."
   (interactive)
   (verb--ensure-verb-mode)
-  (unless verb--vars
-    (user-error "%s" (concat "No variables have been initialized yet\n"
-                             "Run a {{(verb-var my-var)}} code tag first")))
   (let* ((v (or var
                (completing-read "Variable: " (mapcar (lambda (e)
                                                        (symbol-name (car e)))
-                                                     verb--vars)
-                                nil t)))
+                                                     verb--vars))))
          (val (or value (read-string (format "Set value for %s: " v))))
          (elem (assoc-string v verb--vars)))
     (if elem
         (setcdr elem val)
-      (user-error "Variable does not exist: %s" v))))
+      (push (cons v val) verb--vars))))
 
 (defun verb-read-file (file &optional coding-system)
   "Return a buffer with the contents of FILE.
@@ -1000,23 +1001,25 @@ Set the buffer's `verb-kill-this-buffer' variable to t."
         (fit-window-to-buffer)))))
 
 ;;;###autoload
-(defun verb-send-request-on-point-other-window ()
+(defun verb-send-request-on-point-other-window (&optional arg)
   "Send the request specified by the selected heading's text contents.
-Show the results on another window and switch to it (use
-`verb-send-request-on-point')."
-  (interactive)
-  (verb-send-request-on-point 'other-window))
+Show the results on another window and switch to it, using
+`verb-send-request-on-point'.  See that function's documentation for a
+description of prefix argument ARG."
+  (interactive "P")
+  (verb-send-request-on-point 'other-window arg))
 
 ;;;###autoload
-(defun verb-send-request-on-point-other-window-stay ()
+(defun verb-send-request-on-point-other-window-stay (&optional arg)
   "Send the request specified by the selected heading's text contents.
-Show the results on another window, but don't switch to it (use
-`verb-send-request-on-point')."
-  (interactive)
-  (verb-send-request-on-point 'stay-window))
+Show the results on another window but don't switch to it, using
+`verb-send-request-on-point'.  See that function's documentation for a
+description of prefix argument ARG."
+  (interactive "P")
+  (verb-send-request-on-point 'stay-window arg))
 
 ;;;###autoload
-(defun verb-send-request-on-point (where)
+(defun verb-send-request-on-point (where &optional arg)
   "Send the request specified by the selected heading's text contents.
 After the request has been sent, return the response buffer (the buffer
 where the response will be loaded into).
@@ -1031,12 +1034,77 @@ keep the current one selected.  If WHERE is `this-window', show the
 results of the request in the current window.  If WHERE has any other
 value, send the request but do not show the results anywhere.
 
+If prefix argument ARG is non-nil, allow the user to quickly edit the
+request before it is sent.  The changes made will not affect the
+contents of the current buffer and will be discarded after the request
+is sent.
+
 The `verb-post-response-hook' hook is called after a response has been
 received."
-  (interactive (list 'this-window))
+  (interactive (list 'this-window current-prefix-arg))
   (verb--ensure-verb-mode)
-  (verb--request-spec-send (verb--request-spec-from-hierarchy)
-                           where))
+  (let* ((verb--inhibit-code-tags-evaluation arg)
+         (rs (verb--request-spec-from-hierarchy))
+         (buffer (current-buffer))
+         (window (selected-window))
+         (verb-variables verb--vars))
+    (if arg
+        ;; If ARG is non-nil, setup a buffer to edit the request
+        (progn
+          (select-window (verb--split-window))
+          (switch-to-buffer (get-buffer-create "*Edit HTTP Request*"))
+          ;; "Reset" the buffer in case it wasn't killed correctly
+          (erase-buffer)
+          (unless (derived-mode-p 'org-mode)
+            (org-mode))
+          (verb--ensure-verb-mode)
+
+          ;; Don't require tagging for this temp buffer
+          (set (make-local-variable 'verb-tag) t)
+
+          ;; Copy over verb variables
+          (setq verb--vars verb-variables)
+
+          ;; Insert the request spec
+          (insert "* Press 'C-c C-c' to send the request.\n")
+
+          (when-let (metadata (oref rs metadata))
+            (insert ":properties:\n")
+            (dolist (element metadata)
+              (insert (format ":%s: %s\n" (car element) (cdr element))))
+            (insert ":end:\n"))
+
+          (insert "# You can also press 'C-c C-k' to cancel.\n"
+                  "# Note that any changes made here won't be saved.\n"
+                  (verb-request-spec-to-string rs))
+
+          ;; Use a copy of Org mode's keymap as the local keymap, so
+          ;; that we can rebind C-c C-c freely
+          (use-local-map (copy-keymap org-mode-map))
+
+          ;; Rebind C-c C-c to send the request
+          (local-set-key (kbd "C-c C-c")
+                         (lambda ()
+                           "Send the request specified in the current buffer."
+                           (interactive)
+                           (verb--send-temp-request-on-point buffer
+                                                             window
+                                                             where)))
+          (local-set-key (kbd "C-c C-k") #'verb-kill-buffer-and-window))
+      ;; If ARG is nil, just send the request
+      (verb--request-spec-send rs where))))
+
+(defun verb--send-temp-request-on-point (source-buffer source-window where)
+  "Send the request specified in the current temporary buffer.
+SOURCE-BUFFER and SOURCE-WINDOW specify what buffer and window must be
+selected/active when the request is actually sent.  WHERE specifies
+where the result shoud be shown in."
+  (unwind-protect
+      (let ((new-rs (verb--request-spec-from-hierarchy)))
+        (with-selected-window source-window
+          (with-current-buffer source-buffer
+            (verb--request-spec-send new-rs where))))
+    (verb-kill-buffer-and-window)))
 
 ;;;###autoload
 (defun verb-kill-all-response-buffers (&optional keep-windows)
@@ -1871,23 +1939,24 @@ special case, if S is the empty string, return the empty string."
 When evaluating the code, use buffer CONTEXT as the current buffer.
 Replace the code tags with the results of their own evaluations.  Code
 tags are delimited with `verb-code-tag-delimiters'."
-  (with-current-buffer buf
-    (while (re-search-forward (concat (car verb-code-tag-delimiters)
-                                      "\\(.*?\\)"
-                                      (cdr verb-code-tag-delimiters))
-                              nil t)
-      (let ((result (verb--eval-string (match-string 1) context)))
-        (cond
-         ((stringp result)
-          (replace-match result))
-         ((bufferp result)
-          (goto-char (match-beginning 0))
-          (delete-region (match-beginning 0) (match-end 0))
-          (insert-buffer-substring result)
-          (when (buffer-local-value 'verb-kill-this-buffer result)
-            (kill-buffer result)))
-         (t
-          (replace-match (format "%s" result))))))))
+  (unless verb--inhibit-code-tags-evaluation
+    (with-current-buffer buf
+      (while (re-search-forward (concat (car verb-code-tag-delimiters)
+                                        "\\(.*?\\)"
+                                        (cdr verb-code-tag-delimiters))
+                                nil t)
+        (let ((result (verb--eval-string (match-string 1) context)))
+          (cond
+           ((stringp result)
+            (replace-match result))
+           ((bufferp result)
+            (goto-char (match-beginning 0))
+            (delete-region (match-beginning 0) (match-end 0))
+            (insert-buffer-substring result)
+            (when (buffer-local-value 'verb-kill-this-buffer result)
+              (kill-buffer result)))
+           (t
+            (replace-match (format "%s" result)))))))))
 
 (defun verb--eval-code-tags-in-string (s &optional context)
   "Like `verb--eval-code-tags-in-buffer', but in a string S.
@@ -1909,7 +1978,12 @@ and there are query string arguments present.
 
 If a schema is not present, interpret the URL as a path, query string
 and fragment component of a URL with no host or schema defined."
-  (let* ((url-obj (url-generic-parse-url (url-encode-url url)))
+  ;; If we're not expanding code tags, do not attempt to encode '{',
+  ;; '}', etc., so that we keep the original URL text
+  (let* ((encoded-url (if verb--inhibit-code-tags-evaluation
+                          url
+                        (url-encode-url url)))
+         (url-obj (url-generic-parse-url encoded-url))
          (path (url-filename url-obj))
          (schema (url-type url-obj)))
     (if (not schema)

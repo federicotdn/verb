@@ -45,9 +45,9 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Function: **verb-request-spec-from-string** *text*
 - Function: **verb-request-spec-override** *original other*
 - Error: **verb-empty-spec**
-- Command: **verb-send-request-on-point** *where*
-- Command: **verb-send-request-on-point-other-window**
-- Command: **verb-send-request-on-point-other-window-stay**
+- Command: **verb-send-request-on-point** *where &optional arg*
+- Command: **verb-send-request-on-point-other-window** *&optional arg*
+- Command: **verb-send-request-on-point-other-window-stay** *&optional arg*
 - Command: **verb-re-send-request**
 - Command: **verb-kill-all-response-buffers** *&optional keep-windows*
 - Command: **verb-export-request-on-point** *name*

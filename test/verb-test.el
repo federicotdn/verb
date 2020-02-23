@@ -29,6 +29,7 @@
 (require 'ert-x)
 (require 'verb)
 (require 'ob-verb)
+(require 'cl-lib)
 
 (org-babel-do-load-languages
  'org-babel-load-languages
@@ -837,17 +838,17 @@
     (should (string= (verb--eval-string "(verb-var test-var-1)"
 					(current-buffer))
 		     "bye"))
-    (should (= (length verb--vars) 1))
-    (should-error (verb-set-var "test-foo" "1")))
+    (should (= (length verb--vars) 1)))
   (with-temp-buffer
     (should-not verb--vars)))
 
-(ert-deftest test-verb-set-var-error ()
+(ert-deftest test-verb-set-var-previously-unset ()
   (with-temp-buffer
     (org-mode)
     (verb-mode)
     (setq verb--vars nil)
-    (should-error (verb-set-var "test"))))
+    (verb-set-var "test" "hello")
+    (should (equal verb--vars '(("test" . "hello"))))))
 
 (ert-deftest test-eval-code-tags-context ()
   (with-temp-buffer
@@ -1510,8 +1511,39 @@
     (erase-buffer)
     (should (string= (buffer-string) ""))
     (with-current-buffer (verb-re-send-request)
-      (sleep-for 0.25)
+      (while (eq verb-http-response t)
+        (sleep-for req-sleep-time))
       (should (string= (buffer-string) "Hello, World!")))))
+
+(ert-deftest test-c-u-send-request ()
+  (setq verb--stored-responses nil)
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+                        ":properties:"
+                        ":verb-store: test-c-u"
+                        ":end:"
+                        "# comment"
+                        "post http://localhost:8000/echo"
+                        "Accept: text/plain"
+                        ""
+                        "Foobar"))
+
+    ;; C-u M-x verb-send-request-on-point
+    (let ((current-prefix-arg '(4)))
+      (cl-letf (((symbol-function 'verb--split-window) (lambda () (selected-window))))
+        (call-interactively 'verb-send-request-on-point)))
+    (should (string= (buffer-name) "*Edit HTTP Request*"))
+    (goto-char (point-max))
+    (insert "!!??")
+
+    ;; C-c C-c
+    (with-current-buffer (call-interactively (local-key-binding (kbd "C-c C-c")))
+      (while (eq verb-http-response t)
+        (sleep-for req-sleep-time))
+      (should (string= (buffer-string) "Foobar!!??"))
+      (should (string= (oref (verb-stored-response "test-c-u") body) "Foobar!!??")))))
 
 (ert-deftest test-repeated-args ()
   (server-test "repeated-args"
