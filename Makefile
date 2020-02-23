@@ -92,7 +92,7 @@ run: clean server-bg
 			     (verb-mode) \
 			     (insert \"* Test :verb:\") \
 			     (newline) \
-			     (insert \"get http://localhost:8000/\")) \
+			     (insert \"get http://localhost:8000/basic\")) \
 			   (load-theme 'wombat) \
 			   (setq url-debug t) \
 			   (toggle-debug-on-error) \
