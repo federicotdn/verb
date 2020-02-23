@@ -38,11 +38,12 @@ Verb has been tested on Emacs 26 and 27.
   - [Enabling Verb in Org Buffers](#enabling-verb-in-org-buffers)
   - [Sending Requests](#sending-requests)
   - [The Response Body Buffer](#the-response-body-buffer)
-  - [Re-sending requests](#re-sending-requests)
+  - [Re-sending Requests](#re-sending-requests)
   - [The Response Headers Buffer](#the-response-headers-buffer)
   - [Specifying HTTP Headers](#specifying-http-headers)
   - [Adding a Body](#adding-a-body)
   - [Extend and Override Requests](#extend-and-override-requests)
+  - [Modifying Requests before Sending](#modifying-requests-before-)
   - [Emacs Lisp Code Tags](#emacs-lisp-code-tags)
   - [Last Response](#last-response)
   - [Storing Responses by Key](#storing-responses-by-key)
@@ -164,7 +165,7 @@ In general, the first option should be useful enough for most cases. Once Verb m
 To actually send the HTTP request, use one of the `verb-send-request-on-point` commands. They are the following:
 - <kbd>C-c C-r C-r</kbd>: `verb-send-request-on-point-other-window-stay` sends the request and shows the response on a buffer in another window, but doesn't switch to that window.
 - <kbd>C-c C-r C-s</kbd>: `verb-send-request-on-point-other-window` sends the request, shows the response on a buffer in another window, and switches to it.
-- <kbd>C-c C-r C-f</kbd>: `verb-send-request-on-point-other-window-stay` sends the request, and shows the response on a buffer in the currently selected window.
+- <kbd>C-c C-r C-f</kbd>: `verb-send-request-on-point` sends the request, and shows the response on a buffer in the currently selected window.
 
 Request sending is asynchronous - you can do other stuff while Emacs waits for the server's response. If the response is taking too long to be received, a warning will be displayed in the minibuffer. You can modify this behaviour by modifying the `verb-show-timeout-warning` variable's value.
 
@@ -195,7 +196,7 @@ There's two recommended ways of closing response buffers:
 
 As you send more HTTP requests, more response buffers will be created, with `<N>` at the end of their name to distinguish between them. If you wish to automatically have old response buffers killed when making a new request, set the `verb-auto-kill-response-buffers` variable to `t`.
 
-### Re-sending requests
+### Re-sending Requests
 
 If you wish to re-send the request that generated the current response buffer, select the window showing it and use the `verb-re-send-request` command, which is bound to <kbd>C-c C-r C-f</kbd> by default. Note that the exact same request will be sent, even if the originating `.org` file was modified.
 
@@ -359,6 +360,14 @@ get ?text=example
 delete
 ```
 
+### Modifying Requests before Sending
+
+As you add more and more headings with different properties, it can get hard to track what will actually be sent once you use one of the `verb-send-request-on-point-*` commands. To review a request before it is sent, use the keyboard prefix argument <kbd>C-u</kbd> before invoking one of te send commands. This will open a temporary buffer which will contain only the request that is about to be sent. In this buffer, you can actually modify the contents of the request to whatever you like. By doing this, you can try different variations of one request, without having to edit your `.org` file.
+
+Once you have finished reviewing/modifying the request, press <kbd>C-c C-c</kbd> to send it. If you don't want to send the request, press <kbd>C-c C-k</kbd> to kill the buffer.
+
+**Note**: Any changes done in the temporary buffer will not be saved.
+
 ### Emacs Lisp Code Tags
 
 You can embed Emacs Lisp code inside request specifications by using code tags. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere in the request specification: the URL, method, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
@@ -391,7 +400,7 @@ Content-Type: application/json; charset=utf-8
 
 The example uses the `verb-var` function in the first code tag. This function returns the value of the symbol being passed to it, unless the symbol does not have a value, in which case its value is set using `read-string` and then returned. It is useful for creating request specifications that require external (potentially secret) values, that only need to be set once.
 
-If you wish to quickly re-set the value of a variable previously set with `verb-var`, use the `verb-set-var` command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`.
+If you wish to quickly re-set the value of a variable previously set with `verb-var`, use the `verb-set-var` command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`. You may also specify a completely new variable name, in which case it will be created and its value set.
 
 ### Last Response
 
