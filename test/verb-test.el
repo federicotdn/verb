@@ -1546,6 +1546,27 @@
     ;; Code tags should not have been evaluated
     (should (search-forward "{{(+ 40 2)}}"))))
 
+(ert-deftest test-c-u-verb-var ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (verb-var testvar1 "World!")
+    (insert (join-lines "* test :verb:"
+                        "post http://localhost:8000/echo"
+                        ""
+                        "Hello, {{(verb-var testvar1)}}"))
+    ;; C-u M-x verb-send-request-on-point
+    (let ((current-prefix-arg '(4)))
+      (cl-letf (((symbol-function 'verb--split-window) (lambda () (selected-window))))
+        (call-interactively 'verb-send-request-on-point)))
+    (should (string= (buffer-name) "*Edit HTTP Request*"))
+
+    ;; C-c C-c
+    (with-current-buffer (call-interactively (local-key-binding (kbd "C-c C-c")))
+      (while (eq verb-http-response t)
+        (sleep-for req-sleep-time))
+      (should (string= (buffer-string) "Hello, World!")))))
+
 (ert-deftest test-c-u-send-request ()
   (setq verb--stored-responses nil)
   (with-temp-buffer
