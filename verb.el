@@ -924,14 +924,14 @@ Delete the window only if it isn't the only window in the frame."
   "Return value of Verb variable VAR.
 If VAR is has no value yet, use `read-string' to set its value first,
 unless DEFAULT is non-nil, in which case that value is used instead."
-  (let ((val (assoc-string var verb--vars)))
-    (unless val
-      (setq val (cons var
-                      (or default
-                          (read-string (format "[verb-var] Set value for %s: "
-                                               var)))))
-      (push val verb--vars))
-    (cdr val)))
+  `(let ((val (assoc-string ',var verb--vars)))
+     (unless val
+       (setq val (cons ',var
+                       (or ,default
+                           (read-string (format "[verb-var] Set value for %s: "
+                                                ',var)))))
+       (push val verb--vars))
+     (cdr val)))
 
 (defun verb-set-var (&optional var value)
   "Set new value for variable VAR previously set with `verb-var'.

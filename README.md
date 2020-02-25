@@ -45,6 +45,7 @@ Verb has been tested on Emacs 26 and 27.
   - [Extend and Override Requests](#extend-and-override-requests)
   - [Modifying Requests before Sending](#modifying-requests-before-sending)
   - [Emacs Lisp Code Tags](#emacs-lisp-code-tags)
+  - [Verb Variables](#verb-variables)
   - [Last Response](#last-response)
   - [Storing Responses by Key](#storing-responses-by-key)
   - [Body Lines starting with `*`](#body-lines-starting-with-)
@@ -393,7 +394,6 @@ Let's extend the previous example so that it now uses code tags:
 ```
 * User management              :verb:
 template https://reqres.in/api/users
-Authentication: {{(verb-var token)}}
 Accept: application/json
 
 ** Get users list
@@ -410,9 +410,38 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
-The example uses the `verb-var` function in the first code tag. This function returns the value of the symbol being passed to it, unless the symbol does not have a value, in which case its value is set using `read-string` and then returned. It is useful for creating request specifications that require external (potentially secret) values, that only need to be set once.
+Notice that interactive functions like `read-string` can be used inside code tags as well - they will be evaluated before the request is sent, and the resulting value will be inserted into the content.
 
-If you wish to quickly re-set the value of a variable previously set with `verb-var`, use the `verb-set-var` command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`. You may also specify a completely new variable name, in which case it will be created and its value set.
+### Verb Variables
+
+Let's suppose that the two endpoints from the previous example now require authentication to be used. We could then modify the example to look like this:
+```
+* User management              :verb:
+template https://reqres.in/api/users
+Accept: application/json
+Authentication: {{(verb-var token)}}
+
+** Get users list
+get
+Content-Language: de-DE
+
+** Create a user
+post
+Content-Type: application/json; charset=utf-8
+
+{
+    "name": "{{(user-full-name)}}",
+    "age": "{{(read-string "Age: ")}}"
+}
+```
+
+The example now uses the `verb-var` macro in the first code tag. This macro essentially returns the value associated with the specified symbol - in this case, `token`. If the symbol does not have any associated value yet, the user is prompted for one using `read-string`. The value is then associated with the symbol and returned. If you don't wish to be prompted for a value, you can specify a second parameter, which will be used as the default value.
+
+If you wish to explicitly re-set the value of a variable set with `verb-var`, use the `verb-set-var` interactive command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`. You may also specify a completely new variable name, in which case it will be created and its value set.
+
+`verb-var` and `verb-set-var` are useful for writing requests that include sensitive information (such as passwords or tokens), or for writing requests that can be parametrized with different values.
+
+**Note**: Values set with `verb-var` and `verb-set-var` will be lost if the buffer is killed.
 
 ### Last Response
 

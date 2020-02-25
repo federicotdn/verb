@@ -831,14 +831,29 @@
   (with-temp-buffer
     (org-mode)
     (verb-mode)
+    (cl-letf (((symbol-function 'read-string) (lambda (&rest _)
+                                                "Foobar.")))
+      (should-not verb--vars)
+      (should (string= (verb-var v1) "Foobar."))
+      (should (equal verb--vars '((v1 . "Foobar."))))
+
+      (should (string= (verb-var v2 "123") "123"))
+      (should (equal verb--vars '((v2 . "123")
+                                  (v1 . "Foobar.")))))))
+
+(ert-deftest test-verb-set-var ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
     (should (string= (verb--eval-string "(verb-var test-var-1 \"hello\")"
 					(current-buffer))
 		     "hello"))
-    (verb-set-var "test-var-1" "bye")
-    (should (string= (verb--eval-string "(verb-var test-var-1)"
+
+    (verb-set-var "test-var-2" "bye")
+    (should (string= (verb--eval-string "(verb-var test-var-2)"
 					(current-buffer))
 		     "bye"))
-    (should (= (length verb--vars) 1)))
+    (should (= (length verb--vars) 2)))
   (with-temp-buffer
     (should-not verb--vars)))
 
