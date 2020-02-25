@@ -90,11 +90,21 @@ Both cases will set <kbd>C-c C-r</kbd> as the prefix key for all Verb commands i
 
 ## Quick Start
 
-Here's a quick example in case you want to get started without reading the [Usage Guide](#usage-guide). Place the following on an `example.org` file:
+Here's a minimal example in case you want to get started without reading the [Usage Guide](#usage-guide). Place the following on an Org mode buffer:
+```
+* Example request                            :verb:
+get https://api.ipify.org/?format=json
+```
+
+Then, press <kbd>C-c C-r C-r</kbd> to send the HTTP request.
+
+Here's a more complete example that includes defines two requests, both of which share the same base URL and `Accept` header:
+
 ```
 * Quick Start for Verb                       :verb:
 # Comments start with '#'. You can only place
 # comments before the URL and in the headers.
+
 template https://postman-echo.com
 Accept: application/json
 
@@ -102,6 +112,7 @@ Accept: application/json
 # Because the base URL is defined in the parent
 # heading, there's no need to repeat it here.
 # We can also add more headers.
+
 post /post
 Content-Type: application/json; charset=utf-8
 
@@ -113,10 +124,11 @@ Content-Type: application/json; charset=utf-8
 # Send a GET request and get a specific status code
 # as a response.
 # Use embedded Lisp code in the request spec.
+
 get /status/{{(read-number "Status: " 200)}}
 ```
 
-Then, move the point to one of the level 2 headings (marked with `**`), and press <kbd>C-c C-r C-r</kbd> to send the HTTP request.
+You can send any of the two requests by moving the point to one of the level 2 headings (marked with `**`), and then pressing <kbd>C-c C-r C-r</kbd>.
 
 ## Screenshots
 
