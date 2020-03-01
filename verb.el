@@ -872,13 +872,6 @@ all the request specs in SPECS, in the order they were passed in."
                           "Remember to tag your headlines with :%s:")
                   verb-tag))))
 
-(defun verb--split-window ()
-  "Split selected window by its longest side."
-  (split-window nil nil (if (< (window-pixel-height)
-                               (window-pixel-width))
-                            'right
-                          'below)))
-
 (defun verb-kill-response-buffer-and-window (&optional keep-window)
   "Delete response window and kill its buffer.
 If KEEP-WINDOW is non-nil, kill the buffer but do not delete the
@@ -993,8 +986,9 @@ Set the buffer's `verb-kill-this-buffer' variable to t."
     (setq verb--response-headers-buffer
           (generate-new-buffer "*HTTP Headers*"))
     (let ((headers (oref verb-http-response headers)))
-      (with-selected-window (verb--split-window)
-        (switch-to-buffer verb--response-headers-buffer)
+      (with-selected-window (display-buffer
+                             verb--response-headers-buffer
+                             '(display-buffer-below-selected))
         (verb-response-headers-mode)
         (setq header-line-format (format "HTTP Response Headers | count: %s"
                                          (length headers)))
@@ -1067,8 +1061,7 @@ should be current/active when the request is sent.  VERB-VARIABLES
 should contain the Verb user-defined variables set in SOURCE-BUFFER.
 WHERE describes where the response should be shown in (see
 `verb-send-request-on-point' for a complete description)."
-  (select-window (verb--split-window))
-  (switch-to-buffer (get-buffer-create "*Edit HTTP Request*"))
+  (switch-to-buffer-other-window (get-buffer-create "*Edit HTTP Request*"))
   ;; "Reset" the buffer in case it wasn't killed correctly
   (erase-buffer)
   (unless (derived-mode-p 'org-mode)
