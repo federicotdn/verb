@@ -1525,7 +1525,7 @@ Uses `verb--to-ascii' to ensure all added text is unibyte.
 Returns a new alist, does not modify HEADERS."
   (let* ((headers (copy-alist headers))
          (accept (assoc-string "Accept" headers t)))
-    ;; ;; Accept
+    ;; Accept
     (when accept
       (setq headers (cl-delete "Accept" headers
                                :key #'car
