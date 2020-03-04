@@ -1,6 +1,7 @@
 # Verb Changelog
 ## master
 - Use standard `switch-to-buffer`/`display-buffer` functions to show side buffers and pop-up buffers.
+- Added `verb-send-request-on-point-no-window` command. By default, it is bound to <kbd>C-c C-r C-m</kbd>.
 
 ## **2.8.0** - 2020-02-23
 - All the `verb-send-request-on-point-*` commands now accept a prefix argument (<kbd>C-u</kbd>). When it is specified, the user can modify the request that was extracted from the headings hierarchy before it is sent, in a temporary buffer.

@@ -1530,6 +1530,21 @@
         (sleep-for req-sleep-time))
       (should (string= (buffer-string) "Hello, World!")))))
 
+(ert-deftest test-send-no-window ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+                        "get http://localhost:8000/basic"))
+    (let ((w (selected-window))
+          (b (current-buffer))
+          (resp (verb-send-request-on-point-no-window))
+          (inhibit-message t))
+      (while (eq (buffer-local-value 'verb-http-response resp) t)
+        (sleep-for req-sleep-time))
+      (should (equal w (selected-window)))
+      (should (equal b (current-buffer))))))
+
 (ert-deftest test-c-u-temp-buffer-contents ()
   (with-temp-buffer
     (org-mode)

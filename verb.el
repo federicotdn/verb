@@ -346,6 +346,7 @@ other buffers without actually expanding the embedded code tags.")
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") #'verb-send-request-on-point-other-window)
     (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window-stay)
+    (define-key map (kbd "C-m") #'verb-send-request-on-point-no-window)
     (define-key map (kbd "C-f") #'verb-send-request-on-point)
     (define-key map (kbd "C-k") #'verb-kill-all-response-buffers)
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
@@ -1014,6 +1015,18 @@ description of prefix argument ARG."
   (verb-send-request-on-point 'stay-window arg))
 
 ;;;###autoload
+(defun verb-send-request-on-point-no-window (&optional arg)
+  "Send the request specified by the selected heading's text contents.
+Do this using `verb-send-request-on-point', but do not show the
+results on any window.  See that function's documentation for a
+description of prefix argument ARG.
+
+This command is useful for cases where the request is only being sent
+for its side effects."
+  (interactive "P")
+  (verb-send-request-on-point 'minibuffer arg))
+
+;;;###autoload
 (defun verb-send-request-on-point (where &optional arg)
   "Send the request specified by the selected heading's text contents.
 After the request has been sent, return the response buffer (the buffer
@@ -1022,12 +1035,17 @@ where the response will be loaded into).
 Note that the contents of all parent headings are considered as well;
 see `verb--request-spec-from-hierarchy' to see how this is done.
 
-If WHERE is `other-window', show the results of the request (the
-response buffer) on another window and select it.  If WHERE is
-`show-window', show the results of the request on another window, but
-keep the current one selected.  If WHERE is `this-window', show the
-results of the request in the current window.  If WHERE has any other
-value, send the request but do not show the results anywhere.
+The buffer containing the response will be shown (or not) in different
+ways, depending on the value of WHERE:
+- `other-window': Show the results of the request (the response
+buffer) on another window and select it.
+- `stay-window': Show the results of the request on another window,
+but keep the current one selected.
+- `this-window': Show the results of the request in the current
+  window.
+- `minibuffer': Show the response status on the minibuffer, but don't
+show the response contents themselves anywhere.
+- Other values: Send the request but do not show the results anywhere.
 
 If prefix argument ARG is non-nil, allow the user to quickly edit the
 request before it is sent.  The changes made will not affect the
@@ -1505,7 +1523,8 @@ view the HTTP response in a user-friendly way."
         ('other-window (switch-to-buffer-other-window (current-buffer)))
         ('stay-window (save-selected-window
                         (switch-to-buffer-other-window (current-buffer))))
-        ('this-window (switch-to-buffer (current-buffer)))))
+        ('this-window (switch-to-buffer (current-buffer)))
+        ('minibuffer (message "%s" (oref verb-http-response status)))))
 
     (with-current-buffer response-buf
       (verb-response-body-mode)

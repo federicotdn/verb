@@ -48,6 +48,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-send-request-on-point** *where &optional arg*
 - Command: **verb-send-request-on-point-other-window** *&optional arg*
 - Command: **verb-send-request-on-point-other-window-stay** *&optional arg*
+- Command: **verb-send-request-on-point-no-window** *&optional arg*
 - Command: **verb-re-send-request**
 - Command: **verb-kill-all-response-buffers** *&optional keep-windows*
 - Command: **verb-export-request-on-point** *name*
