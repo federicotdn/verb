@@ -5,7 +5,7 @@
 
 **Verb** is a package for Emacs which allows you to organize and send HTTP requests.
 
-The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to organize specifications for HTTP requests using Org's tree structure. Properties defined in the higher levels extend or sometimes override properties defined in the lower levels - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Org mode with the common functionality provided by other HTTP clients.
+The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to organize specifications for HTTP requests using Org's tree structure. Properties defined in the higher levels extend or sometimes override properties defined in the lower levels - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Org mode with the common functionality provided by other HTTP clients. However, very little knowledge of Org mode is needed to use Verb.
 
 Verb has been tested on Emacs 26 and 27.
 
@@ -16,17 +16,18 @@ Verb has been tested on Emacs 26 and 27.
 
 ## Features
 
-- Send requests from Emacs using HTTP and HTTPS.
-- Organize request specifications using Org mode.
-- Easily define common attributes (URLs, query string, headers, etc.) for many requests.
+- Send HTTP and HTTPS requests from Emacs.
+- Organize request specifications into trees using Org mode.
+- Easily define common attributes (URLs, query strings, headers, etc.) for many requests.
 - Correctly handle text encodings (charsets) for requests and responses.
 - Display PDF, PNG, JPEG, BMP, GIF and SVG responses.
-- Evaluate and substitute Emacs Lisp expressions in specifications text.
+- Evaluate and substitute Emacs Lisp expressions in specifications.
 - Can export requests to `curl` format.
 - Integrates with Babel.
 - Includes mouse support (menu bar and mode line).
-- Supports uploading files on requests.
+- Supports file uploads.
 - Optionally uses `url-queue` backend.
+- Has no dependencies!
 - Easy to use! (hopefully).
 
 ## Table of Contents
@@ -153,7 +154,9 @@ get https://reqres.in/api/users
 
 This defines a minimal HTTP request specification under the "Get users list" heading, composed of a method (`GET`) and a URL (`https://reqres.in/api/users`). The heading is prefixed with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level. All the text under a heading corresponds to the HTTP request it is describing. It is not possible to write request specifications without adding a heading at the top.
 
-Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. Note that in Org mode, by default subheadings inherit their parents' tags (see the `org-use-tag-inheritance` variable). To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
+Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. To tag a heading, simply move the point to it and press <kbd>C-c C-c</kbd>, and then type in `verb` <kbd>RET</kbd>. Note that in Org mode, by default subheadings inherit their parents' tags (see the `org-use-tag-inheritance` variable). This implies that once you've tagged one of the lower level headings, all its subheadings will have that tag as well. 
+
+To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
 ```
 #+FILETAGS: :verb:
 ```
