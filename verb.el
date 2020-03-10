@@ -1109,6 +1109,14 @@ WHERE describes where the response should be shown in (see
   ;; that we can rebind C-c C-c freely
   (use-local-map (copy-keymap org-mode-map))
 
+  ;; Unbind keys for verb-send-request-on-point-* commands
+  (dolist (cmd '(verb-send-request-on-point
+                 verb-send-request-on-point-other-window
+                 verb-send-request-on-point-other-window-stay
+                 verb-send-request-on-point-no-window))
+    (when-let ((key (where-is-internal cmd nil t)))
+      (local-unset-key key)))
+
   ;; Rebind C-c C-c to send the request
   (local-set-key (kbd "C-c C-c")
                  (lambda ()
