@@ -1662,7 +1662,7 @@ loaded into."
                         url-request-extra-headers))
          (url-request-data (verb--encode-http-body (oref rs body)
                                                    (cdr content-type)))
-         (url-mime-accept-string (or accept-header "*/*"))
+         (url-mime-accept-string (verb--to-ascii (or accept-header "*/*")))
          (num (setq verb--requests-count (1+ verb--requests-count)))
          (response-buf (verb--generate-response-buffer num))
          timeout-timer)

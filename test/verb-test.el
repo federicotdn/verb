@@ -1712,6 +1712,10 @@
   (server-test "request-utf-8-default-2"
     (should (string= (buffer-string) "OK"))))
 
+(ert-deftest test-server-request-utf-8-with-accept ()
+  (server-test "utf-8-request-with-accept"
+    (should (string= (buffer-string) "語"))))
+
 (ert-deftest test-server-response-big5 ()
   (server-test "response-big5"
     (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))

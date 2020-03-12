@@ -119,6 +119,12 @@ Content-Type: text/plain
 Foobar
 ** repeated-args
 get /echo-args?a=1&a=2&a=3&b=42
+** utf-8-request-with-accept
+post /echo
+Accept: application/json
+Content-Type: application/json; charset=utf-8
+
+語
 * connection-fail-port
 # Valid host but invalid port
 get http://localhost:1234/test
