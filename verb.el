@@ -1437,7 +1437,7 @@ view the HTTP response in a user-friendly way."
     (let ((handler (verb--get-handler content-type)))
       (unless handler
         ;; Default handler is fundamental mode (text)
-        (setq handler #'fundamental-mode))
+        (setq handler '(fundamental-mode)))
 
       (if (= (length handler) 1)
           ;; Text handler

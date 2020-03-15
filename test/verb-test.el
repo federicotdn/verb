@@ -1662,6 +1662,12 @@
       (should-not enable-multibyte-characters)
       (should (coding-system-equal buffer-file-coding-system 'binary)))))
 
+(ert-deftest test-unknown-content-type ()
+  (let ((verb-content-type-handlers nil))
+    (server-test "basic-json"
+      (should (equal major-mode 'fundamental-mode))
+      (should (string= (buffer-string) "{\"foo\":true,\"hello\":\"world\"}")))))
+
 (ert-deftest test-repeated-header ()
   (clear-log)
   (server-test "repeated-sorted-headers"

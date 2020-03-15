@@ -1,4 +1,7 @@
 # Verb Changelog
+## master
+- Fix error signaled when receiving a response with an unknown content type.
+
 ## **2.8.1** - 2020-03-12
 - Use standard `switch-to-buffer`/`display-buffer` functions to show side buffers and pop-up buffers.
 - Added `verb-send-request-on-point-no-window` command. By default, it is bound to <kbd>C-c C-r C-m</kbd>.
