@@ -7,8 +7,8 @@ on:
       - 'docs/*'
 jobs:
   test:
-    name: Run checks and tests
-    runs-on: ubuntu-latest
+    name: Checks/Tests
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         emacs_version:
@@ -16,6 +16,9 @@ jobs:
           - '26.2'
           - '26.3'
           - snapshot
+        os:
+          - ubuntu-latest
+          - macos-latest
     steps:
       - uses: purcell/setup-emacs@master
         with:
