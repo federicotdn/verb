@@ -1,0 +1,26 @@
+name: CI
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - 'examples/*'
+      - 'docs/*'
+jobs:
+  test:
+    name: Run unit tests
+    strategy:
+      matrix:
+        emacs_version:
+          - '26.1'
+          - '26.2'
+          - '26.3'
+          - snapshot
+    steps:
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+      - uses: actions/checkout@v2
+      - name: Run checks
+        run: 'make check'
+      - name: Run ERT unit tests
+        run: 'make test'
