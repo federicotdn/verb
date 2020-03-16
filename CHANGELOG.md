@@ -1,5 +1,5 @@
 # Verb Changelog
-## master
+## **2.8.2** - 2020-03-16
 - Fix error signaled when receiving a response with an unknown content type.
 
 ## **2.8.1** - 2020-03-12
