@@ -5,6 +5,8 @@ on:
       - '**.md'
       - 'examples/*'
       - 'docs/*'
+  schedule:
+    - '0 12 1,15 * *'
 jobs:
   test:
     name: Checks/Tests

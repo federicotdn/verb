@@ -9,7 +9,7 @@ The package introduces a new minor mode, **Verb mode**, which works as an extens
 
 Verb has been tested on Emacs 26 and 27.
 
-[![Build Status](https://travis-ci.org/federicotdn/verb.svg?branch=master)](https://travis-ci.org/federicotdn/verb)
+[![CI Status](https://github.com/federicotdn/verb/workflows/CI/badge.svg)](https://github.com/federicotdn/verb/actions)
 [![MELPA](https://melpa.org/packages/verb-badge.svg)](https://melpa.org/#/verb)
 [![MELPA Stable](https://stable.melpa.org/packages/verb-badge.svg)](https://stable.melpa.org/#/verb)
 ![License](https://img.shields.io/github/license/federicotdn/verb.svg)
