@@ -7,7 +7,7 @@ on:
       - 'docs/*'
 jobs:
   test:
-    name: Run unit tests
+    name: Run checks and tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,7 +21,11 @@ jobs:
         with:
           version: ${{ matrix.emacs_version }}
       - uses: actions/checkout@v2
+      - name: Setup checks
+        run: 'make setup-check'
       - name: Run checks
         run: 'make check'
+      - name: Setup unit testing
+        run: 'make setup-tests'
       - name: Run ERT unit tests
         run: 'make test'
