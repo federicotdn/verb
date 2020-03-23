@@ -48,7 +48,6 @@ options are:
   \"send get-body\": Send the HTTP request specified in the source
     block, but only return the response body.
   \"export curl\": Export request spec to curl format.
-  \"export human\": Export request spec to human-readable format.
   \"export verb\": Export request spec to verb format.
 
 The default value for OPERATION is \"send\"."
@@ -73,14 +72,10 @@ with the contents of the exported request.
 
 Called when :op `export' is passed to `org-babel-execute:verb'."
   (pcase name
-    ((or "human" "verb")
+    ("verb"
      (save-window-excursion
-       (let ((fn (if (string= name "human")
-                     #'verb--export-to-human
-                   #'verb--export-to-verb))
-             result)
-         (with-current-buffer (funcall fn rs)
-           (setq result (verb--buffer-string-no-properties))
+       (with-current-buffer (verb--export-to-verb rs)
+         (let ((result (verb--buffer-string-no-properties)))
            (kill-buffer)
            result))))
     ("curl"

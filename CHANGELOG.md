@@ -1,4 +1,7 @@
 # Verb Changelog
+## master
+- Removed human-readable export format as it was too similar to Verb format.
+
 ## **2.8.2** - 2020-03-16
 - Fix error signaled when receiving a response with an unknown content type.
 

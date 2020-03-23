@@ -2018,24 +2018,6 @@
 		 (verb-request-spec-from-string
 		  "CONNECT http://abc.com"))))
 
-(ert-deftest test-human-readable-export ()
-  (setq test-spec (text-as-spec-nl "# test"
-				   "post https://hello.com"
-				   "Test: Foobar"
-				   "Test2: Foo"
-				   ""
-				   "Body contents"))
-  (with-current-buffer (verb--export-to-human test-spec)
-    (should (string= (verb--buffer-string-no-properties)
-		     (join-lines "HTTP Method: POST"
-				 "URL: https://hello.com"
-				 "Headers:"
-				 "    Test: Foobar"
-				 "    Test2: Foo"
-				 ""
-				 "Body:"
-				 "Body contents\n")))))
-
 (ert-deftest test-verb-export ()
   (setq test-spec (text-as-spec-nl "PUT https://hello.com"
 				   "Test: Foobar"
@@ -2149,16 +2131,13 @@
 			  "-X POST \\"
 			  "--data-raw '{}'")))
 
-(ert-deftest test-babel-human ()
-  (babel-test (join-lines "#+begin_src verb :op export human"
+(ert-deftest test-babel-verb-format ()
+  (babel-test (join-lines "#+begin_src verb :op export verb"
 			  "delete http://example.org"
+                          "Some: Header"
 			  "#+end_src")
-	      (join-lines "HTTP Method: DELETE"
-			  "URL: http://example.org"
-			  "Headers:"
-			  "    No headers defined."
-			  ""
-			  "No body defined.")))
+	      (join-lines "DELETE http://example.org"
+			  "Some: Header\n")))
 
 (ert-deftest test-babel-send ()
   (babel-test (join-lines "* Heading 1    :verb:"

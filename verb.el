@@ -106,8 +106,7 @@ will be used."
                                (const :tag "Text" nil)))))
 
 (defcustom verb-export-functions
-  '(("human" . verb--export-to-human)
-    ("verb" . verb--export-to-verb)
+  '(("verb" . verb--export-to-verb)
     ("curl" . verb--export-to-curl))
   "Alist of request specification export functions.
 Each element should have the form (NAME . FN), where NAME should be a
@@ -352,7 +351,6 @@ other buffers without actually expanding the embedded code tags.")
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
     (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
     (define-key map (kbd "C-b") #'verb-export-request-on-point-verb)
-    (define-key map (kbd "C-n") #'verb-export-request-on-point-human)
     (define-key map (kbd "C-v") #'verb-set-var)
     map)
   "Keymap for `verb-mode' commands.
@@ -399,7 +397,6 @@ comfortably.  All commands listed in this keymap automatically enable
         ["Set variable value" verb-set-var]
         "--"
         ["Export request to curl" verb-export-request-on-point-curl]
-        ["Export request to human-readable" verb-export-request-on-point-human]
         ["Export request to Verb" verb-export-request-on-point-verb]
         "--"
         ["Customize Verb" verb-customize-group]
@@ -1180,42 +1177,11 @@ See `verb--export-to-verb' for more information."
   (verb-export-request-on-point "verb"))
 
 ;;;###autoload
-(defun verb-export-request-on-point-human ()
-  "Export request on point to a human-readable format.
-See `verb--export-to-human' for more information."
-  (interactive)
-  (verb-export-request-on-point "human"))
-
-;;;###autoload
 (defun verb-export-request-on-point-curl ()
   "Export request on point to curl format.
 See `verb--export-to-curl' for more information."
   (interactive)
   (verb-export-request-on-point "curl"))
-
-(defun verb--export-to-human (rs)
-  "Export a request spec RS to a human-readable format.
-Return a new buffer with the export results inserted into it."
-  (with-current-buffer (generate-new-buffer "*HTTP Request Spec*")
-    (text-mode)
-    (insert (propertize "HTTP Method: " 'font-lock-face 'bold)
-            (oref rs method) "\n"
-            (propertize "URL: " 'font-lock-face 'bold)
-            (url-recreate-url (oref rs url)) "\n"
-            (propertize "Headers:\n" 'font-lock-face 'bold))
-    (let ((headers (oref rs headers)))
-      (if headers
-          (dolist (key-value headers)
-            (insert "    " (car key-value) ": " (cdr key-value) "\n"))
-        (insert "    No headers defined.\n")))
-    (insert "\n")
-    (let ((body (oref rs body)))
-      (if body
-          (insert (propertize "Body:" 'font-lock-face 'bold) "\n"
-                  body "\n")
-        (insert "No body defined.")))
-    (switch-to-buffer-other-window (current-buffer))
-    (current-buffer)))
 
 (defun verb--export-to-verb (rs)
   "Export a request spec RS to Verb format.
