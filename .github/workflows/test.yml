@@ -6,7 +6,7 @@ on:
       - 'examples/*'
       - 'docs/*'
   schedule:
-    - cron: '0 12 1,15 * *'
+    - cron: '0 12 1 * *'
 jobs:
   test:
     name: Checks/Tests
