@@ -81,10 +81,10 @@ Once Verb has been installed and loaded, add the following to your `init.el`:
   (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
 ```
 
-If you're using [use-package](https://github.com/jwiegley/use-package), try this instead:
+If you're using [use-package](https://github.com/jwiegley/use-package), you'll need to modify your entry for `org` (create one if you don't have one already). Under the `:config` key, add the code necessary to bind the Verb command map to a key. The end result should look something like this:
 ```elisp
-(use-package verb
-  :after org
+(use-package org
+  :mode ("\\.org\\'" . org-mode)
   :config (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
 ```
 
