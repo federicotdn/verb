@@ -479,7 +479,7 @@ message is logged.  To turn off logging, set `verb-enable-log' to nil."
   (member m verb--http-methods))
 
 (defun verb--alist-p (l)
-  "Return on-nil if L is an alist."
+  "Return non-nil if L is an alist."
   (when (consp l)
     (catch 'end
       (dolist (elem l)
