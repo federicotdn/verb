@@ -371,6 +371,7 @@
 (ert-deftest test-verb-heading-tags ()
   (with-temp-buffer
     (org-mode)
+    (verb-mode)
     (insert (join-lines "* H1  :a:b:"
 			"something"
 			"** H2 :c:"))
@@ -378,6 +379,14 @@
 
   (with-temp-buffer
     (org-mode)
+    (verb-mode)
+    (insert (join-lines "* Heading with no tags"
+                        "content"))
+    (should-not (verb--heading-tags)))
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
     (insert (join-lines "no headings"))
     (should-not (verb--heading-tags))))
 
