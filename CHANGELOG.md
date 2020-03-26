@@ -1,5 +1,6 @@
 # Verb Changelog
 ## master
+- Added support for Emacs 25.
 - Removed human-readable export format as it was too similar to Verb format.
 - Search for `:verb:` tag now respects the `org-use-tag-inheritance` variable.
 

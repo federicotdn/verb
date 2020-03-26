@@ -7,7 +7,7 @@
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: tools
 ;; Package-Version: 2.8.2
-;; Package-Requires: ((emacs "26"))
+;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
