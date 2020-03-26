@@ -723,7 +723,7 @@ Return t if there was a heading to move towards to and nil otherwise."
   "Return all (inherited) tags from current heading."
   (verb--back-to-heading)
   (when-let ((tags (org-entry-get (point) "ALLTAGS" t)))
-    (split-string (string-trim tags ":" ":") ":")))
+    (split-string tags ":" t)))
 
 (defun verb--heading-properties (prefix)
   "Return alist of current heading properties starting with PREFIX.
@@ -1655,6 +1655,12 @@ loaded into."
                url-request-data)
       (verb--log num 'W "Body is present but request method is %s"
                  url-request-method))
+
+    ;; Workaround for "localhost" not working on Emacs 25
+    (when (and (< emacs-major-version 26)
+               (string= (url-host url) "localhost"))
+      (verb--log num 'W "Replacing localhost with 127.0.0.1")
+      (setf (url-host url) "127.0.01"))
 
     ;; Send the request!
     (condition-case err
