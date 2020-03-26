@@ -1,5 +1,5 @@
 # Verb Changelog
-## master
+## **2.9.0** - 2020-03-27
 - Added support for Emacs 25.
 - Removed human-readable export format as it was too similar to Verb format.
 - Search for `:verb:` tag now respects the `org-use-tag-inheritance` variable.
