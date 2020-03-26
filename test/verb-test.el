@@ -390,6 +390,34 @@
     (insert (join-lines "no headings"))
     (should-not (verb--heading-tags))))
 
+(ert-deftest test-verb-heading-tags-inheritance ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* H1  :a:b:"
+			"something"
+			"** H2 :c:"))
+    (let ((org-use-tag-inheritance t))
+      (should (equal (verb--heading-tags) '("a" "b" "c")))))
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* H1  :a:b:"
+			"something"
+			"** H2 :c:"))
+    (let ((org-use-tag-inheritance nil))
+      (should (equal (verb--heading-tags) '("c")))))
+
+    (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* H1"
+			"something"
+			"** H2 :c:"))
+    (let ((org-use-tag-inheritance nil))
+      (should (equal (verb--heading-tags) '("c"))))))
+
 (ert-deftest test-verb-heading-properties ()
   (with-temp-buffer
     (org-mode)
@@ -1921,6 +1949,9 @@
 		     "Hello, World!"))))
 
 (ert-deftest test-cookies ()
+  ;; TODO: Fix this test on Emacs 25
+  (skip-unless (> emacs-major-version 25))
+
   (setq verb-inhibit-cookies nil)
   (setq url-cookie-storage nil)
   (setq url-cookie-secure-storage nil)
@@ -2133,9 +2164,34 @@
     (verb-mode)
     (insert input)
     (search-backward "#+begin_src")
-    (let ((inhibit-message t))
-      (setq babel-result (org-ctrl-c-ctrl-c)))
-    (should (string= babel-result output))))
+    (let ((inhibit-message t)
+          start
+          result)
+      (setq result (org-ctrl-c-ctrl-c))
+      (when (< emacs-major-version 26)
+        ;; In Emacs 25, `org-ctrl-c-ctrl-c' does not return the result
+        (search-forward "#+results:")
+        (forward-char)
+        (setq start (point))
+
+        ;; Two cases to handle
+        (if (looking-at-p ": ")
+            ;; Results have been inserted in lines with ": "
+            (while (re-search-forward "^: " nil t)
+              (replace-match ""))
+          ;; Results have been inserted inside begin/end_src blocks
+          (delete-matching-lines "#\\+\\(begin\\|end\\)_\\(src\\|example\\)"))
+
+        ;; Replace 127.0.0.1 - > localhost
+        (goto-char (point-min))
+        (while (re-search-forward "127\\.0\\.0\\.1" nil t)
+          (replace-match "localhost"))
+
+        ;; Set the result
+        (setq result (buffer-substring start (point-max))))
+
+      (should (string= (string-trim-right result)
+                       (string-trim-right output))))))
 
 (ert-deftest test-babel-curl ()
   (babel-test (join-lines "#+begin_src verb :op export curl"

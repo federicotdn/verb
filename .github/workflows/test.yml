@@ -14,8 +14,7 @@ jobs:
     strategy:
       matrix:
         emacs_version:
-          - '26.1'
-          - '26.2'
+          - '25.3'
           - '26.3'
           - snapshot
         os:
@@ -30,9 +29,11 @@ jobs:
         with:
           python-version: '3.x'
       - name: Setup checks
+        if: ! startsWith(matrix.emacs_version, '25')
         run: 'make setup-check'
       - name: Run checks
         run: 'make check'
+        if: ! startsWith(matrix.emacs_version, '25')
       - name: Setup unit testing
         run: 'make setup-tests'
       - name: Run ERT unit tests

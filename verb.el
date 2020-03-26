@@ -722,16 +722,23 @@ Return t if there was a heading to move towards to and nil otherwise."
 (defun verb--heading-tags ()
   "Return all (inherited) tags from current heading."
   (verb--back-to-heading)
-  (when-let ((tags (org-entry-get (point) "ALLTAGS" t)))
-    (split-string tags ":" t)))
+  (when-let ((tags (org-entry-get (point) "ALLTAGS")))
+    (seq-filter (lambda (s) (or org-use-tag-inheritance
+                                (not (get-text-property 0 'inherited s))))
+                (split-string tags ":" t))))
 
 (defun verb--heading-properties (prefix)
   "Return alist of current heading properties starting with PREFIX.
 Does not use property inheritance.  Matching is case-insensitive."
   (verb--back-to-heading)
-  (seq-filter (lambda (e)
-                (string-prefix-p prefix (car e) t))
-              (org-entry-properties (point))))
+  ;; 3) Discard all (key . nil) elements in the list
+  (seq-filter (lambda (e) (stringp (cdr e)))
+              ;; 2) Take the (key . value) for each of those properties here
+              (mapcar (lambda (key) (cons (upcase key)
+                                          (org-entry-get (point) key)))
+                      ;; 1) Get all doc properties and filter them by prefix
+                      (seq-filter (lambda (s) (string-prefix-p prefix s t))
+                                  (org-buffer-property-keys)))))
 
 (defun verb--heading-contents ()
   "Return the current heading's text contents.
@@ -782,7 +789,7 @@ If no Babel source blocks are found, return TEXT."
     (let ((case-fold-search t)
           start result)
       (when (search-forward "#+begin_src" nil t)
-        (unless (looking-at " +verb")
+        (unless (looking-at-p " +verb")
           (user-error "%s" (concat "Found a non-verb Babel source block\n"
                                    "Make sure all source blocks in the "
                                    "hierarchy use \"verb\" as language")))
