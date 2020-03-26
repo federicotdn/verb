@@ -2148,7 +2148,8 @@ METADATA."
           ;; Now we know body isn't comprised entirely of whitespace,
           ;; check if the user wants to delete any trailing characters
           (setq body (if verb-trim-body-end
-                         (string-trim-right rest verb-trim-body-end)
+                         (replace-regexp-in-string
+                          (concat verb-trim-body-end "$") "" rest)
                        rest))))
       ;; Return a `verb-request-spec'
       (verb-request-spec :method method

@@ -557,7 +557,14 @@
 			       ""
 			       " "
 			       ""))
-    (should (string= (oref aux :body) "  hello"))))
+    (should (string= (oref aux :body) "  hello")))
+
+  (let ((verb-trim-body-end "-+"))
+    (setq aux (text-as-spec-nl "GET example.com"
+			       "Accept: text"
+			       ""
+                               "---text---"))
+    (should (string= (oref aux :body) "---text"))))
 
 (ert-deftest test-request-spec-from-text-body ()
   (setq aux (text-as-spec "GET example.com\n"
