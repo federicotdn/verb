@@ -1648,8 +1648,10 @@
     (should verb-response-body-mode)
     (should verb-http-response)
     (should (oref verb-http-response request))
-    (should (string= (verb-request-spec-url-to-string (oref verb-http-response request))
-		     "http://localhost:8000/basic"))))
+    (let ((req-url (verb-request-spec-url-to-string (oref verb-http-response request))))
+      (should (string= req-url (if (< emacs-major-version 26)
+                                   "http://127.0.0.1:8000/basic"
+                                 "http://localhost:8000/basic"))))))
 
 (ert-deftest test-server-basic-json ()
   (let ((verb-json-max-pretty-print-size nil))

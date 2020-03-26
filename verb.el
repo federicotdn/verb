@@ -1660,7 +1660,7 @@ loaded into."
     (when (and (< emacs-major-version 26)
                (string= (url-host url) "localhost"))
       (verb--log num 'W "Replacing localhost with 127.0.0.1")
-      (setf (url-host url) "127.0.01"))
+      (setf (url-host url) "127.0.0.1"))
 
     ;; Send the request!
     (condition-case err
