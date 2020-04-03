@@ -1954,9 +1954,6 @@
 		     "Hello, World!"))))
 
 (ert-deftest test-cookies ()
-  ;; TODO: Fix this test on Emacs 25
-  (skip-unless (> emacs-major-version 25))
-
   (setq verb-inhibit-cookies nil)
   (setq url-cookie-storage nil)
   (setq url-cookie-secure-storage nil)
