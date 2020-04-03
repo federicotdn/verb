@@ -1969,7 +1969,9 @@
     (should (string= (buffer-string) "OK")))
 
   (server-test "get-cookies"
-    (should (= (buffer-size) 0))))
+    (should (or (= (buffer-size) 0)
+                (string= (buffer-string)
+                         "foo=\nabc=\n")))))
 
 (ert-deftest test-cookies-disabled ()
   (setq verb-inhibit-cookies t)
