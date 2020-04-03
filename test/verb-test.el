@@ -1726,6 +1726,11 @@
 				  "{\n  \"foo\": true,\n  \"hello\": \"world\"\n}"))
 		 (should (eq major-mode 'js-mode)))))
 
+(ert-deftest test-server-basic-json-mode ()
+  (let ((verb-json-use-mode #'html-mode))
+    (server-test "basic-json"
+      (should (eq major-mode 'html-mode)))))
+
 (ert-deftest test-server-error-400 ()
   (server-test "error-400"
     (should (string-match "400" header-line-format))))

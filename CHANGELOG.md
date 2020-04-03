@@ -1,4 +1,8 @@
 # Verb Changelog
+## master
+- Added the `verb-json-use-mode` customizable variable. It allows users to change what mode is enabled on JSON responses.
+- Renamed `verb--handler-json` to `verb-handler-json`.
+
 ## **2.9.0** - 2020-03-27
 - Added support for Emacs 25.
 - Removed human-readable export format as it was too similar to Verb format.

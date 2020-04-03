@@ -64,7 +64,7 @@ header value (\"charset=utf-8\")."
     ("text/html" html-mode)
     ("\\(application\\|text\\)/xml" xml-mode)
     ("application/xhtml+xml" xml-mode)
-    ("application/json" verb--handler-json)
+    ("application/json" verb-handler-json)
     ("application/javascript" js-mode)
     ("application/css" css-mode)
     ("text/plain" text-mode)
@@ -184,9 +184,16 @@ info node `(url)Retrieving URLs'."
 
 (defcustom verb-json-max-pretty-print-size (* 1 1024 1024)
   "Max JSON file size (bytes) to automatically prettify when received.
-If nil, never prettify JSON files automatically."
+If nil, never prettify JSON files automatically.  This variable only applies
+if `verb-handler-json' is being used to handle JSON responses."
   :type '(choice (integer :tag "Max bytes")
                  (const :tag "Off" nil)))
+
+(defcustom verb-json-use-mode #'js-mode
+  "Mode to enable in response buffers containing JSON data.
+This variable only applies if `verb-handler-json' is being used to
+handle JSON responses."
+  :type 'function)
 
 (defcustom verb-enable-log t
   "When non-nil, log different events in the *Verb Log* buffer."
@@ -1266,9 +1273,10 @@ non-nil, do not add the command to the kill ring."
     (when url
       (url-recreate-url url))))
 
-(defun verb--handler-json ()
-  "Handler for \"application/json\" content type."
-  (js-mode)
+(defun verb-handler-json ()
+  "Standard handler for the \"application/json\" content type."
+  (when verb-json-use-mode
+    (funcall verb-json-use-mode))
   (when (< (oref verb-http-response body-bytes)
            (or verb-json-max-pretty-print-size 0))
     (unwind-protect

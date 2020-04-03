@@ -44,6 +44,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Function: **verb-request-spec-to-string** *rs*
 - Function: **verb-request-spec-from-string** *text*
 - Function: **verb-request-spec-override** *original other*
+- Function: **verb-handler-json**
 - Error: **verb-empty-spec**
 - Command: **verb-send-request-on-point** *where &optional arg*
 - Command: **verb-send-request-on-point-other-window** *&optional arg*
@@ -101,6 +102,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-code-tag-delimiters**
 - User Option: **verb-url-retrieve-function**
 - User Option: **verb-json-max-pretty-print-size**
+- User Option: **verb-json-use-mode**
 - User Option: **verb-babel-timeout**
 - User Option: **verb-base-headers**
 - User Option: **verb-trim-body-end**
