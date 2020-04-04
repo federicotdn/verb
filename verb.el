@@ -2158,7 +2158,7 @@ METADATA."
       (let ((rest (buffer-substring (point) (point-max))))
         ;; Only read body if it isn't comprised entirely of
         ;; whitespace, but if it's not and has leading/trailing
-        ;; whitespace, include itP
+        ;; whitespace, include it
         (unless (string-empty-p (string-trim rest))
           ;; Now we know body isn't comprised entirely of whitespace,
           ;; check if the user wants to delete any trailing characters
