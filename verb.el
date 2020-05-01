@@ -243,6 +243,12 @@ be overriden by re-specifying them somwhere in the document
 hierarchy."
   :type '(alist :key-type string :value-type string))
 
+(defcustom verb-enable-elisp-completion nil
+  "When set to a non-nil value, enable Lisp completion in code tags.
+Completion is handled by the `verb-elisp-completion-at-point'
+function."
+  :type 'boolean)
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
                                 :weight bold))
   "Face for highlighting HTTP methods.")
@@ -346,6 +352,9 @@ here under its value.")
   "When non-nil, do not evaluate code tags in requests specs.
 This variable is used mostly to parse and then copy request specs to
 other buffers without actually expanding the embedded code tags.")
+
+(defvar verb--elisp-completion-buffer nil
+  "Auxiliary buffer for performing completion for Lisp code.")
 
 ;;;###autoload
 (defvar verb-command-map
@@ -593,6 +602,29 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
   "Show the Customize menu buffer for the Verb package group."
   (interactive)
   (customize-group "verb"))
+
+(defun verb-elisp-completion-at-point ()
+  "Completion at point function for Lisp code tags."
+  (when-let (verb-enable-elisp-completion
+             (beg (save-excursion
+                    (when (search-backward (car verb-code-tag-delimiters) (line-beginning-position) t)
+                      (match-end 0))))
+             (end (save-excursion
+                    (when (search-forward (cdr verb-code-tag-delimiters) (line-end-position) t)
+                      (match-beginning 0)))))
+    (unless verb--elisp-completion-buffer
+      (setq verb--elisp-completion-buffer (get-buffer-create " *verb-elisp-completion*")))
+    (let* ((code (buffer-substring-no-properties beg end))
+           (point-offset (1+ (- (point) beg)))
+           (completions (with-current-buffer verb--elisp-completion-buffer
+                          (erase-buffer)
+                          (insert code)
+                          (goto-char point-offset)
+                          (elisp-completion-at-point))))
+      (when completions
+        (append (list (+ (nth 0 completions) beg -1)
+                      (+ (nth 1 completions) beg -1))
+                (cddr completions))))))
 
 (defun verb--log (request level &rest args)
   "Log a message in the *Verb Log* buffer.
