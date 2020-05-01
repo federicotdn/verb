@@ -1,5 +1,5 @@
 # Verb Changelog
-## master
+## **2.10.0** - 2020-05-01
 - Added the `verb-json-use-mode` customizable variable. It allows users to change what mode is enabled on JSON responses.
 - Renamed `verb--handler-json` to `verb-handler-json`.
 - Added code completion for code tags via `completion-at-point-functions`.
