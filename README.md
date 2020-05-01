@@ -419,7 +419,7 @@ Notice that interactive functions like `read-string` can be used inside code tag
 
 ### Code Completion
 
-You can enable completion for Emacs Lisp inside code tags. To do this, set the `verb-enable-elisp-completion` variable to `t` (its disabled by default). Code completion will work automatically with [`company-mode`](https://github.com/company-mode/company-mode), if it is installed.
+You can enable completion for Emacs Lisp inside code tags. To do this, set the `verb-enable-elisp-completion` variable to `t` (it's disabled by default). Code completion will work automatically with [`company-mode`](https://github.com/company-mode/company-mode), if it is installed.
 
 Note that the point must be surrounded by the code tag delimeters (e.g. `{{` and `}}`) in the same line for completion to work. If you're using `electric-pair-mode`, matching tag delimeters will be inserted automatically, so this won't be a problem. `verb-mode` should also be enabled, as enabling it will load the completion function itself.
 
