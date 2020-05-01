@@ -21,7 +21,7 @@ Verb requires at least Emacs version 25 to work.
 - Easily define common attributes (URLs, query strings, headers, etc.) for many requests.
 - Correctly handle text encodings (charsets) for requests and responses.
 - Display PDF, PNG, JPEG, BMP, GIF and SVG responses.
-- Evaluate and substitute Emacs Lisp expressions in specifications.
+- Embed Emacs Lisp expressions in specifications (with code completion!).
 - Can export requests to `curl` format.
 - Integrates with Babel.
 - Includes mouse support (menu bar and mode line).
