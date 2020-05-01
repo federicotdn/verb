@@ -87,6 +87,7 @@ run: clean server-bg
 			     '((verb . t))) \
 			   (setq org-confirm-babel-evaluate nil) \
 			   (setq verb-auto-kill-response-buffers t) \
+			   (setq verb-enable-elisp-completion t) \
 			   (with-current-buffer (get-buffer \"*scratch*\") \
 			     (org-mode) \
 			     (verb-mode) \
