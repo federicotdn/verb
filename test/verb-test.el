@@ -1494,6 +1494,58 @@
   (should-not (verb--http-method-p verb--template-keyword))
   (should-not (verb--http-method-p "test")))
 
+(setq elisp-code "system-")
+
+(ert-deftest test-elisp-completion ()
+  (with-temp-buffer
+    (insert elisp-code)
+    ;; Sanity checks
+    (let ((comp (elisp-completion-at-point)))
+      (should (= (nth 0 comp) 1))
+      (should (= (nth 1 comp) 8))))
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert "{{" elisp-code "}}")
+    (backward-char 2)
+
+    (let* ((verb-enable-elisp-completion t)
+           (comp (verb-elisp-completion-at-point)))
+      (should (= (nth 0 comp) 3))
+      (should (= (nth 1 comp) 10)))
+
+    (let* ((verb-enable-elisp-completion nil)
+           (comp (verb-elisp-completion-at-point)))
+      (should-not comp))))
+
+(ert-deftest test-elisp-completion-fn-installed ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (should (member #'verb-elisp-completion-at-point
+                    completion-at-point-functions))))
+
+(ert-deftest test-elisp-completion-outside-tag ()
+    (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert elisp-code)
+
+    (let* ((verb-enable-elisp-completion t)
+           (comp (verb-elisp-completion-at-point)))
+      (should-not comp))))
+
+(ert-deftest test-elisp-completion-partial-tag ()
+    (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert "{{" elisp-code)
+
+    (let* ((verb-enable-elisp-completion t)
+           (comp (verb-elisp-completion-at-point)))
+      (should-not comp))))
+
 ;; Tests using the test server (server.py)
 
 (setq test-file-name (expand-file-name "test/test.org"))

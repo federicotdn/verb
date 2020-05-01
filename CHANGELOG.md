@@ -2,6 +2,7 @@
 ## master
 - Added the `verb-json-use-mode` customizable variable. It allows users to change what mode is enabled on JSON responses.
 - Renamed `verb--handler-json` to `verb-handler-json`.
+- Added code completion for code tags via `completion-at-point-functions`.
 
 ## **2.9.0** - 2020-03-27
 - Added support for Emacs 25.

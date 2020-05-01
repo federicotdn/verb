@@ -46,6 +46,7 @@ Verb requires at least Emacs version 25 to work.
   - [Extend and Override Requests](#extend-and-override-requests)
   - [Modifying Requests before Sending](#modifying-requests-before-sending)
   - [Emacs Lisp Code Tags](#emacs-lisp-code-tags)
+  - [Code Completion](#code-completion)
   - [Verb Variables](#verb-variables)
   - [Last Response](#last-response)
   - [Storing Responses by Key](#storing-responses-by-key)
@@ -415,6 +416,12 @@ Content-Type: application/json; charset=utf-8
 ```
 
 Notice that interactive functions like `read-string` can be used inside code tags as well - they will be evaluated before the request is sent, and the resulting value will be inserted into the content.
+
+### Code Completion
+
+You can enable completion for Emacs Lisp inside code tags. To do this, set the `verb-enable-elisp-completion` variable to `t` (its disabled by default). Code completion will work automatically with [`company-mode`](https://github.com/company-mode/company-mode), if it is installed.
+
+Note that the point must be surrounded by the code tag delimeters (e.g. `{{` and `}}`) in the same line for completion to work. If you're using `electric-pair-mode`, matching tag delimeters will be inserted automatically, so this won't be a problem. `verb-mode` should also be enabled, as enabling it will load the completion function itself.
 
 ### Verb Variables
 
