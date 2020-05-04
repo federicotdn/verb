@@ -1,0 +1,11 @@
+* /dev/null as a Service                                                             :verb:
+# In modern days everything is a service. You create documents, upload
+# photos, deploy computers, but what’s happening to your trash? That’s
+# why we’re launching /dev/null to the cloud.
+#
+# https://devnull-as-a-service.com/home/
+
+post https://devnull-as-a-service.com/dev/null
+Content-Type: text/plain; charset=utf-8
+
+Hello!
