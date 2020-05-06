@@ -10,6 +10,13 @@ app = Sanic(name="test server")
 logger.setLevel(logging.WARNING)
 
 
+@app.route("/endpoints")
+async def endpoints(request: Request) -> HTTPResponse:
+    rules = sorted(elem[0] for elem in app.router.routes_names.values())
+
+    return response.text("\n".join(rules))
+
+
 @app.route("/basic")
 async def basic(request: Request) -> HTTPResponse:
     return response.text("Hello, World!")
