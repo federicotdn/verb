@@ -835,17 +835,13 @@ If not on a heading, signal an error."
 
 (defun verb--maybe-extract-babel-src-block (text)
   "Return contents of the first Verb Babel source block in TEXT.
-If no Babel source blocks are found, return TEXT."
+If no Verb Babel source blocks are found, return TEXT."
   (with-temp-buffer
     (insert text)
     (goto-char (point-min))
     (let ((case-fold-search t)
           start result)
-      (when (search-forward "#+begin_src" nil t)
-        (unless (looking-at-p " +verb")
-          (user-error "%s" (concat "Found a non-verb Babel source block\n"
-                                   "Make sure all source blocks in the "
-                                   "hierarchy use \"verb\" as language")))
+      (when (re-search-forward "#\\+begin_src +verb" nil t)
         ;; Found the start
         (end-of-line)
         (forward-char)

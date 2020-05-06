@@ -2199,21 +2199,6 @@
     (re-search-backward "get")
     (should-error (org-ctrl-c-ctrl-c))))
 
-(ert-deftest test-babel-non-verb-block-in-hierarchy ()
-  (with-temp-buffer
-    (org-mode)
-    (verb-mode)
-    (insert (join-lines "* test          :verb:"
-			"#+begin_src foobar"
-			"template"
-			"#+end_src"
-			"** Test"
-			"#+begin_src verb"
-			"get http://localhost:8000/basic"
-			"#+end_src"))
-    (re-search-backward "get")
-    (should-error (org-ctrl-c-ctrl-c))))
-
 (defun babel-test (input output)
   (with-temp-buffer
     (org-mode)
@@ -2401,11 +2386,6 @@
 			      "hello world"
 			      "#+eNd_src")
 		  (join-lines "hello world"))
-
-  (should-error (verb--maybe-extract-babel-src-block
-		 (join-lines "#+begin_src"
-			     "helloooo"
-			     "#+end_src")))
 
   (babel-src-test (join-lines "test"
 			      "#+begin_SRC verb abcdef"
