@@ -336,9 +336,9 @@ Now, when we send the request under "Get users list", Verb will collect all the 
   - **Host**: The last defined heading's URL host will be used.
   - **Port**: The last defined heading's URL port will be used.
   - **Path**: All paths will be concatenated, starting from the first heading (i.e. the one with the lowest level).
-  - **Query**: Query string arguments will be merged. Values from higher level headings take priority.
+  - **Query**: Query string arguments will be merged. Values from higher level headings have higher priority.
   - **Fragment**: The last defined heading's URL fragment will be used.
-- **Headers:**: All headers will be merged. Values from higher level headings take priority.
+- **Headers**: All headers will be merged. Values from higher level headings have higher priority.
 - **Body**: The last request body present in a heading will be used (if no heading defines a body, none will be used).
 
 If you try to send a request from the level 1 header, you'll get an error, as at that level there's no specified HTTP method.
@@ -503,7 +503,7 @@ After the "Create a user" request has been sent at least once, the result will b
 
 ### Body Lines starting with `*`
 
-You may have noticed that because headings start with `*`, you cannot include lines starting with `*` in your request bodies, because Verb will interpret them as a new heading. To get around this, you can prefix request body lines starting with `*` with an empty code tag, `{{}}`. The empty code tag will evaluate to the empty string, so it won't modify the content of your request body. Following from our previous example, we can add a new level 2 heading:
+You may have noticed that because headings start with `*`, you cannot include lines starting with `*` in your request bodies, because Org will interpret them as a new heading. To get around this, you can prefix request body lines starting with `*` with an empty code tag, `{{}}`. The empty code tag will evaluate to the empty string, so it won't modify the content of your request body. Following from our previous example, we can add a new level 2 heading:
 
 ```
 ** Upload file to user storage
