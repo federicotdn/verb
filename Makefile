@@ -1,7 +1,7 @@
 SHELL = bash
 EMACS ?= emacs
 PORT ?= 8000
-NOOUTPUT = { ! grep '^'; }
+NOOUTPUT = grep -v '^Loading' | { ! grep '^'; }
 VENDOR = vendor
 FONT_SIZE ?= 180
 ENV ?= env
