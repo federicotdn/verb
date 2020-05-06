@@ -594,6 +594,33 @@
                                "---text---"))
     (should (string= (oref aux :body) "---text"))))
 
+(ert-deftest test-request-spec-remove-src-blocks ()
+  (setq aux (text-as-spec-nl "GET example.com"
+			     "Accept: text"
+			     ""
+			     "#+begin_src xml"
+                             "<something/>"
+                             "#+end_src"))
+  (should (string= (oref aux :body) "<something/>\n"))
+
+  (setq aux (text-as-spec-nl "GET example.com"
+			     "Accept: text"
+			     ""
+			     "#+begin_src xml"
+                             "<something/>"
+                             "#+end_src"
+                             "hello"))
+  (should (string= (oref aux :body) "<something/>\nhello"))
+
+  (setq aux (text-as-spec-nl "GET example.com"
+			     "Accept: text"
+			     ""
+			     "#+begin_src"
+                             "foo"
+                             "bar"
+                             "#+end_src"))
+  (should (string= (oref aux :body) "foo\nbar\n")))
+
 (ert-deftest test-request-spec-from-text-body ()
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"))

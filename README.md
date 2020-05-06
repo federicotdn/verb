@@ -286,6 +286,22 @@ To encode the request body, Verb will use the `charset` value defined in the `Co
 
 If your body contains binary data (i.e. raw bytes that do not correspond to any particular character), that data will be sent without any encoding.
 
+The request body can also be wrapped inside a Babel source block. If this is the case, the lines containing the `#+begin_src` and `#+end_src` delimiters will be automatically erased before the request is sent. For example, the request body above could be wrapped with a `javascript` source block for better font locking:
+
+```
+* Create a user
+post https://reqres.in/api/users
+Accept: application/json
+Content-Type: application/json; charset=utf-8
+
+#+begin_src javascript
+{
+    "name": "John",
+    "age": 42
+}
+#+end_src
+```
+
 ### Extend and Override Requests
 
 Our example file should now look like the following:

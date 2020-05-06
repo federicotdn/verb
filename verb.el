@@ -2121,6 +2121,8 @@ METADATA."
       (insert text)
       (goto-char (point-min))
 
+      ;;; COMMENTS / PROPERTIES
+
       ;; Skip initial blank lines, comments and properties
       (while (and (re-search-forward "^\\s-*\\(\\(:\\|#\\).*\\)?$"
                                      (line-end-position) t)
@@ -2131,6 +2133,8 @@ METADATA."
                                                            (point-max))))
         ;; Signal `verb-empty-spec' if so
         (signal 'verb-empty-spec nil))
+
+      ;;; METHOD + URL
 
       ;; Read HTTP method and URL line
       ;; First, expand any code tags on it (if any)
@@ -2168,6 +2172,8 @@ METADATA."
       ;; Skip newline after URL line
       (unless (eobp) (forward-char))
 
+      ;;; HEADERS
+
       ;; Search for HTTP headers, stop as soon as we find a blank line
       (while (re-search-forward "^\\(.+\\)$" (line-end-position) t)
         (let ((line (match-string 1)))
@@ -2188,6 +2194,15 @@ METADATA."
                           line))))
         (unless (eobp) (forward-char)))
       (setq headers (nreverse headers))
+
+      ;;; BODY
+
+      ;; Allow users to include Babel source blocks in their request
+      ;; bodies. This allows them to have font locking and other
+      ;; features that depend on specific content types (e.g JSON,
+      ;; XML, etc.). Here we delete the source block delimiters so
+      ;; that they are not included in the actual request.
+      (delete-matching-lines "^#\\+\\(begin\\|end\\)_src")
 
       ;; Expand code tags in the rest of the buffer (if any)
       (save-excursion
