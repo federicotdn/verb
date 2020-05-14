@@ -1153,7 +1153,7 @@ After the user has finished modifying the buffer, they can press
   ;; Insert the request spec
   (insert "* Press 'C-c C-c' to send the request.\n")
 
-  (when-let (metadata (oref rs metadata))
+  (when-let ((metadata (oref rs metadata)))
     (insert ":properties:\n")
     (dolist (element metadata)
       (insert (format ":%s: %s\n" (car element) (cdr element))))
