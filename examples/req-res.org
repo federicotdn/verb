@@ -57,7 +57,9 @@ delete
 
 post /login
 
+#+BEGIN_SRC javascript
 {
     "email": "eve.holt@reqres.in",
     "password": "hello"
 }
+#+END_SRC
