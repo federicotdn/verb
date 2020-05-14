@@ -232,14 +232,14 @@ that tag as well.  This can be changed via the
 If set to nil, read request bodies as they appear on the buffer.  In
 that case, if any whitespace is present between the body end and the
 next heading (or buffer end), it will be included in the body."
-  :type '(choice (regexp :tag "Other regexp")
+  :type '(choice (regexp :tag "Custom regexp")
                  (const :tag "All whitespace" "[ \t\n\r]+")
                  (const :tag "Disable" nil)))
 
 (defcustom verb-base-headers nil
   "Set of HTTP headers used as base when reading request specs.
 These headers will be included by default in requests, but still may
-be overriden by re-specifying them somwhere in the document
+be overriden by re-specifying them somwhere in the headings
 hierarchy."
   :type '(alist :key-type string :value-type string))
 
@@ -643,8 +643,8 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 (defun verb--log (request level &rest args)
   "Log a message in the *Verb Log* buffer.
 REQUEST must be a number corresponding to an HTTP request made.  LEVEL
-must be a value in `verb--log-levels'.  The remaining ARGS are used to
-call `format', and then the result is logged in the log buffer.
+must be a value in `verb--log-levels'.  Use the remaining ARGS to call
+`format', and then log the result in the log buffer.
 
 If `verb-enable-log' is nil, do not log anything."
   (setq request (if request (number-to-string request) "-"))
@@ -861,8 +861,8 @@ If no Verb Babel source blocks are found, return TEXT."
 BODY should contain the body of the source block.  POS should be a
 position of the buffer that lies inside the source block.
 
-Note that the entire buffer will be considered when generating the
-request spec, not only the section contained by the source block."
+Note that the entire buffer is considered when generating the request
+spec, not only the section contained by the source block."
   (save-excursion
     (goto-char pos)
     (let* ((metadata (verb--heading-properties verb--metadata-prefix))
@@ -880,9 +880,12 @@ request spec, not only the section contained by the source block."
 
 (defun verb--request-spec-post-process (rs)
   "Validate and prepare request spec RS to be used.
+
+The following checks/preparations are run:
 - Check if `verb-base-headers' needs to be applied.
 - Run validations with `verb-request-spec-validate'.
-Return another request spec corresponding to RS."
+
+After that, return RS."
   ;; Use `verb-base-headers' if necessary
   (when verb-base-headers
     (setq rs (verb-request-spec-override
@@ -1001,7 +1004,7 @@ use string VAR and value VALUE."
   "Return a buffer with the contents of FILE.
 If CODING-SYSTEM system is a valid coding system, use it when reading
 the file contents (see `coding-system-for-read' for more information).
-Set the buffer's `verb-kill-this-buffer' variable to t."
+Set the buffer's `verb-kill-this-buffer' variable locally to t."
   (with-current-buffer (generate-new-buffer " *verb-temp*")
     (buffer-disable-undo)
     (let ((coding-system-for-read coding-system))
@@ -1082,22 +1085,23 @@ for its side effects."
 ;;;###autoload
 (defun verb-send-request-on-point (where &optional arg)
   "Send the request specified by the selected heading's text contents.
-After the request has been sent, return the response buffer (the buffer
-where the response will be loaded into).
+After the request has been sent, return the response buffer (the
+buffer where the response will be loaded into).
 
 Note that the contents of all parent headings are considered as well;
 see `verb--request-spec-from-hierarchy' to see how this is done.
 
-The buffer containing the response will be shown (or not) in different
-ways, depending on the value of WHERE:
+The buffer containing the response is shown (or not shown) in
+different ways, depending on the value of WHERE:
+
 - `other-window': Show the results of the request (the response
-buffer) on another window and select it.
+  buffer) on another window and select it.
 - `stay-window': Show the results of the request on another window,
-but keep the current one selected.
+  but keep the current one selected.
 - `this-window': Show the results of the request in the current
   window.
 - `minibuffer': Show the response status on the minibuffer, but don't
-show the response contents themselves anywhere.
+  show the response contents themselves anywhere.
 - Other values: Send the request but do not show the results anywhere.
 
 If prefix argument ARG is non-nil, allow the user to quickly edit the
@@ -1124,14 +1128,15 @@ received."
 (defun verb--setup-temp-request-buffer (rs source-buffer source-window
                                            verb-variables where)
   "Setup and show a temporary buffer for editing a request spec.
-After the user has finished modifying the buffer, they can press
-\\<org-mode-map>\\[org-ctrl-c-ctrl-c] to send the request.
 Argument RS indicates the request specification to edit.
 SOURCE-BUFFER and SOURCE-WINDOW indicate which buffer and window
 should be current/active when the request is sent.  VERB-VARIABLES
 should contain the Verb user-defined variables set in SOURCE-BUFFER.
 WHERE describes where the response should be shown in (see
-`verb-send-request-on-point' for a complete description)."
+`verb-send-request-on-point' for a complete description).
+
+After the user has finished modifying the buffer, they can press
+\\<org-mode-map>\\[org-ctrl-c-ctrl-c] to send the request."
   (switch-to-buffer-other-window (get-buffer-create "*Edit HTTP Request*"))
   ;; "Reset" the buffer in case it wasn't killed correctly
   (erase-buffer)
@@ -1212,8 +1217,8 @@ function with the request specification object.  See the
 Lisp, use the export function under NAME.  If NAME is nil, prompt the
 user anyways.
 
-No HTTP request will be sent, unless the export function does this
-explicitly.  Lisp code tags will be evaluated before exporting."
+No HTTP request is sent, unless the export function does this
+explicitly.  Lisp code tags are evaluated when exporting."
   (interactive)
   (verb--ensure-verb-mode)
   (let ((rs (verb--request-spec-from-hierarchy))
@@ -1316,7 +1321,7 @@ non-nil, do not add the command to the kill ring."
       (url-recreate-url url))))
 
 (defun verb-handler-json ()
-  "Standard handler for the \"application/json\" content type."
+  "Standard handler for the \"application/json\" text content type."
   (when verb-json-use-mode
     (funcall verb-json-use-mode))
   (when (< (oref verb-http-response body-bytes)
@@ -1335,8 +1340,8 @@ non-nil, do not add the command to the kill ring."
 (defun verb--headers-content-type (headers)
   "Return the value of the \"Content-Type\" header in HEADERS.
 The value returned has the form (TYPE . CHARSET).  If the charset is
-not present, return (TYPE . nil).  If the header itself is not
-present, return (nil . nil)."
+not present, return (TYPE).  If the header itself is not present,
+return (nil)."
   (let* ((value (cdr (assoc-string "Content-Type" headers t)))
          (type-subtype (and value (string-trim (car (split-string
                                                      value ";"))))))
@@ -1360,7 +1365,7 @@ CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
 
 (defun verb--maybe-store-response (response)
   "Store RESPONSE depending on its request metadata.
-Check `verb--stored-responses' for more details."
+See `verb--stored-responses' for more details."
   (when-let ((req (oref response request))
              (metadata (oref req metadata))
              (val (verb--nonempty-string (cdr (assoc-string
@@ -1373,6 +1378,7 @@ Check `verb--stored-responses' for more details."
 
 (defun verb-stored-response (key)
   "Return stored HTTP response under KEY.
+
 To automatically store HTTP responses, set the request heading's
 \"Verb-Store\" property to a nonempty value.  The response will then
 be stored under that value. For example:
@@ -1392,6 +1398,9 @@ get https://gnu.org/test"
 (defun verb--request-spec-callback (status rs response-buf start timeout-timer
                                            where num)
   "Callback for `verb--request-spec-send' for request RS.
+Set up the current buffer so that it can be used to view the HTTP
+response in a user-friendly way.
+
 More response information can be read from STATUS.
 RESPONSE-BUF points to a buffer where the response should be copied
 to, which the user can then use or edit freely.
@@ -1401,10 +1410,7 @@ TIMEOUT-TIMER contains a timer set to call `verb--timeout-warn', or
 nil.
 WHERE describes where the results should be shown in (see
 `verb-send-request-on-point').
-NUM is this request's identification number.
-
-This function sets up the current buffer so that it can be used to
-view the HTTP response in a user-friendly way."
+NUM is this request's identification number."
   (when timeout-timer
     (cancel-timer timeout-timer))
 
@@ -1564,15 +1570,15 @@ view the HTTP response in a user-friendly way."
       (run-hooks 'verb-post-response-hook))))
 
 (defun verb--prepare-http-headers (headers)
-  "Prepare alist HEADERS of HTTP headers to use them on a request.
+  "Prepare alist HEADERS of HTTP headers to be used on a request.
 Add/modify/remove the following headers if they are not already
-present/incomplete:
+present or are incomplete:
 
 Accept:
   Remove header from list (will be set via `url-mime-accept-string').
 
-Uses `verb--to-ascii' to ensure all added text is unibyte.
-Returns a new alist, does not modify HEADERS."
+Use `verb--to-ascii' to ensure all added text is unibyte.
+Return a new alist, does not modify HEADERS."
   (let* ((headers (copy-alist headers))
          (accept (assoc-string "Accept" headers t)))
     ;; Accept
@@ -1634,7 +1640,7 @@ For more information, see `verb-advice-url'."
 
 (cl-defmethod verb-request-spec-validate ((rs verb-request-spec))
   "Run validations on request spec RS and return it.
-If a validation does not pass, signal with `user-error'."
+If a validation does not pass, signal `user-error'."
   (unless (oref rs method)
     (user-error "%s" (concat "No HTTP method specified\n"
                              "Make sure you specify a concrete HTTP "
@@ -1652,7 +1658,7 @@ If a validation does not pass, signal with `user-error'."
   rs)
 
 (defun verb--generate-response-buffer (num)
-  "Return a new buffer ready to be used as response buffer.
+  "Return a new buffer ready to be used as a response buffer.
 NUM is the request's identification number."
   (with-current-buffer (generate-new-buffer
                         (format "*HTTP Response%s*"
@@ -1802,7 +1808,7 @@ buffer BUFFER is live.  NUM is the request's identification number."
 
 (defun verb--override-alist (original other &optional case-fold)
   "Override alist ORIGINAL with OTHER.
-That is; overwrite (KEY . VALUE) pairs present in ORIGINAL with ones
+That is, overwrite (KEY . VALUE) pairs present in ORIGINAL with ones
 present in OTHER if KEYs are equal.  Return the results in a new
 alist.  If CASE-FOLD is non-nil, ignore case when comparing KEYs."
   (let ((result (nreverse (copy-alist original)))
@@ -1931,9 +1937,8 @@ Do this using the rules described in `verb-request-spec-override'."
 
 (cl-defmethod verb-request-spec-override ((original verb-request-spec) other)
   "Override request spec ORIGINAL with OTHER, return the result.
-
-Each member of request ORIGINAL is overridden with the one from OTHER
-in the following way, to form a new request specification:
+Override each member of request ORIGINAL with one from OTHER in the
+following way, to form a new request specification:
 
 method
 
@@ -1941,19 +1946,18 @@ method
 
 url
 
-  A new URL is constructed using a combination of both URLs.  The new
-  URL's path is a concatenation of ORIGINAL's and OTHER's paths.  The
-  new URL's query string is a union of both ORIGINAL's and OTHER's
-  query strings, using OTHER's value when both contain the same key.
-  All other components (host, port, user, etc.) of the new URL are
-  taken from OTHER if they are non-nil, or from ORIGINAL otherwise.
-  If either OTHER's or ORIGINAL's URL is nil, use the other one's
-  without modifications.
+  Construct a new URL using a combination of both URLs.  The new URL's
+  path is a concatenation of ORIGINAL's and OTHER's paths.  The new
+  URL's query string is a union of both ORIGINAL's and OTHER's query
+  strings, preferring OTHER's values when both contain the same key.
+  Use all other components (host, port, user, etc.) from OTHER if they
+  are non-nil, or from ORIGINAL otherwise.  If either OTHER's or
+  ORIGINAL's URL is nil, use the other one's without modifications.
 
 headers
 
   Create a union of ORIGINAL's and OTHER's headers, using OTHER's
-  value when both contain the same header.
+  values when both contain the same header.
 
 body
 
@@ -1963,7 +1967,7 @@ metadata
 
   Always use OTHER's metadata.
 
-Neither request specification is modified, a new one is returned."
+Modify neither request specification, return a new one."
   (unless (object-of-class-p other 'verb-request-spec)
     (user-error "%s" "Argument OTHER must be a `verb-request-spec'"))
   (verb-request-spec :method (or (oref other method)
