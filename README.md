@@ -435,7 +435,7 @@ Notice that interactive functions like `read-string` can be used inside code tag
 
 ### Code Completion
 
-You can enable completion for Emacs Lisp inside code tags. To do this, set the `verb-enable-elisp-completion` variable to `t` (it's disabled by default). Code completion will work automatically with [`company-mode`](https://github.com/company-mode/company-mode), if it is installed.
+You can enable completion for Emacs Lisp inside code tags. To do this, set the `verb-enable-elisp-completion` variable to `t` (the default value). Code completion will work automatically with [`company-mode`](https://github.com/company-mode/company-mode), if it is installed.
 
 Note that the point must be surrounded by the code tag delimeters (e.g. `{{` and `}}`) in the same line for completion to work. If you're using `electric-pair-mode`, matching tag delimeters will be inserted automatically, so this won't be a problem. `verb-mode` should also be enabled, as enabling it will load the completion function itself.
 
@@ -550,7 +550,7 @@ Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this f
 
 ### Base Headers
 
-You can define a set of base headers for all your HTTP requests via the `verb-base-headers` variable. These headers will be defined globally, but may still be overridden by re-specifying them somewhere in the headings hierarchy. The variable must be set to an alist of `(KEY . VALUE)` elements, where `KEY` and `VALUE` are strings. For example, here's how to add a `User-Agent` header to all requests in all files from your `init.el`:
+You can define a set of base headers for all your HTTP requests in all `.org` files via the `verb-base-headers` variable. These headers will be defined globally, but may still be overridden by re-specifying them somewhere in the headings hierarchy. The variable must be set to an alist of `(KEY . VALUE)` elements, where `KEY` and `VALUE` are strings. For example, here's how to add a `User-Agent` header to all requests in all files from your `init.el`:
 
 ```elisp
 (setq verb-base-headers '(("User-Agent" . "my-user-agent")))
@@ -564,7 +564,7 @@ You can export request specifications to other formats by using the `verb-export
 
 You can export directly to `curl` by using the `verb-export-request-on-point-curl` command, bound by default to <kbd>C-c C-r C-u</kbd>.
 
-**Note:** code tags will be evaluated when exporting a request.
+**Note:** Code tags will be evaluated when exporting a request.
 
 ### Babel Integration
 Verb also works on Org [Babel](https://orgmode.org/worg/org-contrib/babel/) source blocks. This feature allows you to send an HTTP request, and view the results in the same `.org` buffer where the request was read from.
@@ -595,9 +595,9 @@ To send the request, move the point to a source block and press <kbd>C-c C-c</kb
 
 After the request has been sent, Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
 
-**Note:** when Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
+**Note:** When Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
 
-**Note:** the heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
+**Note:** The heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
 #### Send with Partial Retrieval (`:op send ...`)
 
