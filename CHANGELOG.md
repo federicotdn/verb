@@ -1,6 +1,7 @@
 # Verb Changelog
 ## master
 - If a (non-Verb) Babel source block is found inside a request body, its corresponding `#+begin_src` and `#+end_src` delimiters are erased before sending the request.
+- Enable code completion for code tags by default.
 
 ## **2.10.0** - 2020-05-01
 - Added the `verb-json-use-mode` customizable variable. It allows users to change what mode is enabled on JSON responses.

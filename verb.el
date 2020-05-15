@@ -243,7 +243,7 @@ be overriden by re-specifying them somwhere in the headings
 hierarchy."
   :type '(alist :key-type string :value-type string))
 
-(defcustom verb-enable-elisp-completion nil
+(defcustom verb-enable-elisp-completion t
   "When set to a non-nil value, enable Lisp completion in code tags.
 Completion is handled by the `verb-elisp-completion-at-point'
 function.
