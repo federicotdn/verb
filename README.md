@@ -643,7 +643,7 @@ The Emacs `url` library also keeps its own internal log - it can be useful for d
 
 ## Hooks, Variables, Functions
 
-To see a listing of Verb's public symbols (hooks, functions, variables, classes, etc.), see the [verb-api.md](docs/verb-api.md) file.
+To see a listing of Verb's publicly defined hooks, functions, variables and classes, see the [verb-api.md](docs/verb-api.md) file.
 
 ## Examples
 

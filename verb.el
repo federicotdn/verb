@@ -1561,9 +1561,8 @@ NUM is this request's identification number."
         ('stay-window (save-selected-window
                         (switch-to-buffer-other-window (current-buffer))))
         ('this-window (switch-to-buffer (current-buffer)))
-        ('minibuffer (message "%s" (oref verb-http-response status)))))
+        ('minibuffer (message "%s" (oref verb-http-response status))))
 
-    (with-current-buffer response-buf
       (verb-response-body-mode)
 
       ;; Run post response hook

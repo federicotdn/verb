@@ -1753,7 +1753,7 @@
     (should (string= (buffer-string) "Hello, World!"))
     (should (eq major-mode 'text-mode))
     (should verb-response-body-mode)
-    (should verb-http-response)
+    (should (equal (type-of verb-http-response) 'verb-response))
     (should (oref verb-http-response request))
     (let ((req-url (verb-request-spec-url-to-string (oref verb-http-response request))))
       (should (string= req-url (if (< emacs-major-version 26)
