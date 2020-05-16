@@ -74,7 +74,7 @@ You can install Verb by using the `package-install` command (make sure either [M
 
 <kbd>M-x</kbd> `package-install` <kbd>RET</kbd> `verb` <kbd>RET</kbd>
 
-Alternatively, you can just add [`verb.el`](verb.el) to your `load-path` instead of installing it as a package.
+Alternatively, you can just add [`verb.el`](verb.el) (and optionally [`ob-verb.el`](ob-verb.el)) to your `load-path` instead of installing it as a package.
 
 Once Verb has been installed and loaded, add the following to your `init.el`:
 ```elisp
