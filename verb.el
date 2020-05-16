@@ -435,8 +435,9 @@ more details on how to use it."
   :group 'verb
   (when verb-mode
     (verb--setup-font-lock-keywords)
-    (add-hook 'completion-at-point-functions #'verb-elisp-completion-at-point
-              nil 'local)
+    (when verb-enable-elisp-completion
+      (add-hook 'completion-at-point-functions #'verb-elisp-completion-at-point
+                nil 'local))
     (when (buffer-file-name)
       (verb--log nil 'I
                  "Verb mode enabled in buffer: %s"
@@ -610,35 +611,34 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 
 (defun verb-elisp-completion-at-point ()
   "Completion at point function for Lisp code tags."
-  (when verb-enable-elisp-completion
-    (when-let (;; Get the contents inside the code tag: {{<content>}}
-               (beg (save-excursion
-                      (when (search-backward (car verb-code-tag-delimiters)
-                                             (line-beginning-position) t)
-                        (match-end 0))))
-               (end (save-excursion
-                      (when (search-forward (cdr verb-code-tag-delimiters)
-                                            (line-end-position) t)
-                        (match-beginning 0)))))
-      ;; Set up the buffer where we'll run `elisp-completion-at-point'
-      (unless verb--elisp-completion-buffer
-        (setq verb--elisp-completion-buffer
-              (get-buffer-create " *verb-elisp-completion*")))
-      ;; Copy the contents of the code tag to the empty buffer, run
-      ;; completion there
-      (let* ((code (buffer-substring-no-properties beg end))
-             (point-offset (1+ (- (point) beg)))
-             (completions (with-current-buffer verb--elisp-completion-buffer
-                            (erase-buffer)
-                            (insert code)
-                            (goto-char point-offset)
-                            (elisp-completion-at-point))))
-        ;; The beginning/end positions will belong to the other buffer, add
-        ;; `beg' so that they make sense on the original one
-        (when completions
-          (append (list (+ (nth 0 completions) beg -1)
-                        (+ (nth 1 completions) beg -1))
-                  (cddr completions)))))))
+  (when-let (;; Get the contents inside the code tag: {{<content>}}
+             (beg (save-excursion
+                    (when (search-backward (car verb-code-tag-delimiters)
+                                           (line-beginning-position) t)
+                      (match-end 0))))
+             (end (save-excursion
+                    (when (search-forward (cdr verb-code-tag-delimiters)
+                                          (line-end-position) t)
+                      (match-beginning 0)))))
+    ;; Set up the buffer where we'll run `elisp-completion-at-point'
+    (unless verb--elisp-completion-buffer
+      (setq verb--elisp-completion-buffer
+            (get-buffer-create " *verb-elisp-completion*")))
+    ;; Copy the contents of the code tag to the empty buffer, run
+    ;; completion there
+    (let* ((code (buffer-substring-no-properties beg end))
+           (point-offset (1+ (- (point) beg)))
+           (completions (with-current-buffer verb--elisp-completion-buffer
+                          (erase-buffer)
+                          (insert code)
+                          (goto-char point-offset)
+                          (elisp-completion-at-point))))
+      ;; The beginning/end positions will belong to the other buffer, add
+      ;; `beg' so that they make sense on the original one
+      (when completions
+        (append (list (+ (nth 0 completions) beg -1)
+                      (+ (nth 1 completions) beg -1))
+                (cddr completions))))))
 
 (defun verb--log (request level &rest args)
   "Log a message in the *Verb Log* buffer.

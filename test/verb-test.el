@@ -1537,14 +1537,9 @@
     (insert "{{" elisp-code "}}")
     (backward-char 2)
 
-    (let* ((verb-enable-elisp-completion t)
-           (comp (verb-elisp-completion-at-point)))
+    (let ((comp (verb-elisp-completion-at-point)))
       (should (= (nth 0 comp) 3))
-      (should (= (nth 1 comp) 10)))
-
-    (let* ((verb-enable-elisp-completion nil)
-           (comp (verb-elisp-completion-at-point)))
-      (should-not comp))))
+      (should (= (nth 1 comp) 10)))))
 
 (ert-deftest test-elisp-completion-fn-installed ()
   (with-temp-buffer
@@ -1558,20 +1553,14 @@
     (org-mode)
     (verb-mode)
     (insert elisp-code)
-
-    (let* ((verb-enable-elisp-completion t)
-           (comp (verb-elisp-completion-at-point)))
-      (should-not comp))))
+    (should-not (verb-elisp-completion-at-point))))
 
 (ert-deftest test-elisp-completion-partial-tag ()
     (with-temp-buffer
     (org-mode)
     (verb-mode)
     (insert "{{" elisp-code)
-
-    (let* ((verb-enable-elisp-completion t)
-           (comp (verb-elisp-completion-at-point)))
-      (should-not comp))))
+    (should-not (verb-elisp-completion-at-point))))
 
 ;; Tests using the test server (server.py)
 
