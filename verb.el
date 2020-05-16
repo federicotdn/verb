@@ -900,7 +900,8 @@ After that, return RS."
         (setq rs (funcall (symbol-function fn-sym) rs))
       (user-error "No request mapping function with name \"%s\" exists"
                   fn-name))
-    (unless (equal (type-of rs) 'verb-request-spec)
+    (unless (equal (type-of rs)
+                   (if (< emacs-major-version 26) 'vector 'verb-request-spec))
       (user-error (concat "Request mapping function \"%s\" must return a "
                           "`verb-request-spec' value")
                   fn-name)))

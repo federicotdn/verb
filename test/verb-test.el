@@ -1814,7 +1814,9 @@
     (should (string= (buffer-string) "Hello, World!"))
     (should (eq major-mode 'text-mode))
     (should verb-response-body-mode)
-    (should (equal (type-of verb-http-response) 'verb-response))
+    (should (equal (type-of verb-http-response) (if (< emacs-major-version 26)
+                                                    'vector
+                                                  'verb-response)))
     (should (oref verb-http-response request))
     (let ((req-url (verb-request-spec-url-to-string (oref verb-http-response request))))
       (should (string= req-url (if (< emacs-major-version 26)
