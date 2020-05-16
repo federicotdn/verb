@@ -351,6 +351,78 @@
     (should (equal (oref req-spec metadata)
 		   '(("VERB-NAME" . "JOHN"))))))
 
+(ert-deftest test-request-spec-from-hierarchy-map-request ()
+  (defun map-req-1 (rs)
+    (oset rs body "foobarfoobar")
+    rs)
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Map-Request: map-req-1"
+      ":end:"
+      "post http://localhost"))
+
+    (should (string= (oref (verb--request-spec-from-hierarchy) body)
+                     "foobarfoobar")))
+
+  (defun map-req-2 (rs)
+    (oset rs headers (append (oref rs headers) '(("X-Foo" . "Test"))))
+    rs)
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":VERB-MAP-REQUEST: map-req-2"
+      ":end:"
+      "post http://localhost"
+      "Content-Type: application/json"))
+
+    (should (equal (oref (verb--request-spec-from-hierarchy) headers)
+                   '(("Content-Type" . "application/json")
+                     ("X-Foo" . "Test"))))))
+
+(ert-deftest test-request-spec-from-hierarchy-map-request-no-fn ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Map-Request: helloworld"
+      ":end:"
+      "post http://localhost"))
+
+    (should-error (verb--request-spec-from-hierarchy))))
+
+(ert-deftest test-request-spec-from-hierarchy-map-request-bad-fn ()
+  (defun map-req-3 (rs)
+    (oset rs body "foobarfoobar")
+    ;; return an int
+    42)
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Map-Request: map-req-3"
+      ":end:"
+      "post http://localhost"))
+
+    (should-error (verb--request-spec-from-hierarchy))))
+
 (ert-deftest test-nonempty-string ()
   (should (string= (verb--nonempty-string "hello") "hello"))
   (should-not (verb--nonempty-string "")))

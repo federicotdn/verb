@@ -50,6 +50,7 @@ Verb requires at least Emacs version 25 to work.
   - [Verb Variables](#verb-variables)
   - [Last Response](#last-response)
   - [Storing Responses by Key](#storing-responses-by-key)
+  - [Request Mapping Functions](#request-mapping-functions)
   - [Body Lines starting with `*`](#body-lines-starting-with-)
   - [File Uploads](#file-uploads)
   - [Base Headers](#base-headers)
@@ -500,6 +501,7 @@ So, for example, we could modify our create/retrieve user endpoints like so:
 :properties:
 :Verb-Store: new-user
 :end:
+
 post
 Content-Type: application/json; charset=utf-8
 
@@ -517,9 +519,41 @@ After the "Create a user" request has been sent at least once, the result will b
 
 **Note**: When reading heading properties, Verb ignores parent headings, so no properties are inherited.
 
+### Request Mapping Functions
+
+The `Verb-Map-Request` heading property also has a special meaning in Verb. When present, it can be used to specify a mapping function than will be called right before the corresponding request is sent or exported, with the request itself as its sole argument. The function must return the same request specification object (type `verb-request-spec`), or a new one. With this, it is possible to apply custom transformations to requests before they are sent or exported.
+
+So, for example, having the following function:
+```elisp
+(defun remove-body-newlines (rs)
+  ;; RS is of type `verb-request-spec'
+  (oset rs body (replace-regexp-in-string "\n" " " (oref rs body)))
+  rs)
+```
+
+We could add the following level 2 heading to the example in the previous section:
+
+```
+** Upload file to user storage
+:properties:
+:Verb-Map-Request: remove-body-newlines
+:end:
+
+post /{{(verb-var user-id)}}/upload
+Content-Type: text/plain; charset=utf-8
+
+foo,
+bar,
+baz
+```
+
+When sent or exported, the request's body will by modified by `remove-body-newlines`, and the resulting body content will be a single line, `foo,bar,baz`.
+
+**Note**: The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overriden values from parent headings.
+
 ### Body Lines starting with `*`
 
-You may have noticed that because headings start with `*`, you cannot include lines starting with `*` in your request bodies, because Org will interpret them as a new heading. To get around this, you can prefix request body lines starting with `*` with an empty code tag, `{{}}`. The empty code tag will evaluate to the empty string, so it won't modify the content of your request body. Following from our previous example, we can add a new level 2 heading:
+You may have noticed that because headings start with `*`, you cannot include lines starting with `*` in your request bodies, because Org will interpret them as a new heading. To get around this, you can prefix request body lines starting with `*` with an empty code tag, `{{}}`. The empty code tag will evaluate to the empty string, so it won't modify the content of your request body. Following from our previous example, we can modify it like so:
 
 ```
 ** Upload file to user storage

@@ -75,6 +75,8 @@ run: ## Run emacs -Q with the working version of verb.el loaded.
 run: clean server-bg
 	$(EMACS) -Q -L . \
 		 --eval "(progn \
+			   (when (eq system-type 'darwin) \
+			     (setq mac-command-modifier 'meta)) \
 			   (require 'package) \
 		           (package-generate-autoloads \"verb\" \".\") \
 			   (load \"verb-autoloads.el\") \

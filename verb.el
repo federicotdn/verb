@@ -882,8 +882,9 @@ spec, not only the section contained by the source block."
   "Validate and prepare request spec RS to be used.
 
 The following checks/preparations are run:
-- Check if `verb-base-headers' needs to be applied.
-- Run validations with `verb-request-spec-validate'.
+1) Check if `verb-base-headers' needs to be applied.
+2) Apply request mapping function, if one was specified.
+3) Run validations with `verb-request-spec-validate'.
 
 After that, return RS."
   ;; Use `verb-base-headers' if necessary
@@ -891,6 +892,18 @@ After that, return RS."
     (setq rs (verb-request-spec-override
               (verb-request-spec :headers verb-base-headers)
               rs)))
+  ;; Apply the request mapping function, if present
+  (when-let ((fn-name (cdr (assoc-string "verb-map-request"
+                                         (oref rs metadata) t)))
+             (fn-sym (intern fn-name)))
+    (if (fboundp fn-sym)
+        (setq rs (funcall (symbol-function fn-sym) rs))
+      (user-error "No request mapping function with name \"%s\" exists"
+                  fn-name))
+    (unless (equal (type-of rs) 'verb-request-spec)
+      (user-error (concat "Request mapping function \"%s\" must return a "
+                          "`verb-request-spec' value")
+                  fn-name)))
   ;; Validate and return
   (verb-request-spec-validate rs))
 
