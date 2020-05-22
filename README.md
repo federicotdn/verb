@@ -303,6 +303,8 @@ Content-Type: application/json; charset=utf-8
 #+end_src
 ```
 
+**Note**: This feature is **not** related with Verb's [Babel Integration](#babel-integration), which only applies to Babel source blocks with `verb` specified as language, and takes into consideration the whole request specification (not just the body).
+
 ### Extend and Override Requests
 
 Our example file should now look like the following:
@@ -601,7 +603,7 @@ You can export directly to `curl` by using the `verb-export-request-on-point-cur
 **Note:** Code tags will be evaluated when exporting a request.
 
 ### Babel Integration
-Verb also works on Org [Babel](https://orgmode.org/worg/org-contrib/babel/) source blocks. This feature allows you to send an HTTP request, and view the results in the same `.org` buffer where the request was read from.
+Verb also works on Org [Babel](https://orgmode.org/worg/org-contrib/babel/) source blocks. This feature allows you to send an HTTP request, and view the results in the same `.org` buffer where the request was read from. You can also export requests to different formats (like `curl`) and view the results in the same buffer as well.
 
 To enable this feature, remember to add `verb` to the `org-babel-load-languages` list. To do this, you may add the following to your `init.el`:
 ```elisp
@@ -610,24 +612,43 @@ To enable this feature, remember to add `verb` to the `org-babel-load-languages`
  '((verb . t)))
 ```
 
-Once that's done, simply wrap your HTTP request specifications with `#+begin_src`/`#+end_src` like so:
+Once that's done, simply wrap your HTTP request specification (excluding the Org heading) with `#+begin_src`/`#+end_src` using `verb` as the source block language. For example, given the following request:
 ```
 * Make a request to an API
+
+post https://example.com/api/users
+Content-Type: application/json; charset=utf-8
+
+{
+    "name": "Jane Smith",
+    "age": "35"
+}
+```
+
+The Babel-compatible version would be:
+```
+* Make a request to an API
+
 #+begin_src verb :wrap src ob-verb-response
-get https://api.kanye.rest
-Accept: application/json
+post https://example.com/api/users
+Content-Type: application/json; charset=utf-8
+
+{
+    "name": "Jane Smith",
+    "age": "35"
+}
 #+end_src
 ```
 
-Babel source blocks in Verb mode accept a header argument called `:op`. Depending on the value that appears after this argument, Verb will execute different actions when <kbd>C-c C-c</kbd> is pressed.
+Babel source blocks with `verb` as a language accept a header argument called `:op`. Depending on the value that appears after this argument, Verb will execute different actions when <kbd>C-c C-c</kbd> is pressed.
 
 #### Sending Requests (`:op send`)
 
 By default, if `:op` is not specified, Verb will assume `:op send` was intended.
 
-To send the request, move the point to a source block and press <kbd>C-c C-c</kbd>. The result of the request will appear below. Adding `:wrap src ob-verb-response` argument tells Babel to wrap the response in a source block, using `ob-verb-response-mode` as major mode for font locking.
+To send the request, move the point to its `verb` source block and press <kbd>C-c C-c</kbd>. The result of the request will appear below. Adding the `:wrap src ob-verb-response` argument tells Babel to wrap the response in another source block, using `ob-verb-response-mode` as major mode for font locking.
 
-After the request has been sent, Emacs will be blocked until the response has arrived. There's a configurable timeout for this; see the `verb-babel-timeout` variable.
+As opposed to requests sent with the `verb-send-request-on-point-*` commands, requests sent with Babel will block Emacs until they are complete. There's a configurable timeout for this, see the `verb-babel-timeout` variable for more details.
 
 **Note:** When Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
 
@@ -640,8 +661,13 @@ Instead of specifying just `:op send`, you may add an additional argument: `get-
 ```
 * Make a request to an API (get body only)
 #+begin_src verb :wrap src ob-verb-response :op send get-body
-get https://api.kanye.rest
-Accept: application/json
+post https://example.com/api/users
+Content-Type: application/json; charset=utf-8
+
+{
+    "name": "Jane Smith",
+    "age": "35"
+}
 #+end_src
 ```
 
@@ -655,8 +681,13 @@ So for example, if you wanted to export the previous example to `curl`, you woul
 ```
 * Export request to curl
 #+begin_src verb :op export curl
-get https://api.kanye.rest
-Accept: application/json
+post https://example.com/api/users
+Content-Type: application/json; charset=utf-8
+
+{
+    "name": "Jane Smith",
+    "age": "35"
+}
 #+end_src
 ```
 
