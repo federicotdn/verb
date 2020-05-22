@@ -5,7 +5,7 @@
 
 **Verb** is a package for Emacs which allows you to organize and send HTTP requests.
 
-The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to organize specifications for HTTP requests using Org's tree structure. Properties defined in the higher levels extend or sometimes override properties defined in the lower levels - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Org mode with the common functionality provided by other HTTP clients. However, very little knowledge of Org mode is needed to use Verb.
+The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to organize specifications for HTTP requests using Org's tree structure. Properties defined in the child headings extend or sometimes override properties defined in the parent headings - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Org mode with the common functionality provided by other HTTP clients. However, very little knowledge of Org mode is needed to use Verb.
 
 Verb requires at least Emacs version 25 to work.
 
@@ -156,7 +156,7 @@ get https://reqres.in/api/users
 
 This defines a minimal HTTP request specification under the "Get users list" heading, composed of a method (`GET`) and a URL (`https://reqres.in/api/users`). The heading is prefixed with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level. All the text under a heading corresponds to the HTTP request it is describing. It is not possible to write request specifications without adding a heading at the top.
 
-Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. To tag a heading, simply move the point to it and press <kbd>C-c C-c</kbd>, and then type in `verb` <kbd>RET</kbd>. Note that in Org mode, by default subheadings inherit their parents' tags (see the `org-use-tag-inheritance` variable). This implies that once you've tagged one of the lower level headings, all its subheadings will have that tag as well. 
+Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. To tag a heading, simply move the point to it and press <kbd>C-c C-c</kbd>, and then type in `verb` <kbd>RET</kbd>. Note that in Org mode, by default, headings inherit their parents' tags (see the `org-use-tag-inheritance` variable). This implies that once you've tagged one of the parent headings, all its child headings will have that tag as well. 
 
 To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
 ```
@@ -261,7 +261,7 @@ A certain set of headers will **always** be included in sent requests, even if t
 
 If you include one of these headers in one of your requests (except `Accept`), Verb will add a warning to the [log](#verb-log).
 
-**Note:** "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements used to separate sections of text.
+**Note:** "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements Org mode uses to separate sections of text. Sometimes, "headline" or "outline" is used to refer to headings as well.
 
 ### Adding a Body
 
@@ -326,7 +326,7 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
-Notice that the two request specifications share many things in common: the URL host, path and one header. In order to avoid repeating all this information, we can actually define a `template` request, establishing all the common attributes among requests, and then extend this template request with different values. Using `template` allows you to avoid specifying an HTTP method at a points in your file where you only want to establish shared attributes for other requests. To use it, create a new level 1 heading, and move the already existing headings below it, making them level 2 headings:
+Notice that the two request specifications share many things in common: the URL host, path and one header. In order to avoid repeating all this information, we can actually define a `template` request, establishing all the common attributes among requests, and then extend this template request with different values. Using `template` allows you to avoid specifying an HTTP method at a points in your file where you only want to establish shared attributes for other requests. To use it, create a new level 1 heading, and move the already existing headings below it, making them level 2 child headings:
 
 ```
 * User management             :verb:
@@ -347,22 +347,22 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
-Now, when we send the request under "Get users list", Verb will collect all the properties defined in all the parent headings tagged with `:verb:` (in this case, a URL and one header), and then extend/override them with the attributes under this specific heading. This is how each attribute of an HTTP request specification is extended/overridden:
+Now, when we send the request under "Get users list", Verb will collect all the properties defined in all the parent headings tagged with `:verb:` (in this case, a URL and one header), and then extend/override them with the attributes under this specific heading. Any number of levels can be traversed this way. This is how each attribute of an HTTP request specification is extended/overridden:
 
-- **Method:** The last heading's (i.e. the one with the highest level) method will be used. The value `template` does not count as a method and will be ignored.
+- **Method:** The last heading's (i.e. the one with no children) method will be used. The value `template` does not count as a method and will be ignored.
 - **URL:**
   - **Schema**: The last defined heading's URL schema will be used (`http` or `https`).
   - **Host**: The last defined heading's URL host will be used.
   - **Port**: The last defined heading's URL port will be used.
-  - **Path**: All paths will be concatenated, starting from the first heading (i.e. the one with the lowest level).
-  - **Query**: Query string arguments will be merged. Values from higher level headings have higher priority.
+  - **Path**: All paths will be concatenated, starting with the first heading (i.e. the topmost parent).
+  - **Query**: Query string arguments will be merged. Values from child headings have higher priority.
   - **Fragment**: The last defined heading's URL fragment will be used.
-- **Headers**: All headers will be merged. Values from higher level headings have higher priority.
+- **Headers**: All headers will be merged. Values from child headings have higher priority.
 - **Body**: The last request body present in a heading will be used (if no heading defines a body, none will be used).
 
 If you try to send a request from the level 1 header, you'll get an error, as at that level there's no specified HTTP method.
 
-You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.org` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL schema, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources, and the level 3 headings will specify actions to run on those resources. For example (unrelated to `guide.org`):
+You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.org` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL schema, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources (e.g. `users`, `products`, etc.), and the level 3 headings will specify actions to run on those resources (e.g. `post`, `put`, etc.). For example (unrelated to `guide.org`):
 
 ```
 * Foobar Blog API                    :verb:
@@ -650,7 +650,7 @@ To send the request, move the point to its `verb` source block and press <kbd>C-
 
 As opposed to requests sent with the `verb-send-request-on-point-*` commands, requests sent with Babel will block Emacs until they are complete. There's a configurable timeout for this, see the `verb-babel-timeout` variable for more details.
 
-**Note:** When Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in lower-level headings will be brought over and potentially overriden by the current source block's. The request specifications in the lower-level headings may be defined in Babel source blocks as well; Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
+**Note:** When Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in parent headings will be brought over and potentially overriden by the current source block's. The request specifications in the parent headings may be defined in Babel source blocks as well, Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
 
 **Note:** The heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
@@ -717,7 +717,7 @@ The [examples/](examples) directory contains various `.org` files which showcase
 ## Troubleshooting
 **Problem**: When trying to send a request, an error is shown: "No request specifications found".
 
-**Fix**: Tag the headings containing request specifications with `:verb:`. Tags are inherited by default, so in most cases you can just tag the lowest-level heading (i.e. the one with least `*`).
+**Fix**: Tag the headings containing request specifications with `:verb:`. Tags are inherited by default, so in most cases you can just tag the topmost parent heading.
 
 ---
 
