@@ -1593,6 +1593,22 @@
   (should-not (verb--http-method-p verb--template-keyword))
   (should-not (verb--http-method-p "test")))
 
+(ert-deftest test-disable-verb-mode-font-lock ()
+  (with-temp-buffer
+    (should-not font-lock-keywords)
+    (verb-mode)
+    (should font-lock-keywords)
+    (verb-mode -1)
+    (should (equal font-lock-keywords '(t nil)))))
+
+(ert-deftest test-disable-verb-mode-completion-at-point ()
+  (with-temp-buffer
+    (should-not (member #'verb-elisp-completion-at-point completion-at-point-functions))
+    (verb-mode)
+    (should (member #'verb-elisp-completion-at-point completion-at-point-functions))
+    (verb-mode -1)
+    (should-not (member #'verb-elisp-completion-at-point completion-at-point-functions))))
+
 (setq elisp-code "system-")
 
 (ert-deftest test-elisp-completion ()

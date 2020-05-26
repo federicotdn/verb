@@ -3,6 +3,7 @@
 - If a (non-Verb) Babel source block is found inside a request body, its corresponding `#+begin_src` and `#+end_src` delimiters are erased before sending the request.
 - Enable code completion for code tags by default.
 - Added support for the `Verb-Map-Request` heading property. This allows specifying a function per request, that can modify the request before it's sent.
+- Properly clean up font locking and completion at point functions when `verb-mode` is disabled.
 
 ## **2.10.0** - 2020-05-01 (MELPA Stable)
 - Added the `verb-json-use-mode` customizable variable. It allows users to change what mode is enabled on JSON responses.

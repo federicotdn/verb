@@ -176,7 +176,7 @@ When you open an `.org` file with HTTP request specifications in it, Verb mode w
 # End:
 ```
 
-In general, the first option should be useful enough for most cases. Once Verb mode has been enabled, `Verb` should appear on the modeline.
+In general, the first option should be useful enough for most cases. Once Verb mode has been enabled, `Verb` should appear on the modeline. To disable Verb mode, run <kbd>M-x</kbd>`verb-mode`<kbd>RET</kbd>.
 
 ### Sending Requests
 

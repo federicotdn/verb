@@ -22,3 +22,6 @@ test/server.pid
 
 # autoloads
 verb-autoloads.el
+
+# Emacs 25 binary
+/emacs
