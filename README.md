@@ -71,6 +71,8 @@ Verb requires at least Emacs version 25 to work.
 - [License](#license)
 
 ## Installation
+### Emacs 25+
+
 You can install Verb by using the `package-install` command (make sure either [MELPA](https://melpa.org/) or [MELPA Stable](https://stable.melpa.org/) are included in your package sources):
 
 <kbd>M-x</kbd> `package-install` <kbd>RET</kbd> `verb` <kbd>RET</kbd>
@@ -91,6 +93,10 @@ If you're using [use-package](https://github.com/jwiegley/use-package), you'll n
 ```
 
 Both cases will set <kbd>C-c C-r</kbd> as the prefix key for all Verb commands in Org mode. Feel free to use another key if you prefer that.
+
+### Spacemacs
+
+Verb is available on the `develop` branch of Spacemacs. To enable it, read the [documentation on enabling Verb support](https://develop.spacemacs.org/layers/+emacs/org/README.html#verb-support). To view the default keybindings, see the [Verb mode bindings](https://develop.spacemacs.org/layers/+emacs/org/README.html#verb) table.
 
 ## Quick Start
 
