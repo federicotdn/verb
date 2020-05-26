@@ -109,27 +109,29 @@ Here's a more complete example that includes defines two requests, both of which
 # Comments start with '#'. You can only place
 # comments before the URL and in the headers.
 
-template https://postman-echo.com
+template https://reqres.in/api
 Accept: application/json
 
-** POST some contents
+** Create a new user
 # Because the base URL is defined in the parent
 # heading, there's no need to repeat it here.
-# We can also add more headers.
+# We can also add more headers here, or override
+# ones defined in parents.
 
-post /post
+post /users
 Content-Type: application/json; charset=utf-8
 
 {
-    "foo": "bar"
+    "name": "Jane Smith",
+    "city": "Berlin"
 }
 
-** GET and respond with status code
-# Send a GET request and get a specific status code
-# as a response.
-# Use embedded Lisp code in the request spec.
+** Fetch a product
+# Use Emacs Lisp code tags to make the request
+# content dynamic. Code tags can be used anywhere
+# in the request specification.
 
-get /status/{{(read-number "Status: " 200)}}
+get /products/{{(read-number "Product ID: ")}}
 ```
 
 You can send any of the two requests by moving the point to one of the level 2 headings (marked with `**`), and then pressing <kbd>C-c C-r C-r</kbd>.
