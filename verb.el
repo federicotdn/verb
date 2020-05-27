@@ -413,6 +413,8 @@ If REMOVE is nil, add the necessary keywords to
          verb-send-request-on-point-other-window]
         ["Send request on other window"
          verb-send-request-on-point-other-window-stay]
+        ["Send request without showing response"
+         verb-send-request-on-point-no-window]
         "--"
         ["Kill response buffers" verb-kill-all-response-buffers]
         "--"
