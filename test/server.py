@@ -223,7 +223,9 @@ def main() -> None:
         with open(pidfile, "w") as f:
             f.write(str(os.getpid()))
 
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "8000")), access_log=False)
+    app.run(
+        host="127.0.0.1", port=int(os.environ.get("PORT", "8000")), access_log=False
+    )
 
 
 if __name__ == "__main__":
