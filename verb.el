@@ -2232,7 +2232,7 @@ METADATA."
       ;; features that depend on specific content types (e.g JSON,
       ;; XML, etc.). Here we delete the source block delimiters so
       ;; that they are not included in the actual request.
-      (delete-matching-lines "^#\\+\\(begin\\|end\\)_src")
+      (delete-matching-lines "^[[:blank:]]*#\\+\\(begin\\|end\\)_src")
 
       ;; Expand code tags in the rest of the buffer (if any)
       (save-excursion
