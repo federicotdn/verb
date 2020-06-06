@@ -1,0 +1,25 @@
+version: 2.1
+
+jobs:
+  tests:
+    parameters:
+      emacs-version:
+        type: string
+    docker:
+      - image: silex/emacs:<<parameters.emacs-version>>-dev
+    steps:
+      - checkout
+      - run: emacs --version
+      - run: apt-get update && apt-get install -y python3-venv
+      - run: make setup-tests
+      - run: make test
+      - run: make setup-check
+      - run: make check
+
+workflows:
+  integrate:
+    jobs:
+      - tests:
+          matrix:
+            parameters:
+              emacs-version: ['26.3', '27', 'master']
