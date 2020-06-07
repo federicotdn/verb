@@ -1911,6 +1911,7 @@
     (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-server-response-latin-1 ()
+  (skip-unless (eq system-type 'darwin))
   (server-test "response-latin-1"
     (should (coding-system-equal buffer-file-coding-system 'iso-latin-1-unix))
     (should (string-match "ñáéíóúß" (buffer-string)))))
@@ -1932,6 +1933,7 @@
     (should (string= (buffer-string) "語"))))
 
 (ert-deftest test-server-response-big5 ()
+  (skip-unless (eq system-type 'darwin))
   (server-test "response-big5"
     (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))
     (should (string-match "常用字" (buffer-string)))))
@@ -1944,6 +1946,7 @@
     (should (= 3 (length (oref verb-http-response body))))))
 
 (ert-deftest test-server-response-utf-8-default ()
+  (skip-unless (eq system-type 'darwin))
   (server-test "response-utf-8-default"
 	       (should (string= (cdr (assoc-string "Content-Type"
 						   (oref verb-http-response headers)))
