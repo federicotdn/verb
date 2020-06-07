@@ -2149,6 +2149,7 @@
   (should-error (verb-stored-response "adfsadfsadf")))
 
 (ert-deftest test-connection-error-port ()
+  (skip-unless (eq system-type 'darwin))
   (clear-log)
   (setq num-buffers (length (buffer-list)))
   (should-error (server-test "connection-fail-port"))
