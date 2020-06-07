@@ -684,6 +684,15 @@
                              "hello"))
   (should (string= (oref aux :body) "<something/>\nhello"))
 
+  ;; Removes src block markers even when indented
+  (setq aux (text-as-spec-nl "  GET example.com"
+        		     "  Accept: text"
+        		     ""
+        		     "  #+begin_src xml"
+                             "  <something/>"
+                             "  #+end_src"))
+  (should (string= (oref aux :body) "  <something/>\n"))
+
   (setq aux (text-as-spec-nl "GET example.com"
 			     "Accept: text"
 			     ""
