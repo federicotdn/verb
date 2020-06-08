@@ -891,6 +891,12 @@ spec, not only the section contained by the source block."
         (setq rs (verb--request-spec-from-hierarchy rs)))
       (verb--request-spec-post-process rs))))
 
+(defun verb--object-of-class-p (obj class)
+  "Return non-nil if OBJ is an instance of CLASS.
+CLASS must be an EIEIO class."
+  (ignore-errors
+    (object-of-class-p obj class)))
+
 (defun verb--request-spec-post-process (rs)
   "Validate and prepare request spec RS to be used.
 
@@ -913,8 +919,7 @@ After that, return RS."
         (setq rs (funcall (symbol-function fn-sym) rs))
       (user-error "No request mapping function with name \"%s\" exists"
                   fn-name))
-    (unless (equal (type-of rs)
-                   (if (< emacs-major-version 26) 'vector 'verb-request-spec))
+    (unless (verb--object-of-class-p rs 'verb-request-spec)
       (user-error (concat "Request mapping function \"%s\" must return a "
                           "`verb-request-spec' value")
                   fn-name)))
@@ -986,6 +991,9 @@ If you use this command frequently, consider setting
 `verb-auto-kill-response-buffers' to t.  This will help avoiding
 having many response buffers open."
   (interactive)
+  (unless (verb--object-of-class-p verb-http-response 'verb-response)
+    (user-error "%s" (concat "Can't re-send request as current buffer is not "
+                             "a response buffer")))
   (verb--request-spec-send (oref verb-http-response request)
                            'this-window))
 

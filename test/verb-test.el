@@ -1829,6 +1829,13 @@
 				 "a=3"
 				 "b=42")))))
 
+(ert-deftest test-object-of-class-p ()
+  (should (verb--object-of-class-p (verb-request-spec) 'verb-request-spec))
+  (should (verb--object-of-class-p (verb-response) 'verb-response))
+  (should-not (verb--object-of-class-p t 'verb-response))
+  (should-not (verb--object-of-class-p nil 'verb-response))
+  (should-not (verb--object-of-class-p 42 'verb-response)))
+
 (ert-deftest test-server-basic-queue ()
   (let ((verb-url-retrieve-function #'url-queue-retrieve))
     (server-test "basic"
@@ -1839,9 +1846,7 @@
     (should (string= (buffer-string) "Hello, World!"))
     (should (eq major-mode 'text-mode))
     (should verb-response-body-mode)
-    (should (equal (type-of verb-http-response) (if (< emacs-major-version 26)
-                                                    'vector
-                                                  'verb-response)))
+    (should (verb--object-of-class-p verb-http-response 'verb-response))
     (should (oref verb-http-response request))
     (let ((req-url (verb-request-spec-url-to-string (oref verb-http-response request))))
       (should (string= req-url (if (< emacs-major-version 26)
