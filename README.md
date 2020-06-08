@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="verb" src="https://github.com/federicotdn/verb/raw/master/docs/img/logo.png" width="50%">
+  <img alt="verb" src="https://github.com/federicotdn/verb/raw/master/extra/logo/logo.png" width="50%">
   <br/>
 </p>
 
@@ -716,7 +716,7 @@ The Emacs `url` library also keeps its own internal log - it can be useful for d
 
 ## Hooks, Variables, Functions
 
-To see a listing of Verb's publicly defined hooks, functions, variables and classes, see the [verb-api.md](docs/verb-api.md) file.
+To see a listing of Verb's publicly defined hooks, functions, variables and classes, see the [verb-api.md](extra/verb-api.md) file.
 
 ## Examples
 

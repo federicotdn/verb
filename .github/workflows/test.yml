@@ -4,7 +4,7 @@ on:
     paths-ignore:
       - '**.md'
       - 'examples/*'
-      - 'docs/*'
+      - 'extra/*'
   pull_request:
   schedule:
     - cron: '0 12 1 * *'
