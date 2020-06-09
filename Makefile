@@ -7,6 +7,7 @@ FONT_SIZE ?= 180
 ENV ?= env
 ACTIVATE = source $(ENV)/bin/activate
 MAX_LINE_LEN = 80
+WAIT_TIME ?= 0.5
 
 .PHONY: test
 
@@ -23,7 +24,7 @@ setup-tests:  ## Install everything required for testing (Python dependencies).
 
 test: ## Run all ERT tests.
 test: clean server-bg
-	sleep 0.5
+	sleep $(WAIT_TIME)
 	$(EMACS) --batch -L . \
 		 -l test/verb-test.el \
 		 -f ert-run-tests-batch-and-exit; \

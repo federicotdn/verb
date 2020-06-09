@@ -38,4 +38,6 @@ jobs:
       - name: Setup unit testing
         run: 'make setup-tests'
       - name: Run ERT unit tests
+        env:
+          WAIT_TIME: 3
         run: 'make test'

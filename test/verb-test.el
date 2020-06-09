@@ -1709,7 +1709,8 @@
   (should-error (verb--log 1 'X "foo")))
 
 (ert-deftest test-response-buffer-name ()
-  (let ((verb--requests-count 41))
+  (let ((verb--requests-count 41)
+        (verb-auto-kill-response-buffers nil))
     (server-test "basic"
       (should (string-match-p "\\*HTTP Response 42\\*"
 			      (buffer-name)))))
@@ -1728,7 +1729,8 @@
 	      (buffer-list)))
 
 (ert-deftest test-kill-all-response-buffers ()
-  (let ((n (length (get-response-buffers))))
+  (let ((n (length (get-response-buffers)))
+        (verb-auto-kill-response-buffers nil))
     (server-test "basic")
     (server-test "basic-json")
     (should (= (length (get-response-buffers)) (+ n 2)))
@@ -2006,9 +2008,10 @@
     (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-buffers-created ()
-  (setq num-buffers (length (buffer-list)))
-  (server-test "basic")
-  (should (= (1+ num-buffers) (length (buffer-list)))))
+  (let ((verb-auto-kill-response-buffers nil))
+    (setq num-buffers (length (buffer-list)))
+    (server-test "basic")
+    (should (= (1+ num-buffers) (length (buffer-list))))))
 
 (ert-deftest test-kill-buffer-and-window ()
   (setq num-buffers (length (buffer-list)))
