@@ -1004,8 +1004,14 @@
     (verb-set-var "test-var-2" "bye")
     (should (string= (verb--eval-string "(verb-var test-var-2)"
 					(current-buffer))
-		     "bye"))
-    (should (= (length verb--vars) 2)))
+                     "bye"))
+
+    ;; Set var to a non-string value (e.g. integer)
+    (should (= (verb--eval-string "(verb-var test-var-3 8080)"
+                                  (current-buffer))
+               8080))
+
+    (should (= (length verb--vars) 3)))
   (with-temp-buffer
     (should-not verb--vars)))
 
