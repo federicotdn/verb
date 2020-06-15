@@ -1006,6 +1006,9 @@
 					(current-buffer))
                      "bye"))
 
+    ;; Set same var again, should replace old entry
+    (verb-set-var "test-var-2" "byeee")
+
     ;; Set var to a non-string value (e.g. integer)
     (should (= (verb--eval-string "(verb-var test-var-3 8080)"
                                   (current-buffer))
