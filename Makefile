@@ -85,6 +85,8 @@ run: clean server-bg
 			   (set-face-attribute 'default nil :height $(FONT_SIZE)) \
 			   (setq initial-scratch-message nil) \
 			   (with-eval-after-load 'org (define-key org-mode-map (kbd \"C-c C-r\") verb-command-map)) \
+			   (global-set-key (kbd \"M-l\") 'switch-to-buffer) \
+			   (global-set-key (kbd \"M-o\") 'other-window) \
 			   (org-babel-do-load-languages \
 			     'org-babel-load-languages \
 			     '((verb . t))) \

@@ -60,6 +60,8 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-kill-buffer-and-window**
 - Command: **verb-toggle-show-headers**
 - Command: **verb-set-var** *&optional var*
+- Command: **verb-unset-vars**
+- Command: **verb-show-vars**
 - Command: **verb-view-log**
 - Command: **verb-customize-group**
 - Macro: **verb-var** *var &optional default*

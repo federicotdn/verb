@@ -419,6 +419,8 @@ If REMOVE is nil, add the necessary keywords to
         ["Kill response buffers" verb-kill-all-response-buffers]
         "--"
         ["Set variable value" verb-set-var]
+        ["Show all variable values" verb-show-vars]
+        ["Unset all variables" verb-unset-vars]
         "--"
         ["Export request to curl" verb-export-request-on-point-curl]
         ["Export request to Verb" verb-export-request-on-point-verb]
@@ -1031,9 +1033,44 @@ use string VAR and value VALUE."
                                                      verb--vars))))
          (val (or value (read-string (format "Set value for %s: " v))))
          (elem (assoc-string v verb--vars)))
+    (when (string-empty-p v)
+      (user-error "%s" "Variable name can't be empty"))
     (if elem
         (setcdr elem val)
       (push (cons (intern v) val) verb--vars))))
+
+(defun verb-unset-vars ()
+  "Unset all variables set with `verb-var' or `verb-set-var'.
+This affects only the current buffer."
+  (interactive)
+  (verb--ensure-verb-mode)
+  (when (or (not (called-interactively-p 'any))
+            (yes-or-no-p "Unset all Verb variables for current buffer? "))
+    (setq verb--vars nil)))
+
+(defun verb-show-vars ()
+  "Show values of variables set with `verb-var' or `verb-set-var'.
+Values correspond to variables set in the current buffer.  Return the
+buffer used to show the values."
+  (interactive)
+  (unless verb--vars
+    (user-error "%s" "No variables are currently defined"))
+  (let ((buf (current-buffer))
+        (inhibit-read-only t))
+    (with-current-buffer-window
+     (get-buffer-create "*Verb Variables*")
+     (cons 'display-buffer-below-selected
+           '((window-height . fit-window-to-buffer)))
+     nil
+     (unless (derived-mode-p 'special-mode)
+       (special-mode))
+     (dolist (elem (buffer-local-value 'verb--vars buf))
+       (insert (propertize (format "%s: " (car elem)) 'face 'verb-header)
+               (format "%s" (cdr elem)))
+       (newline))
+     (unless (zerop (buffer-size))
+       (backward-delete-char 1))
+     (current-buffer))))
 
 (defun verb-read-file (file &optional coding-system)
   "Return a buffer with the contents of FILE.

@@ -1018,6 +1018,46 @@
   (with-temp-buffer
     (should-not verb--vars)))
 
+(ert-deftest test-verb-set-var-empty-name ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (should-error (verb-set-var "" "foo"))))
+
+(ert-deftest test-verb-show-vars-no-vars ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (should-error (verb-show-vars))))
+
+(ert-deftest test-verb-unset-vars ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (verb-set-var "test-var-1" "foo")
+    (verb-set-var "test-var-2" "bar")
+
+    (should (= (length verb--vars) 2))
+
+    (verb-unset-vars)
+
+    (should (zerop (length verb--vars)))))
+
+(ert-deftest test-show-vars ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (verb-set-var "test-var-1" 100)
+    (verb-set-var "test-var-2" "bar")
+    (verb-set-var "test-var-3" "quuz")
+
+    (with-current-buffer (verb-show-vars)
+      (should (string= (buffer-string)
+                       (join-lines
+                        "test-var-3: quuz"
+                        "test-var-2: bar"
+                        "test-var-1: 100"))))))
+
 (ert-deftest test-verb-set-var-previously-unset ()
   (with-temp-buffer
     (org-mode)
