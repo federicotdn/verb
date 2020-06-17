@@ -74,33 +74,5 @@ check: clean
 
 run: ## Run emacs -Q with the working version of verb.el loaded.
 run: clean server-bg
-	$(EMACS) -Q -L . \
-		 --eval "(progn \
-			   (when (eq system-type 'darwin) \
-			     (setq mac-command-modifier 'meta)) \
-			   (require 'package) \
-		           (package-generate-autoloads \"verb\" \".\") \
-			   (load \"verb-autoloads.el\") \
-			   (add-to-list 'default-frame-alist '(fullscreen . maximized)) \
-			   (set-face-attribute 'default nil :height $(FONT_SIZE)) \
-			   (setq initial-scratch-message nil) \
-			   (with-eval-after-load 'org (define-key org-mode-map (kbd \"C-c C-r\") verb-command-map)) \
-			   (global-set-key (kbd \"M-l\") 'switch-to-buffer) \
-			   (global-set-key (kbd \"M-o\") 'other-window) \
-			   (org-babel-do-load-languages \
-			     'org-babel-load-languages \
-			     '((verb . t))) \
-			   (setq org-confirm-babel-evaluate nil) \
-			   (setq verb-auto-kill-response-buffers t) \
-			   (with-current-buffer (get-buffer \"*scratch*\") \
-			     (org-mode) \
-			     (verb-mode) \
-			     (insert \"* Test :verb:\") \
-			     (newline) \
-			     (insert \"get http://localhost:8000/endpoints\")) \
-			   (load-theme 'wombat) \
-			   (setq url-debug t) \
-			   (toggle-debug-on-error) \
-			   (dired \"examples\") \
-			   (delete-other-windows))"
+	FONT_SIZE=$(FONT_SIZE) $(EMACS) -Q -L . --load test/init.el
 	make server-kill
