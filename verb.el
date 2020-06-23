@@ -1581,64 +1581,65 @@ NUM is this request's identification number."
       ;; metadata
       (verb--maybe-store-response verb-http-response))
 
+    ;; Make the response buffer the current one
+    (set-buffer response-buf)
+
     (if binary-handler
-        ;; Response content is a binary format:
-
         (progn
+          ;; Response content is a binary format:
           (verb--log num 'I "Using binary handler: %s" binary-handler)
-          (with-current-buffer response-buf
-            (fundamental-mode)
-            (set-buffer-multibyte nil)
-            (set-buffer-file-coding-system 'binary)
 
-            (buffer-disable-undo)
-            ;; Copy bytes into RESPONSE-BUF
-            (insert-buffer-substring original-buffer)
-            (goto-char (point-min))
-            (funcall binary-handler)))
+          (fundamental-mode)
+          (set-buffer-multibyte nil)
+          (set-buffer-file-coding-system 'binary)
 
-      ;; Response content is text:
+          (buffer-disable-undo)
+          ;; Copy bytes into RESPONSE-BUF
+          (insert-buffer-substring original-buffer)
+          (goto-char (point-min))
+          (funcall binary-handler))
+
+      ;; else: Response content is text:
+      (verb--log num 'I "Using text handler: %s" text-handler)
 
       ;; Choose corresponding coding system for charset
       (setq coding-system (or (mm-charset-to-coding-system charset)
                               'utf-8))
 
-      ;; Decode contents into RESPONSE-BUF
-      (decode-coding-region (point-min) (point-max)
-                            coding-system
-                            response-buf))
+      ;; Decode contents into RESPONSE-BUF from buffer created by
+      ;; url.el (`original-buffer')
+      (with-current-buffer original-buffer
+        (decode-coding-region (point-min) (point-max)
+                              coding-system
+                              response-buf))
+
+      (set-buffer-file-coding-system coding-system)
+
+      ;; Prepare buffer for editing by user
+      (goto-char (point-min))
+      (funcall text-handler))
 
     ;; Kill original response buffer
     (kill-buffer original-buffer)
 
-    (with-current-buffer response-buf
-      ;; Now that the response content has been processed, update
-      ;; `verb-http-response's body slot
-      (oset verb-http-response
-            body
-            (unless (zerop (oref verb-http-response body-bytes))
-              (verb--buffer-string-no-properties)))
+    ;; Now that the response content has been processed, update
+    ;; `verb-http-response's body slot
+    (oset verb-http-response
+          body
+          (unless (zerop (oref verb-http-response body-bytes))
+            (verb--buffer-string-no-properties)))
 
-      (when text-handler
-        (verb--log num 'I "Using text handler: %s" text-handler)
+    (pcase where
+      ('other-window (switch-to-buffer-other-window (current-buffer)))
+      ('stay-window (save-selected-window
+                      (switch-to-buffer-other-window (current-buffer))))
+      ('this-window (switch-to-buffer (current-buffer)))
+      ('minibuffer (message "%s" (oref verb-http-response status))))
 
-        (set-buffer-file-coding-system coding-system)
+    (verb-response-body-mode)
 
-        ;; Prepare buffer for editing by user
-        (goto-char (point-min))
-        (funcall text-handler))
-
-      (pcase where
-        ('other-window (switch-to-buffer-other-window (current-buffer)))
-        ('stay-window (save-selected-window
-                        (switch-to-buffer-other-window (current-buffer))))
-        ('this-window (switch-to-buffer (current-buffer)))
-        ('minibuffer (message "%s" (oref verb-http-response status))))
-
-      (verb-response-body-mode)
-
-      ;; Run post response hook
-      (run-hooks 'verb-post-response-hook))))
+    ;; Run post response hook
+    (run-hooks 'verb-post-response-hook)))
 
 (defun verb--prepare-http-headers (headers)
   "Prepare alist HEADERS of HTTP headers to be used on a request.
