@@ -1581,22 +1581,21 @@ NUM is this request's identification number."
       ;; metadata
       (verb--maybe-store-response verb-http-response))
 
-    ;; Make the response buffer the current one
+    ;; Make RESPONSE-BUF the current buffer, as we'll need to change
+    ;; its major mode, coding system, etc.
     (set-buffer response-buf)
+
+    ;; Copy bytes from `original-buffer' into it
+    (insert-buffer-substring original-buffer)
 
     (if binary-handler
         (progn
           ;; Response content is a binary format:
           (verb--log num 'I "Using binary handler: %s" binary-handler)
 
-          (fundamental-mode)
           (set-buffer-multibyte nil)
           (set-buffer-file-coding-system 'binary)
-
           (buffer-disable-undo)
-          ;; Copy bytes into RESPONSE-BUF
-          (insert-buffer-substring original-buffer)
-          (goto-char (point-min))
           (funcall binary-handler))
 
       ;; else: Response content is text:
@@ -1606,18 +1605,15 @@ NUM is this request's identification number."
       (setq coding-system (or (mm-charset-to-coding-system charset)
                               'utf-8))
 
-      ;; Decode contents into RESPONSE-BUF from buffer created by
-      ;; url.el (`original-buffer')
-      (with-current-buffer original-buffer
-        (decode-coding-region (point-min) (point-max)
-                              coding-system
-                              response-buf))
+      ;; Decode contents using coding system
+      (decode-coding-region (point-min) (point-max) coding-system)
 
       (set-buffer-file-coding-system coding-system)
 
       ;; Prepare buffer for editing by user
-      (goto-char (point-min))
       (funcall text-handler))
+
+    (goto-char (point-min))
 
     ;; Kill original response buffer
     (kill-buffer original-buffer)
