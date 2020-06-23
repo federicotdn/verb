@@ -8,6 +8,7 @@ ENV ?= env
 ACTIVATE = source $(ENV)/bin/activate
 MAX_LINE_LEN = 80
 WAIT_TIME ?= 0.5
+SELECTOR ?= t
 
 .PHONY: test
 
@@ -27,7 +28,7 @@ test: clean server-bg
 	sleep $(WAIT_TIME)
 	$(EMACS) --batch -L . \
 		 -l test/verb-test.el \
-		 -f ert-run-tests-batch-and-exit; \
+		 --eval "(ert-run-tests-batch-and-exit '$(SELECTOR))"; \
 	ret=$$?; \
 	make server-kill; \
 	exit $$ret
