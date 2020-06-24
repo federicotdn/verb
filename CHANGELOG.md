@@ -2,6 +2,8 @@
 ## **master** (MELPA)
 - Added the `verb-show-vars` command. It allows users to see a listing of all currently defined variables.
 - Added the `verb-unset-vars` command. It allows users to unset all currently defined variables. This implies that if the DEFAULT argument was specified for `verb-var`, that value will be used the next time the variable's value is retrieved.
+- Added the `verb-show-request` command. It allows users to quickly see the corresponding request that was sent for an already received HTTP response.
+- Renamed `verb-view-log` to `verb-show-log`.
 
 ## **2.11.0** - 2020-05-27 (MELPA Stable)
 - If a (non-Verb) Babel source block is found inside a request body, its corresponding `#+begin_src` and `#+end_src` delimiters are erased before sending the request.

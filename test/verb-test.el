@@ -1723,11 +1723,11 @@
      (re-search-forward (concat "^\\*+ " ,test-name "$"))
      (let ((inhibit-message t))
        (with-current-buffer (verb-send-request-on-point 'same-window)
-	 (while (eq verb-http-response t)
-	   (sleep-for req-sleep-time)
-	   (when (eq verb-url-retrieve-function #'url-queue-retrieve)
-	     (ert-run-idle-timers)))
-	 ,@body))))
+         (while (eq verb-http-response t)
+           (sleep-for req-sleep-time)
+           (when (eq verb-url-retrieve-function #'url-queue-retrieve)
+             (ert-run-idle-timers)))
+         ,@body))))
 
 (defun clear-log ()
   (with-current-buffer verb--log-buffer-name
@@ -2063,6 +2063,19 @@
   (switch-to-buffer "*HTTP Response 1*")
   (verb-kill-buffer-and-window)
   (should (= num-buffers (length (buffer-list)))))
+
+(ert-deftest test-show-request ()
+  (let ((verb-auto-kill-response-buffers t))
+    (server-test "request-latin-1"
+      (with-current-buffer (verb-show-request)
+        (should (string=
+                 (string-trim (buffer-string))
+                 (join-lines
+                  "* Corresponding HTTP request for response in *HTTP Response*"
+                  "POST http://localhost:8000/request-latin-1"
+                  "Content-Type: text/plain; charset=latin1"
+                  ""
+                  "áéíóúñü")))))))
 
 (ert-deftest test-auto-kill-buffers ()
   (let ((num-buffers (length (buffer-list)))

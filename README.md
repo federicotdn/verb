@@ -40,6 +40,7 @@ Verb requires at least Emacs version 25 to work.
   - [Sending Requests](#sending-requests)
   - [The Response Body Buffer](#the-response-body-buffer)
   - [Re-sending Requests](#re-sending-requests)
+  - [Show Corresponding Request](#show-corresponding-request)
   - [The Response Headers Buffer](#the-response-headers-buffer)
   - [Specifying HTTP Headers](#specifying-http-headers)
   - [Adding a Body](#adding-a-body)
@@ -226,6 +227,10 @@ As you send more HTTP requests, more response buffers will be created, with `<N>
 ### Re-sending Requests
 
 If you wish to re-send the request that generated the current response buffer, select the window showing it and use the `verb-re-send-request` command, which is bound to <kbd>C-c C-r C-f</kbd> by default. Note that the exact same request will be sent, even if the originating `.org` file was modified.
+
+### Show Corresponding Request
+
+While viewing the contents of an HTTP response, you can use the `verb-show-request` command in order to show the corresponding request that generated this response. By default, the command is bound to <kbd>C-c C-r C-s</kbd>.
 
 ### The Response Headers Buffer
 
@@ -710,7 +715,7 @@ To see all aspects of Verb that may be customized, use <kbd>M-x</kbd> `customize
 
 ### Verb Log
 
-When you send a request or receive a response, some information is logged in the `*Verb Log*` buffer. You can use this log to get some more details on any errors that might have happened and other internal stuff. You can disable logging by setting the `verb-enable-log` variable to `nil`. While reading the log, you can press <kbd>q</kbd> to go back to the previous buffer.
+When you send a request or receive a response, some information is logged in the `*Verb Log*` buffer. You can use this log to get some more details on any errors that might have happened and other internal stuff. You can disable logging by setting the `verb-enable-log` variable to `nil`. To read the log, you can use the `verb-show-log` command. While reading the log, you can press <kbd>q</kbd> to go back to the previous buffer.
 
 The Emacs `url` library also keeps its own internal log - it can be useful for debugging requests that are not working as expected. To enable `url` logging, set `url-debug` to `t` (by default, it's disabled). After sending a request, switch to the `*URL-DEBUG*` buffer to read any logged information.
 

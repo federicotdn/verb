@@ -52,6 +52,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-send-request-on-point-other-window-stay** *&optional arg*
 - Command: **verb-send-request-on-point-no-window** *&optional arg*
 - Command: **verb-re-send-request**
+- Command: **verb-show-request**
 - Command: **verb-kill-all-response-buffers** *&optional keep-windows*
 - Command: **verb-export-request-on-point** *name*
 - Command: **verb-export-request-on-point-verb**
@@ -62,7 +63,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-set-var** *&optional var*
 - Command: **verb-unset-vars**
 - Command: **verb-show-vars**
-- Command: **verb-view-log**
+- Command: **verb-show-log**
 - Command: **verb-customize-group**
 - Macro: **verb-var** *var &optional default*
 - Class: **verb-request-spec** \
