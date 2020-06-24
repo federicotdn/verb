@@ -2072,7 +2072,9 @@
                  (string-trim (buffer-string))
                  (join-lines
                   "* Corresponding HTTP request for response in *HTTP Response*"
-                  "POST http://localhost:8000/request-latin-1"
+                  (format "POST %s/request-latin-1" (if (< emacs-major-version 26)
+                                                        "http://127.0.0.1:8000"
+                                                      "http://localhost:8000"))
                   "Content-Type: text/plain; charset=latin1"
                   ""
                   "áéíóúñü")))))))
