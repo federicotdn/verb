@@ -73,6 +73,13 @@ check: clean
 	make lint-file filename=ob-verb.el
 	test $$(cat *.el | grep Package-Version | uniq | wc -l) -eq 1
 
+update: ## Update the package version number (version=X.Y.Z).
+update:
+	@test -n "$(version)" || (echo "version not set!" && exit 1)
+	sed -i -e "s/^;; Package-Version: .*/;; Package-Version: $(version)/g" verb.el
+	sed -i -e "s/^;; Package-Version: .*/;; Package-Version: $(version)/g" ob-verb.el
+	sed -i -e "s/defconst verb-version .*/defconst verb-version \"$(version)\"/g" verb.el
+
 run: ## Run emacs -Q with the working version of verb.el loaded.
 run: clean server-bg
 	FONT_SIZE=$(FONT_SIZE) $(EMACS) -Q -L . --load test/init.el
