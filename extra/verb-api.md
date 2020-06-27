@@ -32,6 +32,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Variable: **verb-command-map** \
   Keymap for Verb mode commands.
 - Variable: **verb-response-headers-mode-map**
+- Constant: **verb-version**
 - Function: **org-babel-execute:verb** *body params*
 - Function: **verb-read-file** *file &optional coding-system*
 - Function: **verb-stored-response** *key* \

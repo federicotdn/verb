@@ -314,6 +314,9 @@ E = Error.")
   "Prefix for Verb metadata keys in heading properties.
 Matching is case insensitive.")
 
+(defconst verb-version "2.11.0"
+  "Verb package version.")
+
 (defvar-local verb-http-response nil
   "HTTP response for this response buffer (`verb-response' object).
 The decoded body contents of the response are included in the buffer
