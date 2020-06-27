@@ -81,5 +81,5 @@ update:
 
 run: ## Run emacs -Q with the working version of verb.el loaded.
 run: clean server-bg
-	FONT_SIZE=$(FONT_SIZE) $(EMACS) -Q -L . --load test/init.el
+	FONT_SIZE=$(FONT_SIZE) $(EMACS) -Q -L . --load test/init.el; \
 	make server-kill
