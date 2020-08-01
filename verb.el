@@ -6,7 +6,7 @@
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: tools
-;; Package-Version: 2.11.0
+;; Package-Version: 2.12.0
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -314,7 +314,7 @@ E = Error.")
   "Prefix for Verb metadata keys in heading properties.
 Matching is case insensitive.")
 
-(defconst verb-version "2.11.0"
+(defconst verb-version "2.12.0"
   "Verb package version.")
 
 (defvar-local verb-http-response nil

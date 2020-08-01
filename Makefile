@@ -9,6 +9,7 @@ ACTIVATE = source $(ENV)/bin/activate
 MAX_LINE_LEN = 80
 WAIT_TIME ?= 0.5
 SELECTOR ?= t
+GIT_CLONE = git clone --depth 1
 
 .PHONY: test
 
@@ -51,9 +52,9 @@ clean: ## Clean up all temporary files created during testing/linting.
 setup-check: ## Install everything required for linting (package-lint and relint).
 	rm -rf $(VENDOR)
 	mkdir $(VENDOR)
-	git clone https://github.com/purcell/package-lint.git $(VENDOR)/package-lint
-	git clone https://github.com/mattiase/xr.git $(VENDOR)/xr
-	git clone https://github.com/mattiase/relint.git $(RELINT) $(VENDOR)/relint
+	$(GIT_CLONE) https://github.com/purcell/package-lint.git $(VENDOR)/package-lint
+	$(GIT_CLONE) https://github.com/mattiase/xr.git $(VENDOR)/xr
+	$(GIT_CLONE) https://github.com/mattiase/relint.git $(RELINT) $(VENDOR)/relint
 
 lint-file:
 	$(EMACS) --batch -L . \
