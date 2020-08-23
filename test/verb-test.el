@@ -2443,24 +2443,24 @@
 
 (ert-deftest test-babel-send ()
   (babel-test (join-lines "* Heading 1    :verb:"
-			"template http://localhost:8000"
-			"** heading 2"
-			"get"
-			"Accept: application/json"
-			"*** Heading 3"
-			"#+begin_src verb :wrap src ob-verb-response"
-			"get /basic-json"
-			"#+end_src")
-	      (join-lines "HTTP/1.1 200 OK"
-			  "Connection: keep-alive"
-			  "Keep-Alive: 5"
-			  "Content-Length: 28"
-			  "Content-Type: application/json"
-			  ""
-			  "{"
-			  "  \"foo\": true,"
-			  "  \"hello\": \"world\""
-			  "}")))
+                          "template http://localhost:8000"
+                          "** heading 2"
+                          "get"
+                          "Accept: application/json"
+                          "*** Heading 3"
+                          "#+begin_src verb :wrap src ob-verb-response"
+                          "get /basic-json"
+                          "#+end_src")
+              (join-lines "HTTP/1.1 200 OK"
+                          "Content-Length: 28"
+                          "Content-Type: application/json"
+                          "Connection: keep-alive"
+                          "Keep-Alive: 5"
+                          ""
+                          "{"
+                          "  \"foo\": true,"
+                          "  \"hello\": \"world\""
+                          "}")))
 
 (ert-deftest test-babel-send-get-body ()
   (babel-test (join-lines "* Heading 1"
@@ -2478,35 +2478,35 @@
 
 (ert-deftest test-babel-send-get-headers ()
   (babel-test (join-lines "* Heading 1"
-			"#+begin_src verb :op send get-headers"
-			"get http://localhost:8000/basic-json"
-			"#+end_src")
-	      (join-lines "Connection: keep-alive"
-			  "Keep-Alive: 5"
-			  "Content-Length: 28"
-			  "Content-Type: application/json")))
+                          "#+begin_src verb :op send get-headers"
+                          "get http://localhost:8000/basic-json"
+                          "#+end_src")
+              (join-lines "Content-Length: 28"
+                          "Content-Type: application/json"
+                          "Connection: keep-alive"
+                          "Keep-Alive: 5")))
 
 (ert-deftest test-babel-base-headers ()
   (let ((verb-base-headers '(("Foo" . "Bar")
-			     ("Quux" . "Quuz"))))
+                             ("Quux" . "Quuz"))))
     (babel-test (join-lines "#+begin_src verb"
-			    "get http://localhost:8000/sorted-headers"
-			    "Foo: XYZ"
-			    "#+end_src")
-		(join-lines "HTTP/1.1 200 OK"
-			    "Connection: keep-alive"
-			    "Keep-Alive: 5"
-			    "Content-Type: text/plain"
-			    "Content-Length: 155"
-			    ""
-			    "accept-encoding: gzip"
-			    "accept: */*"
-			    "connection: keep-alive"
-			    "extension: Security/Digest Security/SSL"
-			    "foo: XYZ"
-			    "host: localhost:8000"
-			    "mime-version: 1.0"
-			    "quux: Quuz"))))
+                            "get http://localhost:8000/sorted-headers"
+                            "Foo: XYZ"
+                            "#+end_src")
+                (join-lines "HTTP/1.1 200 OK"
+                            "Content-Type: text/plain"
+                            "Content-Length: 155"
+                            "Connection: keep-alive"
+                            "Keep-Alive: 5"
+                            ""
+                            "accept-encoding: gzip"
+                            "accept: */*"
+                            "connection: keep-alive"
+                            "extension: Security/Digest Security/SSL"
+                            "foo: XYZ"
+                            "host: localhost:8000"
+                            "mime-version: 1.0"
+                            "quux: Quuz"))))
 
 (defun babel-src-test (input output)
   (should (string= (verb--maybe-extract-babel-src-block input)
