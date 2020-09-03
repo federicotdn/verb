@@ -96,6 +96,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-default-response-charset**
 - User Option: **verb-default-request-charset**
 - User Option: **verb-content-type-handlers**
+- User Option: **verb-default-content-type-handler**
 - User Option: **verb-export-functions**
 - User Option: **verb-auto-kill-response-buffers**
 - User Option: **verb-auto-show-headers-buffer**

@@ -219,7 +219,7 @@ The contents of the response body will be shown on the buffer. To choose how the
 4. The handler will have set an appropiate major mode to display and/or edit the received content.
 
 There's two recommended ways of closing response buffers:
-- If the response buffer is the current buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see next section).
+- If the response buffer is the current buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see the [Response Headers Buffer](https://github.com/federicotdn/verb#the-response-headers-buffer) section).
 - If the response buffer is not the current buffer (e.g. you are still on your `guide.org` buffer), you can kill **all** response buffers by using the `verb-kill-all-response-buffers`, which is bound to <kbd>C-c C-r C-k</kbd> by default. Response headers buffers will also be killed automatically.
 
 As you send more HTTP requests, more response buffers will be created, with `<N>` at the end of their name to distinguish between them. If you wish to automatically have old response buffers killed when making a new request, set the `verb-auto-kill-response-buffers` variable to `t`.

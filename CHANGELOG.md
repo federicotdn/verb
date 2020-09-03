@@ -1,5 +1,8 @@
 # Verb Changelog
-## **2.12.0** - 2020-08-02 (MELPA & MELPA Stable)
+## **master** (MELPA)
+- Added the `verb-default-content-type-handler` customizable variable.
+
+## **2.12.0** - 2020-08-02 (MELPA Stable)
 - Added the `verb-show-vars` command. It allows users to see a listing of all currently defined variables.
 - Added the `verb-unset-vars` command. It allows users to unset all currently defined variables. This implies that if the DEFAULT argument was specified for `verb-var`, that value will be used the next time the variable's value is retrieved.
 - Added the `verb-show-request` command. It allows users to quickly see the corresponding request that was sent for an already received HTTP response.
