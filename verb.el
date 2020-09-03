@@ -63,7 +63,7 @@ header value (\"charset=utf-8\")."
   '(;; Text handlers
     ("text/html" html-mode)
     ("\\(application\\|text\\)/xml" xml-mode)
-    ("application/xhtml+xml" xml-mode)
+    ("application/xhtml\\+xml" xml-mode)
     ("application/json" verb-handler-json)
     ("application/javascript" js-mode)
     ("application/css" css-mode)
@@ -71,7 +71,7 @@ header value (\"charset=utf-8\")."
     ;; Binary handlers
     ("application/pdf" doc-view-mode t)
     ("image/png" image-mode t)
-    ("image/svg+xml" image-mode t)
+    ("image/svg\\+xml" image-mode t)
     ("image/x-windows-bmp" image-mode t)
     ("image/gif" image-mode t)
     ("image/jpe?g" image-mode t))
