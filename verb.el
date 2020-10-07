@@ -1210,15 +1210,20 @@ see `verb--request-spec-from-hierarchy' to see how this is done.
 The buffer containing the response is shown (or not shown) in
 different ways, depending on the value of WHERE:
 
-- `other-window': Show the results of the request (the response
-  buffer) on another window and select it.
-- `stay-window': Show the results of the request on another window,
-  but keep the current one selected.
-- `this-window': Show the results of the request in the current
-  window.
+- `other-window': Show the response buffer on another window and
+  select it.
+- `stay-window': Show the response buffer on another window, but
+  keep the current one selected.
+- `this-window': Show the response buffer in the current window.
 - `minibuffer': Show the response status on the minibuffer, but don't
-  show the response contents themselves anywhere.
-- Other values: Send the request but do not show the results anywhere.
+  show the response buffer anywhere.
+- nil: Send the request but do not show the response buffer nor the
+  response status anywhere.
+
+The response buffer won't have any contents until the HTTP response
+has been received.  For all valid values of WHERE except nil, the
+response status will be shown on the minibuffer when the response is
+received.
 
 If prefix argument ARG is non-nil, allow the user to quickly edit the
 request before it is sent.  The changes made will not affect the
@@ -1229,6 +1234,10 @@ The `verb-post-response-hook' hook is called after a response has been
 received."
   (interactive (list 'this-window current-prefix-arg))
   (verb--ensure-verb-mode)
+  (when (and where
+             (not (member where
+                          '(other-window stay-window this-window minibuffer))))
+    (user-error "Invalid value for WHERE: %s" where))
   (let* ((verb--inhibit-code-tags-evaluation arg)
          (rs (verb--request-spec-from-hierarchy)))
     (if arg
@@ -1669,14 +1678,12 @@ NUM is this request's identification number."
           (unless (zerop (oref verb-http-response body-bytes))
             (verb--buffer-string-no-properties)))
 
-    (pcase where
-      ('other-window (switch-to-buffer-other-window (current-buffer)))
-      ('stay-window (save-selected-window
-                      (switch-to-buffer-other-window (current-buffer))))
-      ('this-window (switch-to-buffer (current-buffer)))
-      ('minibuffer (message "%s" (oref verb-http-response status))))
-
     (verb-response-body-mode)
+
+    (when where
+      (message "%s | %s"
+               (oref verb-http-response status)
+               (verb-request-spec-url-to-string rs)))
 
     ;; Run post response hook
     (run-hooks 'verb-post-response-hook)))
@@ -1781,6 +1788,7 @@ NUM is the request's identification number."
     ;; so that `verb-kill-all-response-buffers' can find it even if
     ;; no response was ever received.
     (setq verb-http-response t)
+    (setq header-line-format "Waiting for HTTP response...")
     (current-buffer)))
 
 (cl-defmethod verb--request-spec-send ((rs verb-request-spec) where)
@@ -1805,6 +1813,7 @@ loaded into."
                                                    (cdr content-type)))
          (url-mime-accept-string (verb--to-ascii (or accept-header "*/*")))
          (num (setq verb--requests-count (1+ verb--requests-count)))
+         (start-time (time-to-seconds))
          (response-buf (verb--generate-response-buffer num))
          timeout-timer)
     ;; Start the timeout warning timer
@@ -1844,7 +1853,7 @@ loaded into."
                  #'verb--request-spec-callback
                  (list rs
                        response-buf
-                       (time-to-seconds)
+                       start-time
                        timeout-timer
                        where
                        num)
@@ -1874,6 +1883,12 @@ loaded into."
     (verb--log num 'I "%s %s"
                (oref rs method)
                (verb-request-spec-url-to-string rs))
+
+    (pcase where
+      ('other-window (switch-to-buffer-other-window response-buf))
+      ('stay-window (save-selected-window
+                      (switch-to-buffer-other-window response-buf)))
+      ('this-window (switch-to-buffer response-buf)))
 
     ;; Return the response buffer
     response-buf))
