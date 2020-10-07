@@ -1,7 +1,7 @@
 # Verb Changelog
 ## **master** (MELPA)
 - Added the `verb-default-content-type-handler` customizable variable.
-- Verb will now display response buffer immediately after request is sent to avoid window/buffer configuration being changed after the request is received, which can happen after an indeterminate amount of time. Note that this only applies to commands that display the response buffer. This change makes the behaviour of Verb more predictable.
+- Verb will now display response buffer immediately after the request is sent to avoid window/buffer configuration being changed after the response is received, which can happen after an indeterminate amount of time. Note that this only applies to commands that display the response buffer. This change makes the behaviour of Verb more predictable.
 - Made the minibuffer response status message more descriptive.
 
 ## **2.12.0** - 2020-08-02 (MELPA Stable)
