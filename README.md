@@ -193,13 +193,13 @@ To actually send the HTTP request, use one of the `verb-send-request-on-point` c
 - <kbd>C-c C-r C-r</kbd>: `verb-send-request-on-point-other-window-stay` sends the request and shows the response on a buffer in another window, but doesn't switch to that window.
 - <kbd>C-c C-r C-s</kbd>: `verb-send-request-on-point-other-window` sends the request, shows the response on a buffer in another window, and switches to it.
 - <kbd>C-c C-r C-f</kbd>: `verb-send-request-on-point` sends the request, and shows the response on a buffer in the currently selected window.
-- <kbd>C-c C-r C-m</kbd>: `verb-send-request-on-point-no-window` sends the request, but does not show the response buffer anywhere. The response status (e.g. `HTTP/1.1 200 OK`) will be shown on the minibuffer. This is useful for cases where one is only interested in the request's side effects.
+- <kbd>C-c C-r C-m</kbd>: `verb-send-request-on-point-no-window` sends the request, but does not show the response buffer anywhere. The response status (e.g. `HTTP/1.1 200 OK | http://example.com`) will be shown on the minibuffer. This is useful for cases where one is only interested in the request's side effects.
 
 Request sending is asynchronous - you can do other stuff while Emacs waits for the server's response. If the response is taking too long to be received, a warning will be displayed in the minibuffer. You can modify this behaviour by modifying the `verb-show-timeout-warning` variable's value.
 
 ### The Response Body Buffer
 
-After you have sent the request and the server has answered back successfully, you should now be seeing the response body buffer. The response body buffer always has the `verb-response-body-mode` minor mode activated (indicated by `Verb[Body]` in the modeline). 
+After you have sent the request and the server has answered back successfully, you should now be seeing the populated response body buffer. The response body buffer always has the `verb-response-body-mode` minor mode activated (indicated by `Verb[Body]` in the modeline). 
 
 The buffer will have an active [header line](https://www.gnu.org/software/emacs/manual/html_node/elisp/Header-Lines.html), showing something similar to:
 
@@ -420,7 +420,7 @@ Once you have finished reviewing/modifying the request, press <kbd>C-c C-c</kbd>
 
 ### Emacs Lisp Code Tags
 
-You can embed Emacs Lisp code inside request specifications by using code tags. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere in the request specification: the URL, method, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`).
+You can embed Emacs Lisp code inside request specifications by using code tags. When sending the request, Verb will evaluate all code tags, and replace them with the results of the evaluations. Code tags may appear anywhere in the request specification: the URL, method, headers and body. By default, code tags are delimited with `{{` and `}}` (see the customizable variable `verb-code-tag-delimiters`). Note that code tags are in no way related to [Org mode macros](https://orgmode.org/manual/Macro-Replacement.html).
 
 Depending on the type of the resulting value for a code tag, Verb will do the following:
 - `string`: The value will be inserted as-is into the request contents.
