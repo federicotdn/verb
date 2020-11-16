@@ -4,7 +4,7 @@
 - Verb will now display response buffer immediately after the request is sent to avoid window/buffer configuration being changed after the response is received, which can happen after an indeterminate amount of time. Note that this only applies to commands that display the response buffer. This change makes the behaviour of Verb more predictable.
 - Made the minibuffer response status message more descriptive.
 
-## **2.12.0** - 2020-08-02 (MELPA Stable)
+## **2.12.0** - 2020-08-02
 - Added the `verb-show-vars` command. It allows users to see a listing of all currently defined variables.
 - Added the `verb-unset-vars` command. It allows users to unset all currently defined variables. This implies that if the DEFAULT argument was specified for `verb-var`, that value will be used the next time the variable's value is retrieved.
 - Added the `verb-show-request` command. It allows users to quickly see the corresponding request that was sent for an already received HTTP response.
