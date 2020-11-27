@@ -490,7 +490,7 @@
     (let ((org-use-tag-inheritance nil))
       (should (equal (verb--heading-tags) '("c"))))))
 
-(ert-deftest test-verb-heading-properties ()
+(ert-deftest test-verb-heading-properties-no-inheritance ()
   (with-temp-buffer
     (org-mode)
     (insert (join-lines "* H1"
@@ -502,7 +502,24 @@
 			":Verb-Y: foo"
 			":end:"))
     (should (equal (verb--heading-properties "verb-")
-		   '(("VERB-Y" . "foo"))))))
+		     '(("VERB-Y" . "foo"))))))
+
+(ert-deftest test-verb-heading-properties-with-inheritance ()
+  (with-temp-buffer
+    (org-mode)
+    (insert (join-lines "* H1"
+			            ":properties:"
+			            ":Verb-X: something"
+			            ":Verb-Y: foobar"
+			            ":end:"
+			            "** H2"
+			            ":properties:"
+			            ":Verb-Y: hello"
+			            ":end:"))
+    (let ((org-use-property-inheritance t))
+      (should (equal (verb--heading-properties "verb-")
+		             '(("VERB-X" . "something")
+                       ("VERB-Y" . "hello")))))))
 
 (ert-deftest test-request-spec-from-text-comments-only ()
   (should-error (text-as-spec "# Hello\n" "# world")

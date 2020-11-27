@@ -532,7 +532,7 @@ Accept: application/json
 
 After the "Create a user" request has been sent at least once, the result will be stored internally under "new-user". It can then be used later at any time. Sending the request again will overwrite the previous value, and killing the response buffer will not erase the stored response. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always re-set `verb-last` globally.
 
-**Note**: When reading heading properties, Verb ignores parent headings, so no properties are inherited.
+**Note**: When reading heading properties such as `Verb-Store`, properties for parent headings are ignored by default. This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
 
 ### Request Mapping Functions
 
@@ -565,6 +565,8 @@ baz
 When sent or exported, the request's body will by modified by `remove-body-newlines`, and the resulting body content will be a single line, `foo,bar,baz`.
 
 **Note**: The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overriden values from parent headings.
+
+**Note**: When reading heading properties such as `Verb-Map-Request`, properties for parent headings are ignored by default. This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
 
 ### Body Lines starting with `*`
 

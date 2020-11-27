@@ -819,7 +819,8 @@ Does not use property inheritance.  Matching is case-insensitive."
   (seq-filter (lambda (e) (stringp (cdr e)))
               ;; 2) Take the (key . value) for each of those properties here
               (mapcar (lambda (key) (cons (upcase key)
-                                          (org-entry-get (point) key)))
+                                          (org-entry-get (point) key
+                                                         'selective)))
                       ;; 1) Get all doc properties and filter them by prefix
                       (seq-filter (lambda (s) (string-prefix-p prefix s t))
                                   (org-buffer-property-keys)))))
