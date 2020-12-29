@@ -216,7 +216,7 @@ The contents of the response body will be shown on the buffer. To choose how the
 3. Depending on the content type handler chosen: \
    **Text:** If the chosen handler is for text, decode the response body using the charset described in the `Content-Type` header. If no charset was specified, use the one specified by `verb-default-response-charset` (default: `utf-8`). After that is done, call the handler (e.g. `xml-mode`). \
    **Binary:** If the chosen handler is for a binary type, call the handler directly after loading the raw bytes into the buffer (e.g. `doc-view-mode`).
-4. The handler will have set an appropiate major mode to display and/or edit the received content.
+4. The handler will have set an appropriate major mode to display and/or edit the received content.
 
 There's two recommended ways of closing response buffers:
 - If the response buffer is the current buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see the [Response Headers Buffer](https://github.com/federicotdn/verb#the-response-headers-buffer) section).
@@ -453,7 +453,7 @@ Notice that interactive functions like `read-string` can be used inside code tag
 
 You can enable completion for Emacs Lisp inside code tags. To do this, set the `verb-enable-elisp-completion` variable to `t` (the default value). Code completion will work automatically with [`company-mode`](https://github.com/company-mode/company-mode), if it is installed.
 
-Note that the point must be surrounded by the code tag delimeters (e.g. `{{` and `}}`) in the same line for completion to work. If you're using `electric-pair-mode`, matching tag delimeters will be inserted automatically, so this won't be a problem. `verb-mode` should also be enabled, as enabling it will load the completion function itself.
+Note that the point must be surrounded by the code tag delimiters (e.g. `{{` and `}}`) in the same line for completion to work. If you're using `electric-pair-mode`, matching tag delimiters will be inserted automatically, so this won't be a problem. `verb-mode` should also be enabled, as enabling it will load the completion function itself.
 
 ### Verb Variables
 
@@ -482,7 +482,7 @@ The example now uses the `verb-var` macro in the first code tag. This macro esse
 
 If you wish to explicitly re-set the value of a variable set with `verb-var`, use the `verb-set-var` interactive command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`. You may also specify a completely new variable name, in which case it will be created and its value set. To see the current value of all variables, use the `verb-show-vars` command. To unset all variable values, use the `verb-unset-vars` command.
 
-`verb-var` and `verb-set-var` are useful for writing requests that include sensitive information (such as passwords or tokens), or for writing requests that can be parametrized with different values (such as IDs or search terms).
+`verb-var` and `verb-set-var` are useful for writing requests that include sensitive information (such as passwords or tokens), or for writing requests that can be parameterized with different values (such as IDs or search terms).
 
 **Note**: Values set with `verb-var` and `verb-set-var` will be lost if the buffer is killed.
 
@@ -564,7 +564,7 @@ baz
 
 When sent or exported, the request's body will by modified by `remove-body-newlines`, and the resulting body content will be a single line, `foo,bar,baz`.
 
-**Note**: The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overriden values from parent headings.
+**Note**: The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overridden values from parent headings.
 
 **Note**: When reading heading properties such as `Verb-Map-Request`, properties for parent headings are ignored by default. This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
 
@@ -665,13 +665,13 @@ To send the request, move the point to its `verb` source block and press <kbd>C-
 
 As opposed to requests sent with the `verb-send-request-on-point-*` commands, requests sent with Babel will block Emacs until they are complete. There's a configurable timeout for this, see the `verb-babel-timeout` variable for more details.
 
-**Note:** When Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in parent headings will be brought over and potentially overriden by the current source block's. The request specifications in the parent headings may be defined in Babel source blocks as well, Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
+**Note:** When Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in parent headings will be brought over and potentially overridden by the current source block's. The request specifications in the parent headings may be defined in Babel source blocks as well, Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
 
 **Note:** The heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
 #### Send with Partial Retrieval (`:op send ...`)
 
-Instead of specifying just `:op send`, you may add an additional argument: `get-headers` or `get-body`. Using the former will change the result of executing the source block to just the response headers. Using the latter will do the same, but for the respnse body. Here's an example:
+Instead of specifying just `:op send`, you may add an additional argument: `get-headers` or `get-body`. Using the former will change the result of executing the source block to just the response headers. Using the latter will do the same, but for the response body. Here's an example:
 
 ```
 * Make a request to an API (get body only)
