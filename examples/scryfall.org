@@ -2,7 +2,7 @@
 # Scryfall is a powerful Magic: The Gathering card search.
 
 # Scryfall provides a REST-like API for ingesting our card data
-# programatically. The API exposes information available on the
+# programmatically. The API exposes information available on the
 # regular site in easy-to-consume formats.
 # https://scryfall.com/docs/api
 

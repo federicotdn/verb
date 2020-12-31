@@ -33,7 +33,7 @@
 (require 'verb)
 
 (defun org-babel-execute:verb (body params)
-  "Exeucute an action on the selected Babel source block.
+  "Execute an action on the selected Babel source block.
 BODY should contain the body of the source block, and PARAMS any
 header arguments passed to it.  This function is called by
 `org-babel-execute-src-block'.

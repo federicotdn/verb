@@ -135,13 +135,13 @@ request."
 
 (defcustom verb-advice-url t
   "Whether to advice url.el functions or not.
-If non-nil, the following url.el functions will be adviced in order to
+If non-nil, the following url.el functions will be advised in order to
 make Verb more flexible and user-friendly:
-- `url-http-user-agent-string': Adviced to allow the user to set their
+- `url-http-user-agent-string': Advised to allow the user to set their
   own \"User-Agent\" headers.
-- `url-http-handle-authentication': Adviced to disable annoying user
+- `url-http-handle-authentication': Advised to disable annoying user
   prompt on 401 responses.
-Note that the functions will be adviced only during the duration of
+Note that the functions will be advised only during the duration of
 the HTTP requests made."
   :type 'boolean)
 
@@ -166,7 +166,7 @@ don't show any warnings."
 (defcustom verb-babel-timeout 10.0
   "Timeout (s) for HTTP requests made from a Babel source blocks.
 Note that Emacs will be blocked while the response hasn't been
-receieved."
+received."
   :type 'float)
 
 (defcustom verb-code-tag-delimiters '("{{" . "}}")
@@ -246,7 +246,7 @@ next heading (or buffer end), it will be included in the body."
 (defcustom verb-base-headers nil
   "Set of HTTP headers used as base when reading request specs.
 These headers will be included by default in requests, but still may
-be overriden by re-specifying them somwhere in the headings
+be overridden by re-specifying them somewhere in the headings
 hierarchy."
   :type '(alist :key-type string :value-type string))
 
@@ -255,7 +255,7 @@ hierarchy."
 Completion is handled by the `verb-elisp-completion-at-point'
 function.
 
-Note the the point must be between the two code tag delimeters
+Note the the point must be between the two code tag delimiters
 \(e.g.  \"{{\" and \"}}\") for the completion function to work."
   :type 'boolean)
 
@@ -787,8 +787,8 @@ Do not include text properties."
 
 (defun verb--back-to-heading ()
   "Move to the previous heading.
-Or, move to beggining of this line if it's a heading.  If there are no
-headings, move to the beggining of buffer.  Return t if a heading was
+Or, move to beginning of this line if it's a heading.  If there are no
+headings, move to the beginning of buffer.  Return t if a heading was
 found."
   (if (ignore-errors (org-back-to-heading t))
       t
@@ -1315,7 +1315,7 @@ After the user has finished modifying the buffer, they can press
   "Send the request specified in the current temporary buffer.
 SOURCE-BUFFER and SOURCE-WINDOW specify what buffer and window must be
 selected/active when the request is actually sent.  WHERE specifies
-where the result shoud be shown in."
+where the result should be shown in."
   (unwind-protect
       (let ((new-rs (verb--request-spec-from-hierarchy)))
         (with-selected-window source-window
@@ -2130,7 +2130,7 @@ special case, if S is the empty string, return the empty string."
           (eval (car (read-from-string (format "(progn %s)" s))) t))))))
 
 (defun verb--eval-code-tags-in-buffer (buf context)
-  "Evalue code tags within buffer BUF.
+  "Eval code tags within buffer BUF.
 When evaluating the code, use buffer CONTEXT as the current buffer.
 Replace the code tags with the results of their own evaluations.  Code
 tags are delimited with `verb-code-tag-delimiters'."

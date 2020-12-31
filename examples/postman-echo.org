@@ -10,13 +10,13 @@ template https://postman-echo.com
 
 ** GZIP test
 # This endpoint returns the response using gzip compression
-# algoritm. The uncompressed response is a JSON string containing the
+# algorithm. The uncompressed response is a JSON string containing the
 # details of the request sent by the client.
 get /gzip
 Accept-Encoding: gzip
 
 ** Stream test
-# This endpoint allows one to recieve streaming http response using
+# This endpoint allows one to receive streaming http response using
 # chunked transfer encoding of a configurable length.
 get /stream/5
 
