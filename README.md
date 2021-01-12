@@ -69,6 +69,7 @@ Verb requires at least Emacs version 25 to work.
 - [Changelog](#changelog)
 - [Contributing](#contributing)
 - [Related Packages](#related-packages)
+- [Similar Packages](#similar-packages)
 - [License](#license)
 
 ## Installation
@@ -779,6 +780,11 @@ $ make run
 Finally, a list of all recipes and their descriptions can be obtained using `make help` or simply `make`.
 
 ## Related Packages
+
+Verb's functionality can be extended via some related packages, such as:
+- [impostman](https://github.com/flashcode/impostman): Can be used to import [Postman](https://www.postman.com/) collections into Verb.
+
+## Similar Packages
 
 - [restclient](https://github.com/pashky/restclient.el): Verb is an attempt to improve upon the core idea of the `restclient` package: writing request specifications on a buffer, and receiving the responses on another. The most important differences between the two packages are:
   - Verb uses a tree-like structure to organize request specifications, `restclient` uses a flat one.
