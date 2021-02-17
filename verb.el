@@ -1454,7 +1454,8 @@ non-nil, do not add the command to the kill ring."
            (or verb-json-max-pretty-print-size 0))
     (unwind-protect
         (unless (zerop (buffer-size))
-          (let ((json-pretty-print-max-secs 0))
+          (let ((json-pretty-print-max-secs 0)
+                (json-key-type 'string))
             (buffer-disable-undo)
             (json-pretty-print-buffer)
             ;; "Use" `json-pretty-print-max-secs' here to avoid

@@ -13,6 +13,8 @@ get /basic
 
 ** basic-json
 get /basic-json
+** keywords-json
+get /keywords-json
 ** stored
 :properties:
 :Verb-Store: foobar
