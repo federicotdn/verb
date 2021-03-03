@@ -33,6 +33,10 @@ async def headers_test(request: Request) -> HTTPResponse:
 async def basic_json(request: Request) -> HTTPResponse:
     return response.json({"hello": "world", "foo": True}, sort_keys=True)
 
+@app.route("/keywords-json")
+async def basic_json(request: Request) -> HTTPResponse:
+    return response.json({"t": True}, sort_keys=True)
+
 
 @app.route("/error-400")
 async def error_400(request: Request) -> HTTPResponse:

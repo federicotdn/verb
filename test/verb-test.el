@@ -1966,6 +1966,13 @@
 				  "{\n  \"foo\": true,\n  \"hello\": \"world\"\n}"))
 		 (should (eq major-mode 'js-mode)))))
 
+(ert-deftest test-server-keywords-json-pretty ()
+  (let ((verb-json-max-pretty-print-size 99999))
+    (server-test "keywords-json"
+		 (should (string= (buffer-string)
+				  "{\n  \"t\": true\n}"))
+		 (should (eq major-mode 'js-mode)))))
+
 (ert-deftest test-server-basic-json-mode ()
   (let ((verb-json-use-mode #'html-mode))
     (server-test "basic-json"
