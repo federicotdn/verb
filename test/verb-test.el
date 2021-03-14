@@ -930,6 +930,18 @@
 		       (cons "Referer" "host"))))
   (should (string= (oref aux :body) "Content\n")))
 
+(ert-deftest test-request-spec-headers-underscore ()
+  (setq aux (text-as-spec "get http://example.com/foobar\n"
+			              "Accept: text\n"
+			              "Foo_Bar: xyz\n"
+                          "Baz-Bar: quux\n"
+			              "\n"
+			              "Content\n"))
+  (should (equal (oref aux :headers)
+		         '(("Accept" . "text")
+		           ("Foo_Bar" . "xyz")
+                   ("Baz-Bar" . "quux")))))
+
 (ert-deftest test-request-spec-override ()
   (setq aux (verb-request-spec :url nil :method nil))
   (should-error (verb-request-spec-override aux "test")))

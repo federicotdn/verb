@@ -1,6 +1,7 @@
 # Verb Changelog
 ## **master** (MELPA)
 - Fixed error when receiving JSON responses that include `"t"` as a key.
+- Allow underscores (`_`) in HTTP header names.
 
 ## **2.13.1** - 2021-01-12 (MELPA Stable)
 - Heading properties (e.g. `Verb-Store`, `Verb-Map-Request`) can now be inherited from parent headings by setting `org-use-property-inheritance` to `t`.

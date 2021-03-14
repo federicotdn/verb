@@ -318,7 +318,7 @@ E = Error.")
   "Regexp for font locking HTTP headers.")
 
 (defconst verb--http-header-parse-regexp
-  "^\\s-*\\([[:alnum:]-]+\\)\\s-*:\\(.*\\)$"
+  "^\\s-*\\([[:alnum:]_-]+\\)\\s-*:\\(.*\\)$"
   "Regexp for parsing HTTP headers.")
 
 (defconst verb--metadata-prefix "verb-"
