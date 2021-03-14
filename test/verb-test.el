@@ -915,6 +915,7 @@
 			  "Accept : text\n"
 			  "Foo:bar\n"
 			  "Quux:    Quuz\n"
+              "Example:      HeaderValue   \n"
 			  " Referer   :host\n"
 			  "\n"
 			  "Content\n"))
@@ -925,6 +926,7 @@
 		 (list (cons "Accept" "text")
 		       (cons "Foo" "bar")
 		       (cons "Quux" "Quuz")
+               (cons "Example" "HeaderValue")
 		       (cons "Referer" "host"))))
   (should (string= (oref aux :body) "Content\n")))
 
