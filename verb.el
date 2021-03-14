@@ -894,7 +894,9 @@ BODY should contain the body of the source block.  POS should be a
 position of the buffer that lies inside the source block.
 
 Note that the entire buffer is considered when generating the request
-spec, not only the section contained by the source block."
+spec, not only the section contained by the source block.
+
+This function is called from ob-verb.el (`org-babel-execute:verb')."
   (save-excursion
     (goto-char pos)
     (let* ((metadata (verb--heading-properties verb--metadata-prefix))
