@@ -314,7 +314,7 @@ I = Information.
 W = Warning.
 E = Error.")
 
-(defconst verb--http-header-regexp "^\\([[:alnum:]-]+:\\).*$"
+(defconst verb--http-header-regexp "^\\([[:alnum:]_-]+:\\).*$"
   "Regexp for font locking HTTP headers.")
 
 (defconst verb--http-header-parse-regexp
