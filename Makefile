@@ -24,7 +24,7 @@ setup-tests:  ## Install everything required for testing (Python dependencies).
 	pip install -U pip wheel && \
 	pip install -r test/requirements-dev.txt
 
-test: ## Run all ERT tests.
+test: ## Run all ERT tests (set SELECTOR to specify only one).
 test: clean server-bg
 	sleep $(WAIT_TIME)
 	$(EMACS) --batch -L . \

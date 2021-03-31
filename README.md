@@ -762,6 +762,11 @@ Then, you can run the tests:
 $ make test
 ```
 
+To run only one test, set the `SELECTOR` environment variable to the tests's name:
+```bash
+$ SELECTOR=test-nonempty-string make test
+```
+
 You can also check for byte-compilation warnings and documentation/package issues. First, run (needed only once):
 ```bash
 $ make setup-check
@@ -778,6 +783,8 @@ $ make run
 ```
 
 Finally, a list of all recipes and their descriptions can be obtained using `make help` or simply `make`.
+
+A PR will need to successfully go through all the checks mentioned above in order to be reviewed first.
 
 ## Related Packages
 
