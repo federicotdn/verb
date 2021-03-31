@@ -961,7 +961,9 @@ inverse order according to the rules described in
 `verb-request-spec-override'.  After that, override that result with
 all the request specs in SPECS, in the order they were passed in."
   (let (done final-spec)
-    (save-excursion
+    (save-restriction
+      (widen)
+      (save-excursion
       ;; First, go back to the current heading, if possible. If no
       ;; heading is found, then don't attempt to read anything.
       (setq done (not (verb--back-to-heading)))
@@ -970,7 +972,7 @@ all the request specs in SPECS, in the order they were passed in."
       (while (not done)
         (let ((spec (verb--request-spec-from-heading)))
           (when spec (push spec specs)))
-        (setq done (not (verb--up-heading)))))
+        (setq done (not (verb--up-heading))))))
     (if specs
         (progn
           (setq final-spec (car specs))

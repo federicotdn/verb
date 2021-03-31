@@ -423,6 +423,22 @@
 
     (should-error (verb--request-spec-from-hierarchy))))
 
+(ert-deftest test-request-spec-from-hierachy-narrowed ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* test :verb:"
+      "template http://localhost/foo"
+      "** test2"
+      "get /bar"))
+    (re-search-backward "test2")
+    (org-narrow-to-subtree)
+    (let ((rs (verb--request-spec-from-hierarchy)))
+      (should (string= (verb-request-spec-url-to-string rs)
+                       "http://localhost/foo/bar")))))
+
 (ert-deftest test-nonempty-string ()
   (should (string= (verb--nonempty-string "hello") "hello"))
   (should-not (verb--nonempty-string "")))
