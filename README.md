@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="verb" src="https://github.com/federicotdn/verb/raw/master/extra/logo/logo.png" width="50%">
+  <img alt="verb" src="https://github.com/federicotdn/verb/raw/main/extra/logo/logo.png" width="50%">
   <br/>
 </p>
 
