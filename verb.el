@@ -1261,8 +1261,8 @@ received."
 (defun verb--setup-temp-request-buffer (rs source-window verb-variables where)
   "Setup and show a temporary buffer for editing a request spec.
 Argument RS indicates the request specification to edit.
-SOURCE-WINDOW indicates which window should be active when the request
-is sent.  VERB-VARIABLES should contain the Verb user-defined
+SOURCE-WINDOW indicates which window should be selected when the
+request is sent.  VERB-VARIABLES should contain the Verb user-defined
 variables set in the buffer displayed by SOURCE-WINDOW.  WHERE
 describes where the response should be shown in (see
 `verb-send-request-on-point' for a complete description).
@@ -1318,9 +1318,9 @@ After the user has finished modifying the buffer, they can press
 
 (defun verb--send-temp-request-on-point (source-window where)
   "Send the request specified in the current temporary buffer.
-SOURCE-BUFFER and SOURCE-WINDOW specify what buffer and window must be
-selected/active when the request is actually sent.  WHERE specifies
-where the result should be shown in."
+SOURCE-WINDOW specifies which window must be selected when the request
+is actually sent.  WHERE specifies where the result should be shown
+in."
   (unwind-protect
       (let ((new-rs (verb--request-spec-from-hierarchy)))
         (verb-kill-buffer-and-window)
