@@ -3,7 +3,7 @@
 
 template https://api.kanye.rest
 
-** Get quotes text response
+** Get quotes text response (Babel)
 :properties:
 :Verb-Store: kanye
 :end:
@@ -34,7 +34,7 @@ Content-Encoding: gzip
 I really love my Tesla. I'm in the future. Thank you Elon.
 #+END_src
 
-** Get JSON quotes, body only
+** Get JSON quotes, body only (Babel)
 #+BEGIN_SRC verb :wrap src ob-verb-response :op send get-body
 get
 #+END_SRC
@@ -45,3 +45,5 @@ get
   "quote": "I'd like to meet with Tim Cook. I got some ideas"
 }
 #+END_src
+** Get JSON quotes
+get

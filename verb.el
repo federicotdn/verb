@@ -1250,21 +1250,19 @@ received."
     (if arg
         ;; If ARG is non-nil, setup a buffer to edit the request
         (verb--setup-temp-request-buffer rs
-                                         (current-buffer)
                                          (selected-window)
                                          verb--vars
                                          where)
       ;; If ARG is nil, just send the request
       (verb--request-spec-send rs where))))
 
-(defun verb--setup-temp-request-buffer (rs source-buffer source-window
-                                           verb-variables where)
+(defun verb--setup-temp-request-buffer (rs source-window verb-variables where)
   "Setup and show a temporary buffer for editing a request spec.
 Argument RS indicates the request specification to edit.
-SOURCE-BUFFER and SOURCE-WINDOW indicate which buffer and window
-should be current/active when the request is sent.  VERB-VARIABLES
-should contain the Verb user-defined variables set in SOURCE-BUFFER.
-WHERE describes where the response should be shown in (see
+SOURCE-WINDOW indicates which window should be active when the request
+is sent.  VERB-VARIABLES should contain the Verb user-defined
+variables set in the buffer displayed by SOURCE-WINDOW.  WHERE
+describes where the response should be shown in (see
 `verb-send-request-on-point' for a complete description).
 
 After the user has finished modifying the buffer, they can press
@@ -1312,22 +1310,20 @@ After the user has finished modifying the buffer, they can press
                  (lambda ()
                    "Send the request specified in the current buffer."
                    (interactive)
-                   (verb--send-temp-request-on-point source-buffer
-                                                     source-window
+                   (verb--send-temp-request-on-point source-window
                                                      where)))
   (local-set-key (kbd "C-c C-k") #'verb-kill-buffer-and-window))
 
-(defun verb--send-temp-request-on-point (source-buffer source-window where)
+(defun verb--send-temp-request-on-point (source-window where)
   "Send the request specified in the current temporary buffer.
 SOURCE-BUFFER and SOURCE-WINDOW specify what buffer and window must be
 selected/active when the request is actually sent.  WHERE specifies
 where the result should be shown in."
   (unwind-protect
       (let ((new-rs (verb--request-spec-from-hierarchy)))
-        (with-selected-window source-window
-          (with-current-buffer source-buffer
-            (verb--request-spec-send new-rs where))))
-    (verb-kill-buffer-and-window)))
+        (verb-kill-buffer-and-window)
+        (select-window source-window)
+        (verb--request-spec-send new-rs where))))
 
 ;;;###autoload
 (defun verb-kill-all-response-buffers (&optional keep-windows)
