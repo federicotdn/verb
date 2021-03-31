@@ -61,6 +61,7 @@ lint-file:
 			 --eval '(byte-compile-file "$(filename)")' 2>&1 | $(NOOUTPUT)
 	yes n | $(EMACS) --batch \
 			 --eval '(find-file "$(filename)")' \
+			 --eval '(setq sentence-end-double-space nil)' \
 			 --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
 	$(EMACS) --batch -l $(VENDOR)/package-lint/package-lint.el \
 			 -f package-lint-batch-and-exit "$(filename)"
