@@ -2562,6 +2562,23 @@
                             "mime-version: 1.0"
                             "quux: Quuz"))))
 
+(ert-deftest test-babel-org-variables ()
+  ;; Use :var for each variable
+  (babel-test (join-lines "* Heading 1"
+                          "#+begin_src verb :op send get-body :var x=1 :var y=\"foo\""
+                          "get http://localhost:8000/echo-args?a={{(verb-var x)}}&b={{(verb-var y)}}"
+                          "#+end_src")
+              (join-lines "a=1"
+                          "b=foo"))
+
+  ;; Use :var only once
+  (babel-test (join-lines "* Heading 1"
+                          "#+begin_src verb :op send get-body :var x=2 y=\"bar\""
+                          "get http://localhost:8000/echo-args?a={{(verb-var x)}}&b={{(verb-var y)}}"
+                          "#+end_src")
+              (join-lines "a=2"
+                          "b=bar")))
+
 (defun babel-src-test (input output)
   (should (string= (verb--maybe-extract-babel-src-block input)
 		   output)))

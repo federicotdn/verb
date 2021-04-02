@@ -658,6 +658,8 @@ Content-Type: application/json; charset=utf-8
 
 Babel source blocks with `verb` as a language accept a header argument called `:op`. Depending on the value that appears after this argument, Verb will execute different actions when <kbd>C-c C-c</kbd> is pressed.
 
+**Note:** It is possible to specify arguments for a `verb` source block by using the [`:var` keyword](https://orgmode.org/manual/Environment-of-a-Code-Block.html). To read the arguments, use `(verb-var <variable-name>)` inside a code block.
+
 #### Sending Requests (`:op send`)
 
 By default, if `:op` is not specified, Verb will assume `:op send` was intended.

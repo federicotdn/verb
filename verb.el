@@ -892,10 +892,12 @@ If no Verb Babel source blocks are found, return TEXT."
                   ""))))
       (or result text))))
 
-(defun verb--request-spec-from-babel-src-block (pos body)
+(defun verb--request-spec-from-babel-src-block (pos body vars)
   "Return a request spec generated from a Babel source block.
 BODY should contain the body of the source block.  POS should be a
-position of the buffer that lies inside the source block.
+position of the buffer that lies inside the source block.  VARS should
+be an alist of argument names and values that should be temporarily
+added to the values available through `verb-var'.
 
 Note that the entire buffer is considered when generating the request
 spec, not only the section contained by the source block.
@@ -903,7 +905,8 @@ spec, not only the section contained by the source block.
 This function is called from ob-verb.el (`org-babel-execute:verb')."
   (save-excursion
     (goto-char pos)
-    (let* ((metadata (verb--heading-properties verb--metadata-prefix))
+    (let* ((verb--vars (append vars verb--vars))
+           (metadata (verb--heading-properties verb--metadata-prefix))
            (rs (verb-request-spec-from-string body metadata)))
       ;; Go up one level first, if possible. Do this to avoid
       ;; re-reading the request in the current level (contained in the

@@ -51,10 +51,12 @@ options are:
   \"export verb\": Export request spec to verb format.
 
 The default value for OPERATION is \"send\"."
-  (let* ((rs (verb--request-spec-from-babel-src-block (point) body))
-         (processed-params (org-babel-process-params params))
+  (let* ((processed-params (org-babel-process-params params))
+         (vars (mapcar #'cdr (seq-filter (lambda (x) (eq (car x) :var))
+                                         processed-params)))
+         (rs (verb--request-spec-from-babel-src-block (point) body vars))
          (op (or (cdr (assoc :op processed-params))
-                "send")))
+                 "send")))
     (pcase op
       ((guard (or (string-prefix-p "send " op)
                   (string= "send" op)))
