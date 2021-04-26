@@ -114,7 +114,8 @@ This handler is used when no appropriate handler was found in
 
 (defcustom verb-export-functions
   '(("verb" . verb--export-to-verb)
-    ("curl" . verb--export-to-curl))
+    ("curl" . verb--export-to-curl)
+    ("eww" . verb--export-to-eww))
   "Alist of request specification export functions.
 Each element should have the form (NAME . FN), where NAME should be a
 user-friendly name for this function, and FN should be the function
@@ -384,6 +385,7 @@ other buffers without actually expanding the embedded code tags.")
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
     (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
     (define-key map (kbd "C-b") #'verb-export-request-on-point-verb)
+    (define-key map (kbd "C-w") #'verb-export-request-on-point-eww)
     (define-key map (kbd "C-v") #'verb-set-var)
     map)
   "Keymap for `verb-mode' commands.
@@ -438,6 +440,7 @@ If REMOVE is nil, add the necessary keywords to
         "--"
         ["Export request to curl" verb-export-request-on-point-curl]
         ["Export request to Verb" verb-export-request-on-point-verb]
+        ["Export request to EWW" verb-export-request-on-point-eww]
         "--"
         ["Customize Verb" verb-customize-group]
         ["Show log" verb-show-log]))
@@ -604,6 +607,7 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
     (define-key map (kbd "C-c C-r C-r") #'verb-toggle-show-headers)
     (define-key map (kbd "C-c C-r C-k") #'verb-kill-response-buffer-and-window)
     (define-key map (kbd "C-c C-r C-f") #'verb-re-send-request)
+    (define-key map (kbd "C-c C-r C-w") #'verb-re-send-request-eww)
     (define-key map (kbd "C-c C-r C-s") #'verb-show-request)
     (easy-menu-define verb-response-body-mode-menu map
       "Menu for Verb response body mode"
@@ -612,6 +616,7 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
         ["Kill buffer and window" verb-kill-response-buffer-and-window]
         "--"
         ["Re-send request" verb-re-send-request]
+        ["Re-send request with EWW" verb-re-send-request-eww]
         ["Show corresponding request" verb-show-request]))
     map)
   "Keymap for `verb-response-body-mode'.")
@@ -1011,6 +1016,12 @@ delete any window displaying it."
           (delete-window))))
     (kill-buffer response-buf)))
 
+(defun verb--check-response-buffer ()
+  "Ensure that the current buffer is a response buffer."
+  (unless (verb--object-of-class-p verb-http-response 'verb-response)
+    (user-error "%s" (concat "Can't execute command as current buffer is not "
+                             "a response buffer"))))
+
 (defun verb-re-send-request ()
   "Re-send request for the response shown on current buffer.
 If the user chose to show the current response buffer on another
@@ -1021,11 +1032,19 @@ If you use this command frequently, consider setting
 `verb-auto-kill-response-buffers' to t.  This will help avoiding
 having many response buffers open."
   (interactive)
-  (unless (verb--object-of-class-p verb-http-response 'verb-response)
-    (user-error "%s" (concat "Can't re-send request as current buffer is not "
-                             "a response buffer")))
+  (verb--check-response-buffer)
   (verb--request-spec-send (oref verb-http-response request)
                            'this-window))
+
+(defun verb-re-send-request-eww ()
+  "Re-send request for the response shown on current buffer with EWW.
+The result will be displayed on a separate buffer managed by EWW."
+  (interactive)
+  (verb--check-response-buffer)
+  (let ((req (oref verb-http-response request)))
+    (unless (string= (oref (oref verb-http-response request) method) "GET")
+      (user-error "%s" "Can only perform GET requests using EWW"))
+    (eww (verb-request-spec-url-to-string req))))
 
 (defun verb-kill-buffer-and-window ()
   "Delete selected window and kill its current buffer.
@@ -1377,6 +1396,13 @@ See `verb--export-to-curl' for more information."
   (interactive)
   (verb-export-request-on-point "curl"))
 
+;;;###autoload
+(defun verb-export-request-on-point-eww ()
+  "Export request on point to EWW.
+See `verb--export-to-eww' for more information."
+  (interactive)
+  (verb-export-request-on-point "eww"))
+
 (defun verb--export-to-verb (rs)
   "Export a request spec RS to Verb format.
 Return a new buffer with the export results inserted into it."
@@ -1385,6 +1411,14 @@ Return a new buffer with the export results inserted into it."
     (insert (verb-request-spec-to-string rs))
     (switch-to-buffer-other-window (current-buffer))
     (current-buffer)))
+
+(defun verb--export-to-eww (rs)
+  "Export and perform GET request RS using EWW.
+Return a buffer created by the `eww' function where the results will
+be displayed."
+  (unless (string= (oref rs method) "GET")
+    (user-error "%s" "Can only perform GET requests using EWW"))
+  (eww (verb-request-spec-url-to-string rs)))
 
 (defun verb--export-to-curl (rs &optional no-message no-kill)
   "Export a request spec RS to curl format.

@@ -2378,6 +2378,10 @@
     (should (equal test-spec (verb-request-spec-from-string
 			      (verb--buffer-string-no-properties))))))
 
+(ert-deftest test-verb-export-eww ()
+  (setq test-spec (text-as-spec "PUT https://hello.com"))
+  (should-error (verb--export-to-eww test-spec)))
+
 (defun replace-all (from to)
   (goto-char (point-min))
   (while (search-forward from nil t)
@@ -2650,6 +2654,14 @@
 			      "hello world"
 			      "#+eNd_src")
 		  (join-lines "hello world")))
+
+
+(ert-deftest test-verb-check-response-buffer ()
+  (with-current-buffer (get-buffer-create "*new buffer*")
+    (should-error (verb--check-response-buffer))
+    (setq verb-http-response (verb-response))
+    (verb--check-response-buffer)))
+
 
 (provide 'verb-test)
 ;;; verb-test.el ends here

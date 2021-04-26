@@ -5,6 +5,8 @@
 - Fixed <kbd>C-u C-c C-r C-r</kbd> and <kbd>C-u C-c C-r C-s</kbd> not displaying the response buffer when a response is received.
 - Fixed Verb not reading parent headings when buffer has been narrowed (e.g. with `org-narrow-to-subtree`).
 - When using Babel `verb` source blocks, arguments specified via the `:var` keyword can now be read using `verb-var`.
+- Added new export function `verb-export-request-on-point-eww`, which uses EWW to display `GET` requests.
+- Added new function `verb-re-send-request-eww` (see above).
 
 ## **2.13.1** - 2021-01-12 (MELPA Stable)
 - Heading properties (e.g. `Verb-Store`, `Verb-Map-Request`) can now be inherited from parent headings by setting `org-use-property-inheritance` to `t`.

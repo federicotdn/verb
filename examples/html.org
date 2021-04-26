@@ -1,0 +1,4 @@
+* Export to EWW example                                                :verb:
+# Use C-c C-r C-w to perform the request using EWW
+get http://neverssl.com
+Accept: text/html
