@@ -2663,5 +2663,15 @@
     (verb--check-response-buffer)))
 
 
+(ert-deftest test-verb-get-accept-header ()
+  (should (equal (verb--get-accept-header '(("Foo" . "Bar") ("Quu" . "Quz")))
+                 "*/*"))
+
+  (should (equal (verb--get-accept-header '(("Foo" . "Bar") ("Accept" . "abc")))
+                 "abc"))
+
+  (should (equal (verb--get-accept-header '(("Foo" . "Bar") ("accept" . "xyz")))
+                 "xyz")))
+
 (provide 'verb-test)
 ;;; verb-test.el ends here

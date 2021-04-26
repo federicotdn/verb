@@ -1800,6 +1800,12 @@ For more information, see `verb-advice-url'."
     (advice-remove 'url-http-handle-authentication
                    #'verb--http-handle-authentication)))
 
+(defun verb--get-accept-header (headers)
+  "Retrieve the value of the \"Accept\" header from alist HEADERS.
+If the header is not present, return \"*/*\" as default."
+  (verb--to-ascii (or (cdr (assoc-string "Accept" headers t))
+                      "*/*")))
+
 (cl-defmethod verb-request-spec-validate ((rs verb-request-spec))
   "Run validations on request spec RS and return it.
 If a validation does not pass, signal `user-error'."
@@ -1845,16 +1851,14 @@ loaded into."
     (verb-kill-all-response-buffers t))
 
   (let* ((url (oref rs url))
-         (accept-header (cdr (assoc-string "Accept"
-                                           (oref rs headers) t)))
          (url-request-method (verb--to-ascii (oref rs method)))
+         (url-mime-accept-string (verb--get-accept-header (oref rs headers)))
          (url-request-extra-headers (verb--prepare-http-headers
                                      (oref rs headers)))
          (content-type (verb--headers-content-type
                         url-request-extra-headers))
          (url-request-data (verb--encode-http-body (oref rs body)
                                                    (cdr content-type)))
-         (url-mime-accept-string (verb--to-ascii (or accept-header "*/*")))
          (num (setq verb--requests-count (1+ verb--requests-count)))
          (start-time (time-to-seconds))
          (response-buf (verb--generate-response-buffer num))
