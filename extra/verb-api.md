@@ -53,11 +53,13 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-send-request-on-point-other-window-stay** *&optional arg*
 - Command: **verb-send-request-on-point-no-window** *&optional arg*
 - Command: **verb-re-send-request**
+- Command: **verb-re-send-request-eww**
 - Command: **verb-show-request**
 - Command: **verb-kill-all-response-buffers** *&optional keep-windows*
 - Command: **verb-export-request-on-point** *name*
 - Command: **verb-export-request-on-point-verb**
 - Command: **verb-export-request-on-point-curl**
+- Command: **verb-export-request-on-point-eww**
 - Command: **verb-kill-response-buffer-and-window** *&optional keep-window*
 - Command: **verb-kill-buffer-and-window**
 - Command: **verb-toggle-show-headers**
