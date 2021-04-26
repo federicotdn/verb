@@ -2299,6 +2299,18 @@
   (should (= num-buffers (length (buffer-list))))
   (should-log-contain "Error sending request"))
 
+(ert-deftest test-request-spec-send-eww ()
+  (skip-unless (>= emacs-major-version 27))
+  (setq test-rs (text-as-spec-nl "GET http://localhost:8000/sorted-headers"
+                                 "Accept: text/xhtml"
+                                 "Foo: Bar123"))
+  (verb--request-spec-send-eww test-rs)
+  (with-current-buffer (get-buffer "*eww*")
+    (sleep-for 0.5)
+    (goto-char (point-min))
+    (should (search-forward "Accept: text/xhtml"))
+    (should (search-forward "Foo: Bar123"))))
+
 (defun should-curl (rs-text &rest lines)
   (should (string= (verb--export-to-curl
 		    (verb-request-spec-from-string rs-text) t)

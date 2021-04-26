@@ -1044,7 +1044,7 @@ The result will be displayed on a separate buffer managed by EWW."
   (let ((req (oref verb-http-response request)))
     (unless (string= (oref (oref verb-http-response request) method) "GET")
       (user-error "%s" "Can only perform GET requests using EWW"))
-    (eww (verb-request-spec-url-to-string req))))
+    (verb--request-spec-send-eww req)))
 
 (defun verb-kill-buffer-and-window ()
   "Delete selected window and kill its current buffer.
@@ -1418,7 +1418,7 @@ Return a buffer created by the `eww' function where the results will
 be displayed."
   (unless (string= (oref rs method) "GET")
     (user-error "%s" "Can only perform GET requests using EWW"))
-  (eww (verb-request-spec-url-to-string rs)))
+  (verb--request-spec-send-eww rs))
 
 (defun verb--export-to-curl (rs &optional no-message no-kill)
   "Export a request spec RS to curl format.
@@ -1939,6 +1939,25 @@ loaded into."
 
     ;; Return the response buffer
     response-buf))
+
+(cl-defmethod verb--request-spec-send-eww ((rs verb-request-spec))
+  "Send request spec RS using EWW (Emacs Web Wowser).
+Return the buffer created by EWW.
+
+Note: this function is unrelated to `verb--request-spec-send'."
+  ;; Require eww to load the `eww-accept-content-types' variable
+  (require 'eww)
+  (let ((eww-accept-content-types (verb--get-accept-header (oref rs headers)))
+        (url-request-extra-headers (verb--prepare-http-headers
+                                    (oref rs headers))))
+    (verb--advice-url)
+    (unwind-protect
+        (prog1
+            (eww (verb-request-spec-url-to-string rs))
+          ;; "Use" the variable to avoid compiler warning.
+          ;; This variable is not available in some Emacs versions.
+          eww-accept-content-types)
+      (verb--unadvice-url))))
 
 (cl-defmethod verb-request-spec-to-string ((rs verb-request-spec))
   "Return request spec RS as a string.
