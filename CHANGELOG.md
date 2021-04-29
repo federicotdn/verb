@@ -8,7 +8,7 @@
 - Added new export function `verb-export-request-on-point-eww`, which uses EWW to display `GET` requests.
 - Added new function `verb-re-send-request-eww` (see above).
 
-## **2.13.1** - 2021-01-12 (MELPA Stable)
+## **2.13.1** - 2021-01-12
 - Heading properties (e.g. `Verb-Store`, `Verb-Map-Request`) can now be inherited from parent headings by setting `org-use-property-inheritance` to `t`.
 
 ## **2.13.0** - 2020-11-16
