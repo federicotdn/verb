@@ -909,12 +909,12 @@ This function is called from ob-verb.el (`org-babel-execute:verb')."
       ;; re-reading the request in the current level (contained in the
       ;; source block). If no more levels exist, skip the call to
       ;; `verb--request-spec-from-hierarchy'.
-      (when (verb--up-heading)
-        ;; Continue reading requests from the headings
-        ;; hierarchy. Pre-include the one we read from the source block
-        ;; at the end of the list.
-        (setq rs (verb--request-spec-from-hierarchy rs)))
-      (verb--request-spec-post-process rs))))
+      (if (verb--up-heading)
+          ;; Continue reading requests from the headings
+          ;; hierarchy. Pre-include the one we read from the source block
+          ;; at the end of the list.
+          (verb--request-spec-from-hierarchy rs)
+        (verb--request-spec-post-process rs)))))
 
 (defun verb--object-of-class-p (obj class)
   "Return non-nil if OBJ is an instance of CLASS.
