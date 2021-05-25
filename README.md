@@ -790,7 +790,7 @@ $ make run
 
 Finally, a list of all recipes and their descriptions can be obtained using `make help` or simply `make`.
 
-A PR will need to successfully go through all the checks mentioned above in order to be reviewed first.
+A PR will need to successfully go through all the checks mentioned above in order to be reviewed first. Please remember to target your PR against the `main` branch (not `master`).
 
 ## Related Packages
 
