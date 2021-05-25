@@ -134,7 +134,7 @@ optional argument may follow `send'."
   "Major mode for displaying HTTP responses with Babel."
   (font-lock-add-keywords
    nil `(;; HTTP/1.1 200 OK
-         ("^HTTP/1\\.[01]\\s-+[[:digit:]]\\{3\\}.*$"
+         ("^\\s-*HTTP/1\\.[01]\\s-+[[:digit:]]\\{3\\}.*$"
           (0 'verb-http-keyword))
          ;; Key: Value
          (,verb--http-header-regexp

@@ -315,7 +315,7 @@ I = Information.
 W = Warning.
 E = Error.")
 
-(defconst verb--http-header-regexp "^\\([[:alnum:]_-]+:\\).*$"
+(defconst verb--http-header-regexp "^\\s-*\\([[:alnum:]_-]+:\\).*$"
   "Regexp for font locking HTTP headers.")
 
 (defconst verb--http-header-parse-regexp
@@ -401,10 +401,10 @@ If REMOVE is nil, add the necessary keywords to
    (if remove #'font-lock-remove-keywords #'font-lock-add-keywords)
    nil
    `(;; GET
-     (,(concat "^\\(" (verb--http-methods-regexp) "\\)$")
+     (,(concat "^\\s-*\\(" (verb--http-methods-regexp) "\\)$")
       (1 'verb-http-keyword))
      ;; GET www.example.com
-     (,(concat "^\\(" (verb--http-methods-regexp) "\\)\\s-+.+$")
+     (,(concat "^\\s-*\\(" (verb--http-methods-regexp) "\\)\\s-+.+$")
       (1 'verb-http-keyword))
      ;; Content-type: application/json
      (,verb--http-header-regexp
