@@ -1,6 +1,7 @@
 # Verb Changelog
 ## **main** (MELPA)
 - Fixed font locking on indented Babel source blocks.
+- Added `verb-part` and `verb-boundary` functions, to facilitate building requests using `multipart/form-data`.
 
 ## **2.14.0** - 2021-04-29 (MELPA Stable)
 - Fixed error when receiving JSON responses that include `"t"` as a key.
