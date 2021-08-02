@@ -2685,5 +2685,54 @@
   (should (equal (verb--get-accept-header '(("Foo" . "Bar") ("accept" . "xyz")))
                  "xyz")))
 
+(ert-deftest test-generate-multipart-boundary ()
+  (let ((boundary (verb--generate-multipart-boundary))
+        (boundary2 (verb--generate-multipart-boundary)))
+    (should (= (length boundary) 64))
+    (should-not (string= boundary boundary2))))
+
+(ert-deftest test-multipart-boundary ()
+  (setq aux (text-as-spec-nl "get https://hello.com"
+				             "Content-Type: multipart/form-data; boundary={{(verb-boundary \"abc\")}}"
+				             ""
+				             "{{(verb-part \"foobar-1\")}}"
+                             "Content-Type: text/plain"
+                             ""
+                             "file-contents-here"
+				             "{{(verb-part \"foobar-2\")}}"
+                             "Content-Type: text/plain"
+                             ""
+                             "other-file-contents-here"
+                             "{{(verb-part)}}"))
+  (should (string= (oref aux body)
+                   (join-lines "--abc"
+                               "Content-Disposition: form-data; name=\"foobar-1\""
+                               "Content-Type: text/plain"
+                               ""
+                               "file-contents-here"
+                               "--abc"
+                               "Content-Disposition: form-data; name=\"foobar-2\""
+                               "Content-Type: text/plain"
+                               ""
+                               "other-file-contents-here"
+                               "--abc--"))))
+
+(ert-deftest test-multipart-boundary-error-no-boundary ()
+  (should-error
+   (text-as-spec-nl "get https://hello.com"
+                    ""
+                    "{{(verb-part \"foobar\")}}")))
+
+(ert-deftest test-multipart-boundary-warning-on-no-final-delimiter ()
+  (clear-log)
+  (text-as-spec-nl "get https://hello.com"
+				   "Content-Type: multipart/form-data; boundary={{(verb-boundary \"abc\")}}"
+				   ""
+				   "{{(verb-part \"foobar-1\")}}"
+                   "Content-Type: text/plain"
+                   ""
+                   "file-contents-here") ;; No final boundary
+  (should-log-contain "Detected an unfinished multipart form"))
+
 (provide 'verb-test)
 ;;; verb-test.el ends here

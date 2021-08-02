@@ -1,0 +1,16 @@
+* ConvertAPI Multipart example                                         :verb:
+# https://www.convertapi.com/doc/upload
+#
+# When source files must be converted multiple times, conversion
+# performance can be increased by uploading files once and converting
+# it multiple times without uploading it again. The uploaded file will
+# be stored in convertapi.com server for maximum period of 3 hours and
+# will be accessible by secret URL with UUID.
+post https://v2.convertapi.com/upload
+
+Content-Type: multipart/form-data; boundary={{(verb-boundary)}}
+
+{{(verb-part "file" "myfile.txt")}}
+Content-Type: text/plain
+
+{{(verb-read-file (read-file-name "Text file: "))}}

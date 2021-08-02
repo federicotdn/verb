@@ -329,6 +329,15 @@ Matching is case insensitive.")
 (defconst verb-version "2.14.0"
   "Verb package version.")
 
+(defconst verb--multipart-boundary-alphabet
+  (concat "abcdefghijklmnopqrstuvwxyz"
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+          "0123456789")
+  "Valid characters for multipart form boundaries.")
+
+(defconst verb--multipart-boundary-length 64
+  "Number of characters per multipart form boundary.")
+
 (defvar-local verb-http-response nil
   "HTTP response for this response buffer (`verb-response' object).
 The decoded body contents of the response are included in the buffer
@@ -347,6 +356,9 @@ This variable is only set on buffers showing HTTP response bodies.")
 When Verb evaluates Lisp code tags, a tag may produce a buffer as a
 result. If the buffer-local value of this variable is non-nil for that
 buffer, Verb will kill it after it has finished reading its contents.")
+
+(defvar-local verb--multipart-boundary nil
+  "Current multipart form boundary available for use in specs.")
 
 (defvar verb-last nil
   "Stores the last received HTTP response (`verb-response' object).
@@ -1380,7 +1392,7 @@ explicitly.  Lisp code tags are evaluated when exporting."
                                        nil t))))
     (when-let ((fn (cdr (assoc exporter verb-export-functions))))
       (funcall fn rs)
-      (verb--log nil 'I "Exported request to %s format." exporter))))
+      (verb--log nil 'I "Exported request to %s format" exporter))))
 
 ;;;###autoload
 (defun verb-export-request-on-point-verb ()
@@ -2182,6 +2194,42 @@ Additionally, allow matching `verb--template-keyword'."
                              (downcase verb--template-keyword)))))
     (mapconcat #'identity terms "\\|")))
 
+(defun verb--generate-multipart-boundary ()
+  "Generate a new random multipart form boundary."
+  (let (chars i)
+    (dotimes (_ verb--multipart-boundary-length)
+      (setq i (% (abs (random)) (length verb--multipart-boundary-alphabet)))
+      (push (substring verb--multipart-boundary-alphabet i (1+ i)) chars))
+    (mapconcat #'identity chars "")))
+
+(defun verb-boundary (&optional boundary)
+  "Set the multipart form boundary for the current buffer.
+Use the value of BOUNDARY if it is non-nil.  Otherwise, generate a new
+random boundary using `verb--generate-multipart-boundary'.
+The form boundary can be inserted into the request body using `verb-part'."
+  (setq verb--multipart-boundary (or boundary
+                                     (verb--generate-multipart-boundary))))
+
+(defun verb-part (&optional name filename)
+  "Start a new multipart form part.
+Use NAME as the 'name' parameter, and FILENAME as the 'filename'
+parameter in the Content-Disposition header.
+If neither NAME nor FILENAME are specified, instead of starting a new
+part, insert the final boundary delimiter."
+  (unless verb--multipart-boundary
+    (user-error "%s" (concat "No multipart boundary defined\n"
+                             "Please ensure you have called "
+                             "(verb-boundary) first within this "
+                             "requests tree")))
+  (if name
+      (concat "--" verb--multipart-boundary "\n"
+              "Content-Disposition: form-data; name=\"" name "\""
+              (when filename (concat "; filename=\"" filename "\"")))
+    (let (boundary)
+      (setq boundary verb--multipart-boundary
+            verb--multipart-boundary nil)
+      (concat "--" boundary "--"))))
+
 (defun verb--eval-string (s &optional context)
   "Eval S as Lisp code and return the result.
 When evaluating the code, use buffer CONTEXT as the current buffer.
@@ -2419,6 +2467,8 @@ METADATA."
                          (replace-regexp-in-string
                           (concat verb-trim-body-end "$") "" rest)
                        rest))))
+      (when (buffer-local-value 'verb--multipart-boundary context)
+        (verb--log nil 'W "Detected an unfinished multipart form"))
       ;; Return a `verb-request-spec'
       (verb-request-spec :method method
                          :url (unless (string-empty-p (or url ""))
