@@ -54,6 +54,7 @@ Verb requires at least Emacs version 25 to work.
   - [Request Mapping Functions](#request-mapping-functions)
   - [Body Lines starting with `*`](#body-lines-starting-with-)
   - [File Uploads](#file-uploads)
+  - [Multipart Data](#multipart-data)
   - [Base Headers](#base-headers)
   - [Export Requests](#export-requests)
   - [Babel Integration](#babel-integration)
@@ -599,6 +600,32 @@ Content-Type: text/markdown; charset=utf-8
 Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this for you. This will let the server know how to interpret the contents of the request.
 
 **Note**: If uploading binary files (e.g. a PNG image), it's a good idea to set `verb-read-file`'s second argument (`coding-system`) to `'binary`. This will instruct Emacs to insert the file contents into the request buffer as raw bytes.
+
+### Multipart Data
+
+Verb makes it easy for you to use the `multipart/form-data` content type in your requests. Two helper functions are provided: `verb-boundary` and `verb-part`.
+
+When `verb-boundary` is called using code tags within a request specification, it will return a string containing a valid randomly-generated multipart boundary. This function must be called at least once in order to establish the boundary value when a request is being constructed from request specifications.
+
+On the other hand, the `verb-part` function can be used in code tags to start new parts (when called with at least one argument), and also to insert the final boundary delimiter (when called with no arguments). The first argument will correspond to the `name` attribute of the `Content-Disposition` header, and the second to the `filename` attribute of the same header.
+
+The following is an example that combines these two functions, along with `verb-read-file`:
+
+```
+** Upload two files to user storage
+post /{{(verb-var user-id)}}/upload
+Content-Type: multipart/form-data; boundary={{(verb-boundary)}}
+
+{{(verb-part "file" "file1.txt")}}
+Content-Type: text/plain
+
+{{(verb-read-file "documents/file1.txt")}}
+{{(verb-part "file" "file2.xml")}}
+Content-Type: application/xml
+
+{{(verb-read-file "documents/file2.xml")}}
+{{(verb-part)}}
+```
 
 ### Base Headers
 

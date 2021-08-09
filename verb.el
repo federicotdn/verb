@@ -2206,7 +2206,9 @@ Additionally, allow matching `verb--template-keyword'."
   "Set the multipart form boundary for the current buffer.
 Use the value of BOUNDARY if it is non-nil.  Otherwise, generate a new
 random boundary using `verb--generate-multipart-boundary'.
-The form boundary can be inserted into the request body using `verb-part'."
+Once the boundary has been set for the current buffer (containing
+request specifications), it can be inserted into a request body using
+`verb-part'."
   (setq verb--multipart-boundary (or boundary
                                      (verb--generate-multipart-boundary))))
 

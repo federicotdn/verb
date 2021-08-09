@@ -47,6 +47,8 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Function: **verb-request-spec-override** *original other*
 - Function: **verb-handler-json**
 - Function: **verb-elisp-completion-at-point**
+- Function: **verb-boundary** *&optional boundary*
+- Function: **verb-part** *&optional name filename*
 - Error: **verb-empty-spec**
 - Command: **verb-send-request-on-point** *where &optional arg*
 - Command: **verb-send-request-on-point-other-window** *&optional arg*
