@@ -984,15 +984,15 @@ all the request specs in SPECS, in the order they were passed in."
     (save-restriction
       (widen)
       (save-excursion
-      ;; First, go back to the current heading, if possible. If no
-      ;; heading is found, then don't attempt to read anything.
-      (setq done (not (verb--back-to-heading)))
-      ;; If there's at least one heading above us, go up through the
-      ;; headings tree taking a request specification from each level.
-      (while (not done)
-        (let ((spec (verb--request-spec-from-heading)))
-          (when spec (push spec specs)))
-        (setq done (not (verb--up-heading))))))
+        ;; First, go back to the current heading, if possible. If no
+        ;; heading is found, then don't attempt to read anything.
+        (setq done (not (verb--back-to-heading)))
+        ;; If there's at least one heading above us, go up through the
+        ;; headings tree taking a request specification from each level.
+        (while (not done)
+          (let ((spec (verb--request-spec-from-heading)))
+            (when spec (push spec specs)))
+          (setq done (not (verb--up-heading))))))
     (if specs
         (progn
           (setq final-spec (car specs))
@@ -1087,9 +1087,9 @@ use string VAR and value VALUE."
   (interactive)
   (verb--ensure-verb-mode)
   (let* ((v (or var
-               (completing-read "Variable: " (mapcar (lambda (e)
-                                                       (symbol-name (car e)))
-                                                     verb--vars))))
+                (completing-read "Variable: " (mapcar (lambda (e)
+                                                        (symbol-name (car e)))
+                                                      verb--vars))))
          (val (or value (read-string (format "Set value for %s: " v))))
          (elem (assoc-string v verb--vars)))
     (when (string-empty-p v)
@@ -1117,19 +1117,19 @@ buffer used to show the values."
   (let ((buf (current-buffer))
         (inhibit-read-only t))
     (with-current-buffer-window
-     (get-buffer-create "*Verb Variables*")
-     (cons 'display-buffer-below-selected
-           '((window-height . fit-window-to-buffer)))
-     nil
-     (unless (derived-mode-p 'special-mode)
-       (special-mode))
-     (dolist (elem (buffer-local-value 'verb--vars buf))
-       (insert (propertize (format "%s: " (car elem)) 'face 'verb-header)
-               (format "%s" (cdr elem)))
-       (newline))
-     (unless (zerop (buffer-size))
-       (backward-delete-char 1))
-     (current-buffer))))
+        (get-buffer-create "*Verb Variables*")
+        (cons 'display-buffer-below-selected
+              '((window-height . fit-window-to-buffer)))
+        nil
+      (unless (derived-mode-p 'special-mode)
+        (special-mode))
+      (dolist (elem (buffer-local-value 'verb--vars buf))
+        (insert (propertize (format "%s: " (car elem)) 'face 'verb-header)
+                (format "%s" (cdr elem)))
+        (newline))
+      (unless (zerop (buffer-size))
+        (backward-delete-char 1))
+      (current-buffer))))
 
 (defun verb-read-file (file &optional coding-system)
   "Return a buffer with the contents of FILE.
