@@ -1,9 +1,9 @@
 # Verb Changelog
-## **main** (MELPA)
+## **2.15.0** - 2021-11-03 (MELPA & MELPA Stable)
 - Fixed font locking on indented Babel source blocks.
 - Added `verb-part` and `verb-boundary` functions, to facilitate building requests using `multipart/form-data`.
 
-## **2.14.0** - 2021-04-29 (MELPA Stable)
+## **2.14.0** - 2021-04-29
 - Fixed error when receiving JSON responses that include `"t"` as a key.
 - Allow underscores (`_`) in HTTP header names.
 - Fixed <kbd>C-u C-c C-r C-r</kbd> and <kbd>C-u C-c C-r C-s</kbd> not displaying the response buffer when a response is received.
