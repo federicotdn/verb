@@ -1,5 +1,8 @@
 # Verb Changelog
-## **2.15.0** - 2021-11-03 (MELPA & MELPA Stable)
+## **main** (MELPA)
+- Fixed LF being used instead of CRLF in multipart boundaries.
+
+## **2.15.0** - 2021-11-03 (MELPA Stable)
 - Fixed font locking on indented Babel source blocks.
 - Added `verb-part` and `verb-boundary` functions, to facilitate building requests using `multipart/form-data`.
 
