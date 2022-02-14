@@ -179,6 +179,10 @@ async def zero_bytes_json(request: Request) -> HTTPResponse:
 
 @app.route("/sorted-headers", methods=["GET", "POST"])
 async def sorted_headers(request: Request) -> HTTPResponse:
+    if "dropcookies" in request.args:
+        request.headers.pop("Cookie", None)
+        request.headers.pop("cookie", None)
+
     headers = sorted(k.lower() + ": " + v for k, v in request.headers.items())
     return response.text("\n".join(headers), headers={"Content-Type": "text/plain"})
 

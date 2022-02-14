@@ -2560,7 +2560,7 @@
   (let ((verb-base-headers '(("Foo" . "Bar")
                              ("Quux" . "Quuz"))))
     (babel-test (join-lines "#+begin_src verb"
-                            "get http://localhost:8000/sorted-headers"
+                            "get http://localhost:8000/sorted-headers?dropcookies=1"
                             "Foo: XYZ"
                             "#+end_src")
                 (join-lines "HTTP/1.1 200 OK"
