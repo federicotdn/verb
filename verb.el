@@ -2224,7 +2224,7 @@ part, insert the final boundary delimiter."
                              "(verb-boundary) first within this "
                              "requests tree")))
   (if name
-      (concat "--" verb--multipart-boundary "\n"
+      (concat "--" verb--multipart-boundary "\r\n"
               "Content-Disposition: form-data; name=\"" name "\""
               (when filename (concat "; filename=\"" filename "\"")))
     (let (boundary)

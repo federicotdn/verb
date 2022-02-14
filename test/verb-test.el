@@ -2705,12 +2705,12 @@
                              "other-file-contents-here"
                              "{{(verb-part)}}"))
   (should (string= (oref aux body)
-                   (join-lines "--abc"
+                   (join-lines "--abc\r"
                                "Content-Disposition: form-data; name=\"foobar-1\""
                                "Content-Type: text/plain"
                                ""
                                "file-contents-here"
-                               "--abc"
+                               "--abc\r"
                                "Content-Disposition: form-data; name=\"foobar-2\""
                                "Content-Type: text/plain"
                                ""
