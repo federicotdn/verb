@@ -2223,6 +2223,13 @@
   (should (= (verb-json-get test-json "bar" 0) 42))
   (should (= (verb-json-get test-json "bar" 1) 100))
 
+  (should-not (= (verb-json-get test-json "bar" -1) nil))
+  (should (eq (verb-json-get test-json "bar" -2) :json-false))
+  (should (= (verb-json-get test-json "bar" -5)
+             (verb-json-get test-json "bar" 0)))
+  (should-error (verb-json-get test-json "bar" -6))
+  (should-error (verb-json-get test-json "bar" -999))
+
   (should (verb-json-get test-json "bar" 2))
   (should-error (verb-json-get test-json "bar" 999))
   (should (eq (verb-json-get test-json "bar" 3) :json-false))
