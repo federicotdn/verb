@@ -788,6 +788,10 @@ Using PATH (\"test\" \"foo\" 1) will yield \"oranges\"."
             (user-error "%s" "Unknown value for `json-object-type'"))))
         (;; Path element is an integer
          (integerp key)
+         ;; Handle negative indexes by adding the negative index to the size of
+         ;; the sequence, and using that as the new index
+         (when (and (< key 0) (seqp obj))
+           (setq key (+ key (length obj))))
          ;; Obj may be a list or a vector
          (pcase json-array-type
            ('list
