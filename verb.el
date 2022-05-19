@@ -840,15 +840,14 @@ Return t if there was a heading to move towards to and nil otherwise."
   "Return alist of current heading properties starting with PREFIX.
 Does not use property inheritance.  Matching is case-insensitive."
   (verb--back-to-heading)
-  ;; 3) Discard all (key . nil) elements in the list
-  (seq-filter (lambda (e) (stringp (cdr e)))
-              ;; 2) Take the (key . value) for each of those properties here
-              (mapcar (lambda (key) (cons (upcase key)
-                                          (org-entry-get (point) key
-                                                         'selective)))
-                      ;; 1) Get all doc properties and filter them by prefix
-                      (seq-filter (lambda (s) (string-prefix-p prefix s t))
-                                  (org-buffer-property-keys)))))
+  (thread-last
+    (org-buffer-property-keys)
+    ;; 1) Get all doc properties and filter them by prefix
+    (seq-filter (lambda (s) (string-prefix-p prefix s t)))
+    ;; 2) Get the value for each of those properties and return an alist
+    (mapcar (lambda (key) (cons (upcase key) (org-entry-get (point) key 'selective))))
+    ;; 3) Discard all (key . nil) elements in the list
+    (seq-filter #'cdr)))
 
 (defun verb--heading-contents ()
   "Return the current heading's text contents.
