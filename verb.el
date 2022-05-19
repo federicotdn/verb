@@ -1090,17 +1090,19 @@ been set once with `verb-var', and then prompt for VALUE.  Otherwise,
 use string VAR and value VALUE."
   (interactive)
   (verb--ensure-verb-mode)
-  (let* ((v (or var
-                (completing-read "Variable: " (mapcar (lambda (e)
-                                                        (symbol-name (car e)))
-                                                      verb--vars))))
-         (val (or value (read-string (format "Set value for %s: " v))))
-         (elem (assoc-string v verb--vars)))
-    (when (string-empty-p v)
+  (let* ((name (or (and (stringp var) var)
+                   (ignore-error 'wrong-type-argument (symbol-name var))
+                   (completing-read "Variable: " (mapcar (lambda (e)
+                                                           (symbol-name (car e)))
+                                                         verb--vars))))
+         (key (intern name))
+         (val (or value (read-string (format "Set value for %s: " name))))
+         (elem (assq key verb--vars)))
+    (when (string-empty-p name)
       (user-error "%s" "Variable name can't be empty"))
     (if elem
         (setcdr elem val)
-      (push (cons (intern v) val) verb--vars))))
+      (push (cons key val) verb--vars))))
 
 (defun verb-unset-vars ()
   "Unset all variables set with `verb-var' or `verb-set-var'.
