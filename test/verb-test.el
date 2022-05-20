@@ -38,7 +38,7 @@
 (setq org-confirm-babel-evaluate nil)
 
 (defun join-lines (&rest args)
-  (mapconcat #'identity args "\n"))
+  (string-join args "\n"))
 
 (defun text-as-spec (&rest args)
   (verb-request-spec-from-string (mapconcat #'identity args "")))
