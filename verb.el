@@ -957,17 +957,15 @@ After that, return RS."
               (verb-request-spec :headers verb-base-headers)
               rs)))
   ;; Apply the request mapping function, if present
-  (when-let ((fn-name (cdr (assoc-string "verb-map-request"
-                                         (oref rs metadata) t)))
-             (fn-sym (intern fn-name)))
-    (if (fboundp fn-sym)
-        (setq rs (funcall (symbol-function fn-sym) rs))
-      (user-error "No request mapping function with name \"%s\" exists"
-                  fn-name))
+  (when-let ((fn (read (cdr (assoc-string "verb-map-request"
+                                          (oref rs metadata) t)))))
+    (if (functionp fn)
+        (setq rs (funcall fn rs))
+      (user-error "`%s' is not a valid function" fn))
     (unless (verb--object-of-class-p rs 'verb-request-spec)
-      (user-error (concat "Request mapping function \"%s\" must return a "
+      (user-error (concat "Request mapping function `%s' must return a "
                           "`verb-request-spec' value")
-                  fn-name)))
+                  fn)))
   ;; Validate and return
   (verb-request-spec-validate rs))
 
