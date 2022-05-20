@@ -971,8 +971,8 @@ After that, return RS."
   (when-let ((fn (thread-first
                    (concat verb--metadata-prefix "map-request")
                    (assoc-string (oref rs metadata) t)
-                   cdr
-                   read)))
+                   cdr))
+             (fn (read fn)))
     (if (functionp fn)
         (setq rs (funcall fn rs))
       (user-error "`%s' is not a valid function" fn))
