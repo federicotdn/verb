@@ -971,7 +971,8 @@ After that, return RS."
   (when-let ((fn (thread-first
                    (concat verb--metadata-prefix "map-request")
                    (assoc-string (oref rs metadata) t)
-                   cdr))
+                   cdr
+                   verb--nonempty-string))
              (fn (read fn)))
     (if (functionp fn)
         (setq rs (funcall fn rs))
