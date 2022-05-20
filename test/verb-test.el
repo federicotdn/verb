@@ -410,6 +410,24 @@
                    '(("Content-Type" . "application/json")
                      ("X-Foo" . "Test"))))))
 
+(ert-deftest test-request-spec-from-hierarchy-map-request-lambda ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":verb-map-request:  (lambda (rs)"
+      ":Verb-Map-Request+:   (oset rs body (append (oref rs body) \"foobar\"))"
+      ":VERB-MAP-request+:   rs)"
+      ":end:"
+      "post http://localhost"
+      "Content-Type: application/json"))
+
+    (should (string= (oref (verb--request-spec-from-hierarchy) body)
+                     "foobar"))))
+
 (ert-deftest test-request-spec-from-hierarchy-map-request-no-fn ()
   (with-temp-buffer
     (org-mode)
