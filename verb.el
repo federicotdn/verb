@@ -957,8 +957,11 @@ After that, return RS."
               (verb-request-spec :headers verb-base-headers)
               rs)))
   ;; Apply the request mapping function, if present
-  (when-let ((fn (read (cdr (assoc-string "verb-map-request"
-                                          (oref rs metadata) t)))))
+  (when-let ((fn (thread-first
+                   (concat verb--metadata-prefix "map-request")
+                   (assoc-string (oref rs metadata) t)
+                   cdr
+                   read)))
     (if (functionp fn)
         (setq rs (funcall fn rs))
       (user-error "`%s' is not a valid function" fn))
@@ -1546,9 +1549,11 @@ CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
 See `verb--stored-responses' for more details."
   (when-let ((req (oref response request))
              (metadata (oref req metadata))
-             (val (verb--nonempty-string (cdr (assoc-string
-                                               "verb-store"
-                                               metadata t)))))
+             (val (thread-first
+                    (concat verb--metadata-prefix "store")
+                    (assoc-string metadata t)
+                    cdr
+                    verb--nonempty-string)))
     (setq verb--stored-responses (cl-delete val verb--stored-responses
                                             :key #'car
                                             :test #'equal))
