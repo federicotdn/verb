@@ -351,6 +351,26 @@
     (should (equal (oref req-spec metadata)
 		   '(("VERB-NAME" . "JOHN"))))))
 
+(ert-deftest test-request-spec-from-hierarchy-metadata-multiline ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+            ":properties:"
+            ":Verb-Foo: xyz"
+            ":Verb-Name: X"
+            ":end:"
+            "** Test"
+            ":properties:"
+            ":Verb-Name: JOHN"
+            ":verb-NAME+: DOE"
+            ":verb-name+: Smith"
+            ":end:"
+            "get http://foobar.com"))
+
+    (should (equal (oref (verb--request-spec-from-hierarchy) metadata)
+		           '(("VERB-NAME" . "JOHN DOE Smith"))))))
+
 (ert-deftest test-request-spec-from-hierarchy-map-request ()
   (defun map-req-1 (rs)
     (oset rs body "foobarfoobar")
