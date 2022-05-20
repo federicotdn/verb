@@ -953,6 +953,11 @@ CLASS must be an EIEIO class."
   (ignore-errors
     (object-of-class-p obj class)))
 
+(defun verb--try-read-fn-form (form)
+  "Try `read'ing FORM and throw error if failed."
+  (condition-case _err (read form)
+    (end-of-file (user-error "`%s' is a malformed expression" form))))
+
 (defun verb--request-spec-post-process (rs)
   "Validate and prepare request spec RS to be used.
 
@@ -973,7 +978,7 @@ After that, return RS."
                    (assoc-string (oref rs metadata) t)
                    cdr
                    verb--nonempty-string))
-             (fn (read fn)))
+             (fn (verb--try-read-fn-form fn)))
     (if (functionp fn)
         (setq rs (funcall fn rs))
       (user-error "`%s' is not a valid function" fn))
