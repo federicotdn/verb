@@ -440,6 +440,19 @@
       ":end:"
       "post http://localhost"))
 
+    (should-error (verb--request-spec-from-hierarchy)))
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Map-Request: (not a function)"
+      ":end:"
+      "post http://localhost"))
+
     (should-error (verb--request-spec-from-hierarchy))))
 
 (ert-deftest test-request-spec-from-hierarchy-map-request-bad-fn ()
