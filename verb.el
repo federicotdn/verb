@@ -973,12 +973,12 @@ After that, return RS."
               (verb-request-spec :headers verb-base-headers)
               rs)))
   ;; Apply the request mapping function, if present
-  (when-let ((fn (thread-first
-                   (concat verb--metadata-prefix "map-request")
-                   (assoc-string (oref rs metadata) t)
-                   cdr
-                   verb--nonempty-string))
-             (fn (verb--try-read-fn-form fn)))
+  (when-let ((form (thread-first
+                     (concat verb--metadata-prefix "map-request")
+                     (assoc-string (oref rs metadata) t)
+                     cdr
+                     verb--nonempty-string))
+             (fn (verb--try-read-fn-form form)))
     (if (functionp fn)
         (setq rs (funcall fn rs))
       (user-error "`%s' is not a valid function" fn))
