@@ -2214,7 +2214,7 @@ request specifications), it can be inserted into a request body using
 
 (defun verb-part (&optional name filename)
   "Start a new multipart form part.
-Use NAME as the 'name' parameter, and FILENAME as the 'filename'
+Use NAME as the \"name\" parameter, and FILENAME as the \"filename\"
 parameter in the Content-Disposition header.
 If neither NAME nor FILENAME are specified, instead of starting a new
 part, insert the final boundary delimiter."
