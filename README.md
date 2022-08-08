@@ -167,7 +167,7 @@ get https://reqres.in/api/users
 
 This defines a minimal HTTP request specification under the "Get users list" heading, composed of a method (`GET`) and a URL (`https://reqres.in/api/users`). The heading is prefixed with only one `*`, which makes it a level 1 heading. The number of `*`s determines a heading's level. All the text under a heading corresponds to the HTTP request it is describing. It is not possible to write request specifications without adding a heading at the top.
 
-Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. To tag a heading, simply move the point to it and press <kbd>C-c C-c</kbd>, and then type in `verb` <kbd>RET</kbd>. Note that in Org mode, by default, headings inherit their parents' tags (see the `org-use-tag-inheritance` variable). This implies that once you've tagged one of the parent headings, all its child headings will have that tag as well. 
+Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. To tag a heading, simply move the point to it and press <kbd>C-c C-c</kbd>, and then type in `verb` <kbd>RET</kbd>. Note that in Org mode, by default, headings inherit their parents' tags (see the `org-use-tag-inheritance` variable). This implies that once you've tagged one of the parent headings, all its child headings will have that tag as well.
 
 To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
 ```
@@ -201,7 +201,7 @@ Request sending is asynchronous - you can do other stuff while Emacs waits for t
 
 ### The Response Body Buffer
 
-After you have sent the request and the server has answered back successfully, you should now be seeing the populated response body buffer. The response body buffer always has the `verb-response-body-mode` minor mode activated (indicated by `Verb[Body]` in the modeline). 
+After you have sent the request and the server has answered back successfully, you should now be seeing the populated response body buffer. The response body buffer always has the `verb-response-body-mode` minor mode activated (indicated by `Verb[Body]` in the modeline).
 
 The buffer will have an active [header line](https://www.gnu.org/software/emacs/manual/html_node/elisp/Header-Lines.html), showing something similar to:
 
@@ -626,6 +626,26 @@ Content-Type: application/xml
 {{(verb-read-file "documents/file2.xml")}}
 {{(verb-part)}}
 ```
+
+In HTTP, the end-of-line marker is CRLF (`\r\n`) instead of LF (`\n`). Although some web servers handle LF as CRLF for compatibility, some do not. If you encounter a similar problem, try to insert CR (`\r`) manually. For example:
+
+```
+** Upload two files to user storage
+post /{{(verb-var user-id)}}/upload
+Content-Type: multipart/form-data; boundary={{(verb-boundary)}}
+
+{{(verb-part "file" "file1.txt")}}^M
+Content-Type: text/plain^M
+^M
+{{(verb-read-file "documents/file1.txt")}}^M
+{{(verb-part "file" "file2.xml")}}^M
+Content-Type: application/xml^M
+^M
+{{(verb-read-file "documents/file2.xml")}}^M
+{{(verb-part)}}^M
+```
+
+> `^M` is CR (`\r`) which is inserted by Emacs with <kbd>C-q C-m</kbd>.
 
 ### Base Headers
 
