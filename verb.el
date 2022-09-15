@@ -1736,8 +1736,9 @@ NUM is this request's identification number."
     (verb-response-body-mode)
 
     (when where
-      (message "%s | %s"
+      (message "%s | %s %s"
                (oref verb-http-response status)
+               (oref rs method)
                (verb-request-spec-url-to-string rs)))
 
     ;; Run post response hook
