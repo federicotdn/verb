@@ -2169,14 +2169,16 @@
 		     "content-length"
 		     "host"
 		     "accept"
-		     "accept-encoding"
-		     "extension")))
+		     "accept-encoding")))
       (dolist (h headers)
 	(goto-char (point-min))
 	(should (search-forward (concat h ": "))))
 
       (goto-char (point-min))
       (delete-matching-lines "cookie") ; ignore cookie header
+
+      (goto-char (point-min))
+      (delete-matching-lines "extension") ; ignore extension header
 
       (should (= (count-lines (point-min) (point-max))
 		 (length headers))))))
@@ -2487,7 +2489,7 @@
           ;; Results have been inserted inside begin/end_src blocks
           (delete-matching-lines "#\\+\\(begin\\|end\\)_\\(src\\|example\\)"))
 
-        ;; Replace 127.0.0.1 - > localhost
+        ;; Replace 127.0.0.1 -> localhost
         (goto-char (point-min))
         (while (re-search-forward "127\\.0\\.0\\.1" nil t)
           (replace-match "localhost"))
@@ -2562,28 +2564,6 @@
                           "Content-Type: application/json"
                           "Connection: keep-alive"
                           "Keep-Alive: 5")))
-
-(ert-deftest test-babel-base-headers ()
-  (let ((verb-base-headers '(("Foo" . "Bar")
-                             ("Quux" . "Quuz"))))
-    (babel-test (join-lines "#+begin_src verb"
-                            "get http://localhost:8000/sorted-headers?dropcookies=1"
-                            "Foo: XYZ"
-                            "#+end_src")
-                (join-lines "HTTP/1.1 200 OK"
-                            "Content-Type: text/plain"
-                            "Content-Length: 155"
-                            "Connection: keep-alive"
-                            "Keep-Alive: 5"
-                            ""
-                            "accept-encoding: gzip"
-                            "accept: */*"
-                            "connection: keep-alive"
-                            "extension: Security/Digest Security/SSL"
-                            "foo: XYZ"
-                            "host: localhost:8000"
-                            "mime-version: 1.0"
-                            "quux: Quuz"))))
 
 (ert-deftest test-babel-org-variables ()
   ;; Use :var for each variable
