@@ -845,7 +845,8 @@ Does not use property inheritance.  Matching is case-insensitive."
     ;; 1) Get all doc properties and filter them by prefix
     (seq-filter (lambda (s) (string-prefix-p prefix s t)))
     ;; 2) Get the value for each of those properties and return an alist
-    (mapcar (lambda (key) (cons (upcase key) (org-entry-get (point) key 'selective))))
+    (mapcar (lambda (key)
+              (cons (upcase key) (org-entry-get (point) key 'selective))))
     ;; 3) Discard all (key . nil) elements in the list
     (seq-filter #'cdr)))
 
@@ -1091,9 +1092,10 @@ use string VAR and value VALUE."
   (verb--ensure-verb-mode)
   (let* ((name (or (and (stringp var) var)
                    (and (symbolp var) (symbol-name var))
-                   (completing-read "Variable: " (mapcar (lambda (e)
-                                                           (symbol-name (car e)))
-                                                         verb--vars))))
+                   (completing-read "Variable: "
+                                    (mapcar (lambda (e)
+                                              (symbol-name (car e)))
+                                            verb--vars))))
          (key (intern name))
          (val (or value (read-string (format "Set value for %s: " name))))
          (elem (assq key verb--vars)))
