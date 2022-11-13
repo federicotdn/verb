@@ -1090,7 +1090,7 @@ use string VAR and value VALUE."
   (interactive)
   (verb--ensure-verb-mode)
   (let* ((name (or (and (stringp var) var)
-                   (ignore-error 'wrong-type-argument (symbol-name var))
+                   (and (symbolp var) (symbol-name var))
                    (completing-read "Variable: " (mapcar (lambda (e)
                                                            (symbol-name (car e)))
                                                          verb--vars))))
