@@ -788,6 +788,10 @@ Using PATH (\"test\" \"foo\" 1) will yield \"oranges\"."
             (user-error "%s" "Unknown value for `json-object-type'"))))
         (;; Path element is an integer
          (integerp key)
+         ;; Handle negative indexes by adding the negative index to the size of
+         ;; the sequence, and using that as the new index
+         (when (and (< key 0) (seqp obj))
+           (setq key (+ key (length obj))))
          ;; Obj may be a list or a vector
          (pcase json-array-type
            ('list
@@ -836,15 +840,15 @@ Return t if there was a heading to move towards to and nil otherwise."
   "Return alist of current heading properties starting with PREFIX.
 Does not use property inheritance.  Matching is case-insensitive."
   (verb--back-to-heading)
-  ;; 3) Discard all (key . nil) elements in the list
-  (seq-filter (lambda (e) (stringp (cdr e)))
-              ;; 2) Take the (key . value) for each of those properties here
-              (mapcar (lambda (key) (cons (upcase key)
-                                          (org-entry-get (point) key
-                                                         'selective)))
-                      ;; 1) Get all doc properties and filter them by prefix
-                      (seq-filter (lambda (s) (string-prefix-p prefix s t))
-                                  (org-buffer-property-keys)))))
+  (thread-last
+    (org-buffer-property-keys)
+    ;; 1) Get all doc properties and filter them by prefix
+    (seq-filter (lambda (s) (string-prefix-p prefix s t)))
+    ;; 2) Get the value for each of those properties and return an alist
+    (mapcar (lambda (key)
+              (cons (upcase key) (org-entry-get (point) key 'selective))))
+    ;; 3) Discard all (key . nil) elements in the list
+    (seq-filter #'cdr)))
 
 (defun verb--heading-contents ()
   "Return the current heading's text contents.
@@ -1086,17 +1090,20 @@ been set once with `verb-var', and then prompt for VALUE.  Otherwise,
 use string VAR and value VALUE."
   (interactive)
   (verb--ensure-verb-mode)
-  (let* ((v (or var
-                (completing-read "Variable: " (mapcar (lambda (e)
-                                                        (symbol-name (car e)))
-                                                      verb--vars))))
-         (val (or value (read-string (format "Set value for %s: " v))))
-         (elem (assoc-string v verb--vars)))
-    (when (string-empty-p v)
+  (let* ((name (or (and (stringp var) var)
+                   (and (symbolp var) (symbol-name var))
+                   (completing-read "Variable: "
+                                    (mapcar (lambda (e)
+                                              (symbol-name (car e)))
+                                            verb--vars))))
+         (key (intern name))
+         (val (or value (read-string (format "Set value for %s: " name))))
+         (elem (assq key verb--vars)))
+    (when (string-empty-p name)
       (user-error "%s" "Variable name can't be empty"))
     (if elem
         (setcdr elem val)
-      (push (cons (intern v) val) verb--vars))))
+      (push (cons key val) verb--vars))))
 
 (defun verb-unset-vars ()
   "Unset all variables set with `verb-var' or `verb-set-var'.
