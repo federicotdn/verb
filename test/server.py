@@ -6,7 +6,7 @@ from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.exceptions import NotFound, MethodNotSupported
 
-app = Sanic(name="test server")
+app = Sanic(name="verb_test_server")
 logger.setLevel(logging.WARNING)
 
 

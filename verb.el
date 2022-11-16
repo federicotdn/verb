@@ -788,6 +788,10 @@ Using PATH (\"test\" \"foo\" 1) will yield \"oranges\"."
             (user-error "%s" "Unknown value for `json-object-type'"))))
         (;; Path element is an integer
          (integerp key)
+         ;; Handle negative indexes by adding the negative index to the size of
+         ;; the sequence, and using that as the new index
+         (when (and (< key 0) (seqp obj))
+           (setq key (+ key (length obj))))
          ;; Obj may be a list or a vector
          (pcase json-array-type
            ('list
@@ -1104,17 +1108,20 @@ been set once with `verb-var', and then prompt for VALUE.  Otherwise,
 use string VAR and value VALUE."
   (interactive)
   (verb--ensure-verb-mode)
-  (let* ((v (or var
-                (completing-read "Variable: " (mapcar (lambda (e)
-                                                        (symbol-name (car e)))
-                                                      verb--vars))))
-         (val (or value (read-string (format "Set value for %s: " v))))
-         (elem (assoc-string v verb--vars)))
-    (when (string-empty-p v)
+  (let* ((name (or (and (stringp var) var)
+                   (and (symbolp var) (symbol-name var))
+                   (completing-read "Variable: "
+                                    (mapcar (lambda (e)
+                                              (symbol-name (car e)))
+                                            verb--vars))))
+         (key (intern name))
+         (val (or value (read-string (format "Set value for %s: " name))))
+         (elem (assq key verb--vars)))
+    (when (string-empty-p name)
       (user-error "%s" "Variable name can't be empty"))
     (if elem
         (setcdr elem val)
-      (push (cons (intern v) val) verb--vars))))
+      (push (cons key val) verb--vars))))
 
 (defun verb-unset-vars ()
   "Unset all variables set with `verb-var' or `verb-set-var'.
@@ -1756,8 +1763,9 @@ NUM is this request's identification number."
     (verb-response-body-mode)
 
     (when where
-      (message "%s | %s"
+      (message "%s | %s %s"
                (oref verb-http-response status)
+               (oref rs method)
                (verb-request-spec-url-to-string rs)))
 
     ;; Run post response hook
@@ -2234,7 +2242,7 @@ request specifications), it can be inserted into a request body using
 
 (defun verb-part (&optional name filename)
   "Start a new multipart form part.
-Use NAME as the 'name' parameter, and FILENAME as the 'filename'
+Use NAME as the \"name\" parameter, and FILENAME as the \"filename\"
 parameter in the Content-Disposition header.
 If neither NAME nor FILENAME are specified, instead of starting a new
 part, insert the final boundary delimiter."
