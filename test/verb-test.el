@@ -597,10 +597,12 @@
 			            ":properties:"
 			            ":Verb-Y: hello"
 			            ":end:"))
-    (let ((org-use-property-inheritance t))
-      (should (equal (verb--heading-properties "verb-")
-		             '(("VERB-X" . "something")
-                       ("VERB-Y" . "hello")))))))
+    (let* ((org-use-property-inheritance t)
+           (properties (verb--heading-properties "verb-")))
+      (should (equal (assoc-string "VERB-X" properties)
+                     '("VERB-X" . "something")))
+      (should (equal (assoc-string "VERB-Y" properties)
+                     '("VERB-Y" . "hello"))))))
 
 (ert-deftest test-request-spec-from-text-comments-only ()
   (should-error (text-as-spec "# Hello\n" "# world")
