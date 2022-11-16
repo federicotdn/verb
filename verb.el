@@ -836,26 +836,20 @@ Return t if there was a heading to move towards to and nil otherwise."
                                 (not (get-text-property 0 'inherited s))))
                 (split-string tags ":" t))))
 
-(defsubst seq-reduce* (function sequence &optional initial-value)
-  "Just like `seq-reduce' but INITIAL-VALUE is optional.
-Arguments FUNCTION and SEQUENCE are passed down to `seq-reduce'.
-If INITIAL-VALUE isn't provided, it will be passed down as nil,
-which is equivalent to the empty list."
-  (seq-reduce function sequence initial-value))
-
 (defun verb--heading-properties (prefix)
   "Return alist of current heading properties starting with PREFIX.
 Does not use property inheritance.  Matching is case-insensitive."
   (verb--back-to-heading)
   (thread-last
-    (org-buffer-property-keys)
     ;; 1) Get all doc properties and filter them by prefix. This will push the
     ;; property already `upcase''d, but only if there is no `string=' the
     ;; `upcase''d value
-    (seq-reduce* (lambda (properties s)
-                   (if (string-prefix-p prefix s t)
-                       (cl-pushnew (upcase s) properties :test #'string=)
-                     properties)))
+    (seq-reduce (lambda (properties property)
+                 (if (string-prefix-p prefix property t)
+                     (cl-pushnew (upcase property) properties :test #'string=)
+                   properties))
+                (org-buffer-property-keys)
+                '())
     ;; 2) Get the value for each of those properties and return an alist
     (mapcar (lambda (key) (cons key (org-entry-get (point) key 'selective))))
     ;; 3) Discard all (key . nil) elements in the list
