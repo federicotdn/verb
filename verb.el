@@ -1083,23 +1083,20 @@ unless DEFAULT is non-nil, in which case that value is used instead."
        (push val verb--vars))
      (cdr val)))
 
-(defun verb-set-var (&optional var value)
+(defun verb-set-var (var &optional value)
   "Set new value for variable VAR previously set with `verb-var'.
 When called interactively, prompt the user for a variable that has
 been set once with `verb-var', and then prompt for VALUE.  Otherwise,
 use string VAR and value VALUE."
-  (interactive)
+  (interactive
+   (let* ((var (intern (completing-read "Variable: " (map-keys verb--vars)))))
+     (list var nil)))
   (verb--ensure-verb-mode)
-  (let* ((name (or (and (stringp var) var)
-                   (and (symbolp var) (symbol-name var))
-                   (completing-read "Variable: "
-                                    (mapcar (lambda (e)
-                                              (symbol-name (car e)))
-                                            verb--vars))))
-         (key (intern name))
-         (val (or value (read-string (format "Set value for %s: " name))))
+  (let* ((key (or (and (stringp var) (intern var))
+                  (and (symbolp var) var)))
+         (val (or value (read-string (format "Set value for %s: " key))))
          (elem (assq key verb--vars)))
-    (when (string-empty-p name)
+    (when (string-empty-p (symbol-name key))
       (user-error "%s" "Variable name can't be empty"))
     (if elem
         (setcdr elem val)
