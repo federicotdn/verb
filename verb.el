@@ -32,6 +32,7 @@
 
 ;;; Code:
 (require 'org)
+(require 'org-element)
 (require 'ob)
 (require 'eieio)
 (require 'subr-x)
@@ -975,6 +976,17 @@ After that, return RS."
   ;; Validate and return
   (verb-request-spec-validate rs))
 
+(defun verb--request-spec-from-src-block ()
+  "Reads request spec from verb src block at point."
+  (let ((ctx (org-element-context)))
+    (when (and (eq (org-element-type ctx) 'src-block)
+               (string= (org-element-property :language ctx) "verb"))
+      (let ((block-info (org-babel-get-src-block-info)))
+        (verb--request-spec-from-babel-src-block
+         (point)
+         (nth 1 block-info)
+         (nth 2 block-info))))))
+
 (defun verb--request-spec-from-hierarchy (&rest specs)
   "Return a request spec generated from the headings hierarchy.
 To do this, use `verb--request-spec-from-heading' for the current
@@ -988,9 +1000,13 @@ all the request specs in SPECS, in the order they were passed in."
     (save-restriction
       (widen)
       (save-excursion
-        ;; First, go back to the current heading, if possible. If no
-        ;; heading is found, then don't attempt to read anything.
-        (setq done (not (verb--back-to-heading)))
+        ;; Unless it's a verb source block, first, go back to the current heading, if
+        ;; possible. If no heading is found, then don't attempt to read anything.
+        (if-let ((spec (verb--request-spec-from-src-block)))
+            (progn
+              (setq done t)
+              (push spec specs))
+          (setq done (not (verb--back-to-heading))))
         ;; If there's at least one heading above us, go up through the
         ;; headings tree taking a request specification from each level.
         (while (not done)
