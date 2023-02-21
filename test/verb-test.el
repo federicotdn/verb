@@ -1040,6 +1040,12 @@
       (should (equal verb--vars '((v2 . "123")
                                   (v1 . "Foobar.")))))))
 
+(ert-deftest test-var-var-error-string-name ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (should-error (verb-var "foo" "hello"))))
+
 (ert-deftest test-verb-set-var ()
   (with-temp-buffer
     (org-mode)
