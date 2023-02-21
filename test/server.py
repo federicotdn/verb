@@ -35,7 +35,7 @@ async def basic_json(request: Request) -> HTTPResponse:
 
 
 @app.route("/keywords-json")
-async def basic_json(request: Request) -> HTTPResponse:
+async def keywords_json(request: Request) -> HTTPResponse:
     return response.json({"t": True}, sort_keys=True)
 
 
@@ -233,7 +233,10 @@ def main() -> None:
             f.write(str(os.getpid()))
 
     app.run(
-        host="127.0.0.1", port=int(os.environ.get("PORT", "8000")), access_log=False
+        host="127.0.0.1",
+        port=int(os.environ.get("PORT", "8000")),
+        access_log=False,
+        debug=True,
     )
 
 
