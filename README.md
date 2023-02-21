@@ -153,7 +153,7 @@ You can send any of the two requests by moving the point to one of the level 2 h
 
 ## Usage Guide
 
-This guide assumes that you're using <kbd>C-c C-r</kbd> as the prefix key for all Verb commands, and that you're also getting started with Org mode.
+This guide, and other Verb-related documentation, assume that you're using <kbd>C-c C-r</kbd> as the prefix key for all Verb commands, and that you're also getting started with Org mode.
 
 All public (and private) variables and functions in the Verb package are documented. If you wish to know more about one of them, use <kbd>C-h v</kbd> and <kbd>C-h f</kbd> respectively.
 
