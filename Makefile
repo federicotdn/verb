@@ -19,6 +19,7 @@ help: ## Display this help message.
 	@echo
 
 setup-tests:  ## Install everything required for testing (Python dependencies).
+	python3 --version
 	test -d $(ENV) || python3 -m venv $(ENV)
 	$(ACTIVATE) && \
 	pip install -U pip wheel && \

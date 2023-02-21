@@ -3,6 +3,7 @@
 - Fixed LF being used instead of CRLF in multipart boundaries.
 - When sending a request, include the HTTP method in the message displayed.
 - The `verb-json-get` function now accepts negative integer arguments for accessing list elements.
+- Changed default binding of `verb-send-request-on-point-no-window` to <kbd>C-c C-r C-<return></kbd>.
 
 ## **2.15.0** - 2021-11-03 (MELPA Stable)
 - Fixed font locking on indented Babel source blocks.
