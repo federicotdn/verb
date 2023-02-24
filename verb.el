@@ -391,7 +391,7 @@ other buffers without actually expanding the embedded code tags.")
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") #'verb-send-request-on-point-other-window)
     (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window-stay)
-    (define-key map (kbd "C-m") #'verb-send-request-on-point-no-window)
+    (define-key map (kbd "C-<return>") #'verb-send-request-on-point-no-window)
     (define-key map (kbd "C-f") #'verb-send-request-on-point)
     (define-key map (kbd "C-k") #'verb-kill-all-response-buffers)
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
@@ -1086,14 +1086,20 @@ Delete the window only if it isn't the only window in the frame."
   "Return value of Verb variable VAR.
 If VAR is has no value yet, use `read-string' to set its value first,
 unless DEFAULT is non-nil, in which case that value is used instead."
-  `(let ((val (assoc-string ',var verb--vars)))
-     (unless val
-       (setq val (cons ',var
-                       (or ,default
-                           (read-string (format "[verb-var] Set value for %s: "
-                                                ',var)))))
-       (push val verb--vars))
-     (cdr val)))
+  `(progn
+     (when (stringp ',var)
+       (user-error "%s (got: \"%s\")"
+                   "[verb-var] Variable name must be a symbol, not a string"
+                   ',var))
+     (let ((val (assoc-string ',var verb--vars)))
+       (unless val
+         (setq val (cons ',var
+                         (or ,default
+                             (read-string
+                              (format "[verb-var] Set value for %s: "
+                                      ',var)))))
+         (push val verb--vars))
+       (cdr val))))
 
 (defun verb-set-var (&optional var value)
   "Set new value for variable VAR previously set with `verb-var'.
@@ -1103,7 +1109,7 @@ use string VAR and value VALUE."
   (interactive)
   (verb--ensure-verb-mode)
   (let* ((name (or (and (stringp var) var)
-                   (and (symbolp var) (symbol-name var))
+                   (and (symbolp var) var (symbol-name var))
                    (completing-read "Variable: "
                                     (mapcar (lambda (e)
                                               (symbol-name (car e)))
