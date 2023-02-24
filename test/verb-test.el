@@ -1720,7 +1720,7 @@
     (verb-mode -1)
     (should-not (member #'verb-elisp-completion-at-point completion-at-point-functions))))
 
-(setq elisp-code "system-")
+(defconst elisp-code "system-")
 
 (ert-deftest test-elisp-completion ()
   (with-temp-buffer
@@ -1763,10 +1763,10 @@
 
 ;; Tests using the test server (server.py)
 
-(setq test-file-name (expand-file-name "test/test.org"))
-(setq test-buf (find-file test-file-name))
+(defconst test-file-name (expand-file-name "test/test.org"))
+(defconst test-buf (find-file test-file-name))
 (with-current-buffer test-buf (verb-mode))
-(setq req-sleep-time 0.01)
+(defconst req-sleep-time 0.01)
 
 (defmacro server-test (test-name &rest body)
   (declare (indent 1))
@@ -2189,15 +2189,15 @@
                  (should (= (count-lines (point-min) (point-max))
 		                    (length headers))))))
 
-(setq test-json (join-lines "{"
-			                "  \"foo\": {"
-			                "    \"test\": \"Hello, World!\","
-			                "    \"nested\": {\"x\": 99}"
-			                "  },"
-			                "  \"bar\": [42, 100, true, false, null],"
-			                "  \"empty-array\":  [],"
-			                "  \"empty-object\": {}"
-			                "}"))
+(defconst test-json (join-lines "{"
+			                    "  \"foo\": {"
+			                    "    \"test\": \"Hello, World!\","
+			                    "    \"nested\": {\"x\": 99}"
+			                    "  },"
+			                    "  \"bar\": [42, 100, true, false, null],"
+			                    "  \"empty-array\":  [],"
+			                    "  \"empty-object\": {}"
+			                    "}"))
 
 (ert-deftest test-headers-get ()
   (setq test-headers '(("Content-Type" . "application/json")
