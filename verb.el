@@ -1153,7 +1153,7 @@ buffer used to show the values."
                 (format "%s" (cdr elem)))
         (newline))
       (unless (zerop (buffer-size))
-        (backward-delete-char 1))
+        (delete-char -1))
       (current-buffer))))
 
 (defun verb-read-file (file &optional coding-system)
@@ -1176,7 +1176,7 @@ Set the buffer's `verb-kill-this-buffer' variable locally to t."
             (value (cdr key-value)))
         (insert key ": " value "\n")))
     (unless (zerop (buffer-size))
-      (backward-delete-char 1))))
+      (delete-char -1))))
 
 (defun verb-show-request ()
   "Show the corresponding HTTP request for a received response.
