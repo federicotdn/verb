@@ -71,6 +71,7 @@ Verb requires at least Emacs version 25 to work.
 - [Contributing](#contributing)
 - [Related Packages](#related-packages)
 - [Similar Packages](#similar-packages)
+- [Contributors](#contributors)
 - [License](#license)
 
 ## Installation
