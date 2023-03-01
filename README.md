@@ -883,6 +883,12 @@ Verb's functionality can be extended via some related packages, such as:
 - [walkman](https://github.com/abrochard/walkman): Write HTTP requests in Org mode and send them using `curl`.
 - [http.el](https://github.com/emacs-pe/http.el): I have not tested this package, so I can't provide a comparison.
 
+## Contributors
+These are the users that have contributed to developing Verb, via code and/or documentation (in order of date of first contribution):
+[stig](https://github.com/stig), [flashcode](https://github.com/flashcode), [ananthakumaran](https://github.com/ananthakumaran), [prashantvithani](https://github.com/prashantvithani), [c4710n](https://github.com/c4710n) and [bigodel](https://github.com/bigodel).
+
+Thank you!
+
 ## License
 
 Distributed under the GNU General Public License, version 3.
