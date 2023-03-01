@@ -841,12 +841,17 @@ Return t if there was a heading to move towards to and nil otherwise."
 Does not use property inheritance.  Matching is case-insensitive."
   (verb--back-to-heading)
   (thread-last
-    (org-buffer-property-keys)
-    ;; 1) Get all doc properties and filter them by prefix
-    (seq-filter (lambda (s) (string-prefix-p prefix s t)))
+    ;; 1) Get all doc properties and filter them by prefix. This will push the
+    ;; property already `upcase''d, but only if there is no `string=' the
+    ;; `upcase''d value
+    (seq-reduce (lambda (properties property)
+                 (if (string-prefix-p prefix property t)
+                     (cl-pushnew (upcase property) properties :test #'string=)
+                   properties))
+                (org-buffer-property-keys)
+                '())
     ;; 2) Get the value for each of those properties and return an alist
-    (mapcar (lambda (key)
-              (cons (upcase key) (org-entry-get (point) key 'selective))))
+    (mapcar (lambda (key) (cons key (org-entry-get (point) key 'selective))))
     ;; 3) Discard all (key . nil) elements in the list
     (seq-filter #'cdr)))
 
@@ -946,6 +951,11 @@ CLASS must be an EIEIO class."
   (ignore-errors
     (object-of-class-p obj class)))
 
+(defun verb--try-read-fn-form (form)
+  "Try `read'ing FORM and throw error if failed."
+  (condition-case _err (read form)
+    (end-of-file (user-error "`%s' is a malformed expression" form))))
+
 (defun verb--request-spec-post-process (rs)
   "Validate and prepare request spec RS to be used.
 
@@ -961,17 +971,19 @@ After that, return RS."
               (verb-request-spec :headers verb-base-headers)
               rs)))
   ;; Apply the request mapping function, if present
-  (when-let ((fn-name (cdr (assoc-string "verb-map-request"
-                                         (oref rs metadata) t)))
-             (fn-sym (intern fn-name)))
-    (if (fboundp fn-sym)
-        (setq rs (funcall (symbol-function fn-sym) rs))
-      (user-error "No request mapping function with name \"%s\" exists"
-                  fn-name))
+  (when-let ((form (thread-first
+                     (concat verb--metadata-prefix "map-request")
+                     (assoc-string (oref rs metadata) t)
+                     cdr
+                     verb--nonempty-string))
+             (fn (verb--try-read-fn-form form)))
+    (if (functionp fn)
+        (setq rs (funcall fn rs))
+      (user-error "`%s' is not a valid function" fn))
     (unless (verb--object-of-class-p rs 'verb-request-spec)
-      (user-error (concat "Request mapping function \"%s\" must return a "
+      (user-error (concat "Request mapping function `%s' must return a "
                           "`verb-request-spec' value")
-                  fn-name)))
+                  fn)))
   ;; Validate and return
   (verb-request-spec-validate rs))
 
@@ -1561,9 +1573,11 @@ CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
 See `verb--stored-responses' for more details."
   (when-let ((req (oref response request))
              (metadata (oref req metadata))
-             (val (verb--nonempty-string (cdr (assoc-string
-                                               "verb-store"
-                                               metadata t)))))
+             (val (thread-first
+                    (concat verb--metadata-prefix "store")
+                    (assoc-string metadata t)
+                    cdr
+                    verb--nonempty-string)))
     (setq verb--stored-responses (cl-delete val verb--stored-responses
                                             :key #'car
                                             :test #'equal))

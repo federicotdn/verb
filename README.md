@@ -507,7 +507,7 @@ If you wish to use the last response's headers instead, you can use the `verb-he
 
 ### Storing Responses by Key
 
-When writing a request specification, you may add [properties](https://orgmode.org/manual/Property-syntax.html) via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
+When writing a request specification, you may add [properties](https://orgmode.org/manual/Property-Syntax.html) via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
 
 The `Verb-Store` property has a special meaning. When this property is set, Verb will automatically store the request's response under the specified value. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
 
@@ -565,6 +565,33 @@ baz
 ```
 
 When sent or exported, the request's body will by modified by `remove-body-newlines`, and the resulting body content will be a single line, `foo,bar,baz`.
+
+The function to be mapped can also be a `lambda` expression, like so:
+
+```
+** Upload file to user storage
+:properties:
+:Verb-Map-Request:  (lambda (rs)
+:Verb-Map-Request+:   (thread-last
+:Verb-Map-Request+:     (oref rs body)
+:Verb-Map-Request+:     (replace-regexp-in-string "\n" " ")
+:Verb-Map-Request+:     (oset rs body))
+:Verb-Map-Request+:   rs)
+:end:
+
+post /{{(verb-var user-id)}}/upload
+Content-Type: text/plain; charset=utf-8
+
+foo,
+bar,
+baz
+```
+
+This has the same effect as the previous example. Note also how we've used the feature of adding to a propertie's value. The final `lambda` expression will be equivalent to
+
+```elisp
+(lambda (rs) (thread-last (oref rs body) (replace-regexp-in-string "\n" " ") (oset rs body)) rs)
+```
 
 **Note**: The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overridden values from parent headings.
 

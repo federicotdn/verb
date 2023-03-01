@@ -38,7 +38,7 @@
 (setq org-confirm-babel-evaluate nil)
 
 (defun join-lines (&rest args)
-  (mapconcat #'identity args "\n"))
+  (string-join args "\n"))
 
 (defun text-as-spec (&rest args)
   (verb-request-spec-from-string (mapconcat #'identity args "")))
@@ -351,6 +351,26 @@
     (should (equal (oref req-spec metadata)
 		           '(("VERB-NAME" . "JOHN"))))))
 
+(ert-deftest test-request-spec-from-hierarchy-metadata-multiline ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+            ":properties:"
+            ":Verb-Foo: xyz"
+            ":Verb-Name: X"
+            ":end:"
+            "** Test"
+            ":properties:"
+            ":Verb-Name: JOHN"
+            ":verb-NAME+: DOE"
+            ":verb-name+: Smith"
+            ":end:"
+            "get http://foobar.com"))
+
+    (should (equal (oref (verb--request-spec-from-hierarchy) metadata)
+		           '(("VERB-NAME" . "JOHN DOE Smith"))))))
+
 (ert-deftest test-request-spec-from-hierarchy-map-request ()
   (defun map-req-1 (rs)
     (oset rs body "foobarfoobar")
@@ -390,6 +410,24 @@
                    '(("Content-Type" . "application/json")
                      ("X-Foo" . "Test"))))))
 
+(ert-deftest test-request-spec-from-hierarchy-map-request-lambda ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":verb-map-request:  (lambda (rs)"
+      ":Verb-Map-Request+:   (oset rs body (append (oref rs body) \"foobar\"))"
+      ":VERB-MAP-request+:   rs)"
+      ":end:"
+      "post http://localhost"
+      "Content-Type: application/json"))
+
+    (should (string= (oref (verb--request-spec-from-hierarchy) body)
+                     "foobar"))))
+
 (ert-deftest test-request-spec-from-hierarchy-map-request-no-fn ()
   (with-temp-buffer
     (org-mode)
@@ -399,6 +437,19 @@
       "* Test :verb:"
       ":properties:"
       ":Verb-Map-Request: helloworld"
+      ":end:"
+      "post http://localhost"))
+
+    (should-error (verb--request-spec-from-hierarchy)))
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Map-Request: (not a function)"
       ":end:"
       "post http://localhost"))
 
@@ -418,6 +469,20 @@
       "* Test :verb:"
       ":properties:"
       ":Verb-Map-Request: map-req-3"
+      ":end:"
+      "post http://localhost"))
+
+    (should-error (verb--request-spec-from-hierarchy))))
+
+(ert-deftest test-request-spec-from-hierarchy-map-request-bad-fn-lambda ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Map-Request: (lambda (rs) (oset rs body \"foobar\") \"string\")"
       ":end:"
       "post http://localhost"))
 
@@ -532,10 +597,12 @@
 			            ":properties:"
 			            ":Verb-Y: hello"
 			            ":end:"))
-    (let ((org-use-property-inheritance t))
-      (should (equal (verb--heading-properties "verb-")
-		             '(("VERB-X" . "something")
-                       ("VERB-Y" . "hello")))))))
+    (let* ((org-use-property-inheritance t)
+           (properties (verb--heading-properties "verb-")))
+      (should (equal (assoc-string "VERB-X" properties)
+                     '("VERB-X" . "something")))
+      (should (equal (assoc-string "VERB-Y" properties)
+                     '("VERB-Y" . "hello"))))))
 
 (ert-deftest test-request-spec-from-text-comments-only ()
   (should-error (text-as-spec "# Hello\n" "# world")
