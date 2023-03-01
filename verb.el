@@ -1091,7 +1091,7 @@ unless DEFAULT is non-nil, in which case that value is used instead."
        (user-error "%s (got: \"%s\")"
                    "[verb-var] Variable name must be a symbol, not a string"
                    ',var))
-     (let ((val (assoc-string ',var verb--vars)))
+     (let ((val (assq ',var verb--vars)))
        (unless val
          (setq val (cons ',var
                          (or ,default

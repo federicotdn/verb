@@ -58,16 +58,22 @@ setup-check: ## Install everything required for linting (package-lint and relint
 	$(GIT_CLONE) https://github.com/mattiase/relint.git $(RELINT) $(VENDOR)/relint
 
 lint-file:
+	@printf "\n<<<------------ Lint file: $(filename) ------------>>>\n"
+	@printf "\n--> Step: Byte-compile file\n\n"
 	$(EMACS) --batch -L . \
 			 --eval '(byte-compile-file "$(filename)")' 2>&1 | $(NOOUTPUT)
+	@printf "\n--> Step: Run checkdoc\n\n"
 	yes n | $(EMACS) --batch \
 			 --eval '(find-file "$(filename)")' \
 			 --eval '(setq sentence-end-double-space nil)' \
 			 --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
+	@printf "\n--> Step: Run package-lint\n\n"
 	$(EMACS) --batch -l $(VENDOR)/package-lint/package-lint.el \
 			 -f package-lint-batch-and-exit "$(filename)"
+	@printf "\n--> Step: Run relint\n\n"
 	$(EMACS) --batch -l $(VENDOR)/xr/xr.el -l $(VENDOR)/relint/relint.el \
 			 -f relint-batch "$(filename)"
+	@printf "\n--> Step: Ensure maximum line length\n\n"
 	! grep -n '.\{$(MAX_LINE_LEN)\}' "$(filename)"
 
 check: ## Lint all Emacs Lisp files in the package.
