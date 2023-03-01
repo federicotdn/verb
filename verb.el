@@ -1,6 +1,6 @@
 ;;; verb.el --- Organize and send HTTP requests  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021  Federico Tedin
+;; Copyright (C) 2023  Federico Tedin
 
 ;; Author: Federico Tedin <federicotedin@gmail.com>
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
