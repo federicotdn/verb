@@ -196,7 +196,7 @@ To actually send the HTTP request, use one of the `verb-send-request-on-point` c
 - <kbd>C-c C-r C-r</kbd>: `verb-send-request-on-point-other-window-stay` sends the request and shows the response on a buffer in another window, but doesn't switch to that window.
 - <kbd>C-c C-r C-s</kbd>: `verb-send-request-on-point-other-window` sends the request, shows the response on a buffer in another window, and switches to it.
 - <kbd>C-c C-r C-f</kbd>: `verb-send-request-on-point` sends the request, and shows the response on a buffer in the currently selected window.
-- <kbd>C-c C-r C-m</kbd>: `verb-send-request-on-point-no-window` sends the request, but does not show the response buffer anywhere. The response status (e.g. `HTTP/1.1 200 OK | http://example.com`) will be shown on the minibuffer. This is useful for cases where one is only interested in the request's side effects.
+- <kbd>C-c C-r C-<return></kbd>: `verb-send-request-on-point-no-window` sends the request, but does not show the response buffer anywhere. The response status (e.g. `HTTP/1.1 200 OK | GET http://example.com`) will be shown on the minibuffer. This is useful for cases where one is only interested in the request's side effects.
 
 Request sending is asynchronous - you can do other stuff while Emacs waits for the server's response. If the response is taking too long to be received, a warning will be displayed in the minibuffer. You can modify this behaviour by modifying the `verb-show-timeout-warning` variable's value.
 
