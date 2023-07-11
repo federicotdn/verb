@@ -1380,11 +1380,10 @@ After the user has finished modifying the buffer, they can press
 SOURCE-WINDOW specifies which window must be selected when the request
 is actually sent.  WHERE specifies where the result should be shown
 in."
-  (unwind-protect
-      (let ((new-rs (verb--request-spec-from-hierarchy)))
-        (verb-kill-buffer-and-window)
-        (select-window source-window)
-        (verb--request-spec-send new-rs where))))
+  (let ((new-rs (verb--request-spec-from-hierarchy)))
+    (verb-kill-buffer-and-window)
+    (select-window source-window)
+    (verb--request-spec-send new-rs where)))
 
 ;;;###autoload
 (defun verb-kill-all-response-buffers (&optional keep-windows)
