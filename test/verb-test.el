@@ -1901,6 +1901,17 @@
       (verb-kill-all-response-buffers))
     (should (zerop (length (get-response-buffers))))))
 
+(ert-deftest test-kill-all-response-buffers-keep-n ()
+  (let ((verb-auto-kill-response-buffers 3))
+    (server-test "basic")
+    (server-test "basic")
+    (server-test "basic")
+    (server-test "basic")
+    (server-test "basic")
+    ;; We should have the 3 most recent response buffers, plus
+    ;; the one of the last request sent
+    (should (= (length (get-response-buffers)) 4))))
+
 (ert-deftest test-re-send-request ()
   (server-test "basic"
                (erase-buffer)

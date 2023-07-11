@@ -124,11 +124,17 @@ argument."
   :type '(alist :key-type string :value-type function))
 
 (defcustom verb-auto-kill-response-buffers nil
-  "If non-nil, kill all response buffers before sending a request.
-Set this variable to t if you wish to have old response buffers (named
+  "Whether to kill existing response buffers before sending a request.
+Set this variable to t if you wish to have all old response buffers (named
 *HTTP Response*) automatically killed when sending a new HTTP
-request."
-  :type 'boolean)
+request.
+Set this variable to an integer number if you wish to have all old response
+buffers killed, except the N most recent ones.
+Set this variable to nil if you do not wish to have any old response buffers
+killed before sending a request."
+  :type '(choice (const :tag "Never" nil)
+                 (integer :tag "Kill all but keep N most recent")
+                 (const :tag "Kill all" t)))
 
 (defcustom verb-inhibit-cookies nil
   "If non-nil, do not send or receive cookies when sending requests."
@@ -377,6 +383,10 @@ here under its value.")
 
 (defvar verb--requests-count 0
   "Number of HTTP requests sent in the past.")
+
+(defvar-local verb--response-number nil
+  "The number of this particular HTTP response buffer.")
+(put 'verb--response-number 'permanent-local t)
 
 (defvar verb--inhibit-code-tags-evaluation nil
   "When non-nil, do not evaluate code tags in requests specs.
@@ -1388,13 +1398,20 @@ in."
 ;;;###autoload
 (defun verb-kill-all-response-buffers (&optional keep-windows)
   "Kill all response buffers, and delete their windows.
-If KEEP-WINDOWS is non-nil, do not delete their respective windows."
+If KEEP-WINDOWS is non-nil, do not delete their respective windows.
+If the value of `verb-auto-kill-response-buffers' is an integer,
+kill all response buffers but keep the N most recent ones."
   (interactive)
   (verb--ensure-verb-mode)
-  (dolist (buf (buffer-list))
-    (with-current-buffer buf
-      (when verb-http-response
-        (verb-kill-response-buffer-and-window keep-windows)))))
+  (let ((keep (if (integerp verb-auto-kill-response-buffers)
+                  (max 0 verb-auto-kill-response-buffers)
+                0)))
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (and verb-http-response
+                   (> (1+ (- verb--requests-count verb--response-number))
+                      keep))
+          (verb-kill-response-buffer-and-window keep-windows))))))
 
 ;;;###autoload
 (defun verb-export-request-on-point (&optional name)
@@ -1869,13 +1886,14 @@ If a validation does not pass, signal `user-error'."
 NUM is the request's identification number."
   (with-current-buffer (generate-new-buffer
                         (format "*HTTP Response%s*"
-                                (if verb-auto-kill-response-buffers
+                                (if (eq verb-auto-kill-response-buffers t)
                                     ""
                                   (format " %s" num))))
     ;; Set `verb-http-response's value to something other than nil
     ;; so that `verb-kill-all-response-buffers' can find it even if
     ;; no response was ever received.
     (setq verb-http-response t)
+    (setq verb--response-number num)
     (setq header-line-format "Waiting for HTTP response...")
     (current-buffer)))
 

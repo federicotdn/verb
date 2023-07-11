@@ -24,7 +24,7 @@
 (setq org-confirm-babel-evaluate nil)
 
 ;; Set up Verb
-(setq verb-auto-kill-response-buffers t)
+(setq verb-auto-kill-response-buffers 3)
 
 ;; Keybindings
 (with-eval-after-load 'org (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
