@@ -7,7 +7,7 @@
 
 The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to organize specifications for HTTP requests using Org's tree structure. Properties defined in the child headings extend or sometimes override properties defined in the parent headings - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Org mode with the common functionality provided by other HTTP clients. However, very little knowledge of Org mode is needed to use Verb.
 
-Verb requires at least Emacs version 25 to work.
+Verb requires at least Emacs version 26 to work.
 
 [![CI Status](https://github.com/federicotdn/verb/workflows/CI/badge.svg)](https://github.com/federicotdn/verb/actions)
 [![MELPA](https://melpa.org/packages/verb-badge.svg)](https://melpa.org/#/verb)
@@ -75,7 +75,7 @@ Verb requires at least Emacs version 25 to work.
 - [License](#license)
 
 ## Installation
-### Emacs 25+
+### Emacs 26+
 
 You can install Verb by using the `package-install` command (make sure either [MELPA](https://melpa.org/) or [MELPA Stable](https://stable.melpa.org/) are included in your package sources):
 
@@ -878,7 +878,6 @@ Verb's functionality can be extended via some related packages, such as:
   - Verb uses a tree-like structure to organize request specifications, `restclient` uses a flat one.
   - Verb displays HTTP response headers on a separate buffer, `restclient` includes them commented out in the main response buffer.
   - Verb correctly handles URLs such as https://api.ipify.org?format=json (400 when using `restclient`, 200 when using Verb and `curl`).
-  - Verb has only been tested on Emacs 25+, `restclient` was tested on those and older versions as well (which is important if you're using an older Emacs version).
   - In Verb, lines starting with `#` can be included in a request body (and `*` as well).
   - Licensing (GPLv3 vs. Public domain).
 - [walkman](https://github.com/abrochard/walkman): Write HTTP requests in Org mode and send them using `curl`.

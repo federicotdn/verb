@@ -7,7 +7,7 @@
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: tools
 ;; Package-Version: 2.15.0
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "26.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -861,6 +861,7 @@ Does not use property inheritance.  Matching is case-insensitive."
                 (org-buffer-property-keys)
                 '())
     ;; 2) Get the value for each of those properties and return an alist
+    ;; Note: this will respect the value of `org-use-property-inheritance'
     (mapcar (lambda (key) (cons key (org-entry-get (point) key 'selective))))
     ;; 3) Discard all (key . nil) elements in the list
     (seq-filter #'cdr)))
@@ -966,6 +967,18 @@ CLASS must be an EIEIO class."
   (condition-case _err (read form)
     (end-of-file (user-error "`%s' is a malformed expression" form))))
 
+(defun verb--request-spec-metadata-get (rs key)
+  "Get the metadata value under KEY for request spec RS.
+If no value is found under KEY, return nil.  KEY must not
+have the prefix `verb--metadata-prefix' included.
+If the value associated with KEY is the empty string, return
+nil."
+  (thread-first
+    (concat verb--metadata-prefix key)
+    (assoc-string (oref rs metadata) t)
+    cdr
+    verb--nonempty-string))
+
 (defun verb--request-spec-post-process (rs)
   "Validate and prepare request spec RS to be used.
 
@@ -981,11 +994,7 @@ After that, return RS."
               (verb-request-spec :headers verb-base-headers)
               rs)))
   ;; Apply the request mapping function, if present
-  (when-let ((form (thread-first
-                     (concat verb--metadata-prefix "map-request")
-                     (assoc-string (oref rs metadata) t)
-                     cdr
-                     verb--nonempty-string))
+  (when-let ((form (verb--request-spec-metadata-get rs "map-request"))
              (fn (verb--try-read-fn-form form)))
     (if (functionp fn)
         (setq rs (funcall fn rs))
@@ -1588,12 +1597,7 @@ CONTENT-TYPE must be the value returned by `verb--headers-content-type'."
   "Store RESPONSE depending on its request metadata.
 See `verb--stored-responses' for more details."
   (when-let ((req (oref response request))
-             (metadata (oref req metadata))
-             (val (thread-first
-                    (concat verb--metadata-prefix "store")
-                    (assoc-string metadata t)
-                    cdr
-                    verb--nonempty-string)))
+             (val (verb--request-spec-metadata-get req "store")))
     (setq verb--stored-responses (cl-delete val verb--stored-responses
                                             :key #'car
                                             :test #'equal))
