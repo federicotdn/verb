@@ -6,6 +6,9 @@
 - Changed default binding of `verb-send-request-on-point-no-window` to <kbd>C-c C-r C-<return></kbd>.
 - Allow using single- or multi-line lambda expressions for `Verb-Map-Request`.
 - The `verb-auto-kill-response-buffers` customizable variable can now be set to an integer. This will cause all response buffers to be killed when a request is sent, except the N most recent ones.
+- Calling `verb-set-var` interactively with a prefix argument (<kbd>C-u</kbd>) will copy the variable value to the kill ring.
+- The current value of a Verb variable will be shown in the minibuffer when the point is moved over a code tag containing only `(verb-var xyz)`.
+- `verb-set-var` now has its own input history.
 - Dropped support for Emacs 25. Emacs 26.3 is now the minimum supported version. Verb may still work partially or completely on Emacs 25, but this may change without prior warning.
 
 ## **2.15.0** - 2021-11-03 (MELPA Stable)
