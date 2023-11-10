@@ -2424,6 +2424,27 @@
     (should (search-forward "Accept: text/xhtml"))
     (should (search-forward "Foo: Bar123"))))
 
+(defun should-websocat (rs-text &rest lines)
+  (should (string= (verb--export-to-websocat
+		            (verb-request-spec-from-string rs-text) t)
+		   (apply #'join-lines lines))))
+
+(ert-deftest test-websocat-export ()
+  (should-websocat (join-lines "GET http://example.com")
+	           "websocat 'ws://example.com'")
+
+  (should-websocat (join-lines "GET https://example.com")
+	           "websocat 'wss://example.com'")
+
+  (should-websocat (join-lines
+		    "GET http://example.com"
+		    "Header1: Val1")
+	           "websocat 'ws://example.com' \\\n-H 'Header1: Val1'")
+
+  (should-error (verb--export-to-websocat
+		 (verb-request-spec-from-string
+		  "POST http://abc.com"))))
+
 (defun should-curl (rs-text &rest lines)
   (should (string= (verb--export-to-curl
 		            (verb-request-spec-from-string rs-text) t)

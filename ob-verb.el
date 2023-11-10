@@ -82,6 +82,8 @@ Called when :op `export' is passed to `org-babel-execute:verb'."
            result))))
     ("curl"
      (verb--export-to-curl rs t t))
+    ("websocat"
+     (verb--export-to-websocat rs t t))
     (_
      (user-error "Invalid export function: %s" name))))
 

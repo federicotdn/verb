@@ -10,6 +10,8 @@
 - The current value of a Verb variable will be shown in the minibuffer when the point is moved over a code tag containing only `(verb-var xyz)`.
 - `verb-set-var` now has its own input history.
 - Dropped support for Emacs 25. Emacs 26.3 is now the minimum supported version. Verb may still work partially or completely on Emacs 25, but this may change without prior warning.
+- Added default binding for `verb-show-vars`: <kbd>C-c C-r C-x</kbd>.
+- Added new export format `websocat`.
 
 ## **2.15.0** - 2021-11-03 (MELPA Stable)
 - Fixed font locking on indented Babel source blocks.

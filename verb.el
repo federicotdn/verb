@@ -115,7 +115,8 @@ This handler is used when no appropriate handler was found in
 (defcustom verb-export-functions
   '(("verb" . verb--export-to-verb)
     ("curl" . verb--export-to-curl)
-    ("eww" . verb--export-to-eww))
+    ("eww" . verb--export-to-eww)
+    ("websocat" . verb--export-to-websocat))
   "Alist of request specification export functions.
 Each element should have the form (NAME . FN), where NAME should be a
 user-friendly name for this function, and FN should be the function
@@ -269,8 +270,8 @@ Note the the point must be between the two code tag delimiters
 (defcustom verb-enable-var-preview t
   "When set to a non-nil value, enable preview of Verb variables.
 A preview of the value of a Verb variable will be shown in the
-minibuffer, when the point is moved over a code tag containing a
-call to `verb-var'."
+minibuffer, when the point is moved over a code tag containing only
+a call to `verb-var'."
   :type 'boolean)
 
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
@@ -1002,10 +1003,9 @@ CLASS must be an EIEIO class."
 
 (defun verb--request-spec-metadata-get (rs key)
   "Get the metadata value under KEY for request spec RS.
-If no value is found under KEY, return nil.  KEY must not
-have the prefix `verb--metadata-prefix' included.
-If the value associated with KEY is the empty string, return
-nil."
+If no value is found under KEY, or if the value associated is the
+empty string, return nil.  KEY must NOT have the prefix
+`verb--metadata-prefix' included."
   (thread-first
     (concat verb--metadata-prefix key)
     (assoc-string (oref rs metadata) t)
@@ -1527,6 +1527,30 @@ be displayed."
   (unless (string= (oref rs method) "GET")
     (user-error "%s" "Can only perform GET requests using EWW"))
   (verb--request-spec-send-eww rs))
+
+(defun verb--export-to-websocat (rs &optional no-message no-kill)
+  "Export a request spec RS to websocat format.
+Add the generated command to the kill ring and return it.  For more
+information about websocat see URL `https://github.com/vi/websocat'.
+If NO-MESSAGE is non-nil, do not display a message on the minibuffer.
+If NO-KILL is non-nil, do not add the command to the kill ring."
+  (with-temp-buffer
+    (unless (string= (oref rs method) "GET")
+      (user-error "%s" "Can only export GET requests to websocat"))
+    (let ((url (concat "ws"
+                       (string-remove-prefix
+                        "http" (verb-request-spec-url-to-string rs)))))
+      (insert "websocat '" url "'"))
+    (dolist (key-value (oref rs headers))
+      (insert " \\\n")
+      (insert "-H '" (car key-value) ": " (cdr key-value) "'"))
+    (let ((result (verb--buffer-string-no-properties)))
+      (unless no-kill
+        (kill-new result))
+      (unless no-message
+        (message "Websocat command copied to the kill ring"))
+      ;; Return the generated command
+      result)))
 
 (defun verb--export-to-curl (rs &optional no-message no-kill)
   "Export a request spec RS to curl format.
