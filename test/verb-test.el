@@ -1138,6 +1138,15 @@
   (with-temp-buffer
     (should-not verb--vars)))
 
+(ert-deftest test-verb-set-var-copy-kill-ring ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (verb--eval-string "(verb-var test-var-foo \"foo\")" (current-buffer))
+    (let ((current-prefix-arg '(4)))
+      (verb-set-var 'test-var-foo 123)
+      (should (string= (car kill-ring) "foo")))))
+
 (ert-deftest test-verb-set-var-empty-name ()
   (with-temp-buffer
     (org-mode)
@@ -1778,6 +1787,17 @@
     (should font-lock-keywords)
     (verb-mode -1)
     (should (equal font-lock-keywords '(t nil)))))
+
+(ert-deftest test-verb-var-preview ()
+  (let ((code "(verb-var foobar 123123)"))
+    (with-temp-buffer
+      (org-mode)
+      (verb-mode)
+      (insert "{{" code "}}")
+      (verb--eval-string code (current-buffer))
+      (backward-char 4)
+      (message nil)
+      (should (string= "Current value for foobar: 123123" (verb--var-preview))))))
 
 (ert-deftest test-disable-verb-mode-completion-at-point ()
   (with-temp-buffer

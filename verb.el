@@ -266,6 +266,13 @@ Note the the point must be between the two code tag delimiters
 \(e.g.  \"{{\" and \"}}\") for the completion function to work."
   :type 'boolean)
 
+(defcustom verb-enable-var-preview t
+  "When set to a non-nil value, enable preview of Verb variables.
+A preview of the value of a Verb variable will be shown in the
+minibuffer, when the point is moved over a code tag containing a
+call to `verb-var'."
+  :type 'boolean)
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
                                 :weight bold))
   "Face for highlighting HTTP methods.")
@@ -381,6 +388,9 @@ here under its value.")
 (defvar-local verb--vars nil
   "List of values set with `verb-var', with their corresponding names.")
 
+(defvar verb--set-var-hist nil
+  "Input history for `verb-set-var'.")
+
 (defvar verb--requests-count 0
   "Number of HTTP requests sent in the past.")
 
@@ -409,6 +419,7 @@ other buffers without actually expanding the embedded code tags.")
     (define-key map (kbd "C-b") #'verb-export-request-on-point-verb)
     (define-key map (kbd "C-w") #'verb-export-request-on-point-eww)
     (define-key map (kbd "C-v") #'verb-set-var)
+    (define-key map (kbd "C-x") #'verb-show-vars)
     map)
   "Keymap for `verb-mode' commands.
 Bind this to an easy-to-reach key in Org mode in order to use Verb
@@ -487,6 +498,7 @@ more details on how to use it."
           (add-hook 'completion-at-point-functions
                     #'verb-elisp-completion-at-point
                     nil 'local))
+        (add-hook 'post-command-hook #'verb--var-preview nil t)
         (when (buffer-file-name)
           (verb--log nil 'I
                      "Verb mode enabled in buffer: %s"
@@ -670,6 +682,27 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
   "Show the Customize menu buffer for the Verb package group."
   (interactive)
   (customize-group "verb"))
+
+(defun verb--var-preview ()
+  "Preview the value of a Verb variable in the minibuffer."
+  (when-let* (((not (current-message)))
+              (verb-enable-var-preview)
+              ;; Get the contents inside the code tag: {{<content>}}
+              (beg (save-excursion
+                     (when (search-backward (car verb-code-tag-delimiters)
+                                            (line-beginning-position) t)
+                       (match-end 0))))
+              (end (save-excursion
+                     (when (search-forward (cdr verb-code-tag-delimiters)
+                                           (line-end-position) t)
+                       (match-beginning 0))))
+              (code (buffer-substring-no-properties beg end))
+              (form (car (ignore-errors (read-from-string code))))
+              ((eq (car form) 'verb-var))
+              (var (cadr form))
+              (val (assq var verb--vars)))
+    (let ((message-log-max nil))
+      (message "Current value for %s: %s" (car val) (cdr val)))))
 
 (defun verb-elisp-completion-at-point ()
   "Completion at point function for Lisp code tags."
@@ -1124,7 +1157,10 @@ unless DEFAULT is non-nil, in which case that value is used instead."
   "Set new value for variable VAR previously set with `verb-var'.
 When called interactively, prompt the user for a variable that has
 been set once with `verb-var', and then prompt for VALUE.  Otherwise,
-use string VAR and value VALUE."
+use string VAR and value VALUE.
+
+When called with a non-nil prefix argument, copy the current variable
+value to the kill ring instead of setting it, and ignore VALUE."
   (interactive)
   (verb--ensure-verb-mode)
   (let* ((name (or (and (stringp var) var)
@@ -1132,15 +1168,25 @@ use string VAR and value VALUE."
                    (completing-read "Variable: "
                                     (mapcar (lambda (e)
                                               (symbol-name (car e)))
-                                            verb--vars))))
+                                            verb--vars)
+                                    nil nil nil
+                                    'verb--set-var-hist)))
          (key (intern name))
-         (val (or value (read-string (format "Set value for %s: " name))))
+         (val (or current-prefix-arg
+                  value
+                  (read-string (format "Set value for %s: " name))))
          (elem (assq key verb--vars)))
     (when (string-empty-p name)
       (user-error "%s" "Variable name can't be empty"))
     (if elem
-        (setcdr elem val)
-      (push (cons key val) verb--vars))))
+        (if current-prefix-arg
+            (progn
+              (kill-new (format "%s" (cdr elem)))
+              (message "Variable value copied to the kill ring"))
+          (setcdr elem val))
+      (if current-prefix-arg
+          (user-error "%s" "Variable has no value set")
+        (push (cons key val) verb--vars)))))
 
 (defun verb-unset-vars ()
   "Unset all variables set with `verb-var' or `verb-set-var'.
@@ -1357,7 +1403,7 @@ After the user has finished modifying the buffer, they can press
   ;; Don't require tagging for this temp buffer
   (set (make-local-variable 'verb-tag) t)
 
-  ;; Copy over verb variables
+  ;; Copy over Verb variables
   (setq verb--vars verb-variables)
 
   ;; Insert the request spec

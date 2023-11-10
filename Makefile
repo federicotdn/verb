@@ -2,14 +2,13 @@ SHELL = bash
 EMACS ?= emacs
 PORT ?= 8000
 NOOUTPUT = grep -v '^Loading' | { ! grep '^'; }
-VENDOR = vendor
+PACKAGES = packages
 FONT_SIZE ?= 180
 ENV ?= env
 ACTIVATE = source $(ENV)/bin/activate
 MAX_LINE_LEN = 80
 WAIT_TIME ?= 0.5
 SELECTOR ?= t
-GIT_CLONE = git clone --depth 1
 
 .PHONY: test
 
@@ -46,16 +45,15 @@ server-bg:
 server-kill:
 	kill $$(cat test/server.pid)
 
-clean: ## Clean up all temporary files created during testing/linting.
+clean: ## Clean up all temporary files created during testing/runtime.
 	rm -f verb-autoloads.el test/server.pid
 	find . -name "*.elc" -type f -delete
 
-setup-check: ## Install everything required for linting (package-lint and relint).
-	rm -rf $(VENDOR)
-	mkdir $(VENDOR)
-	$(GIT_CLONE) https://github.com/purcell/package-lint.git $(VENDOR)/package-lint
-	$(GIT_CLONE) https://github.com/mattiase/xr.git $(VENDOR)/xr
-	$(GIT_CLONE) https://github.com/mattiase/relint.git $(RELINT) $(VENDOR)/relint
+setup-check: ## Install packages required for linting.
+	rm -rf $(PACKAGES)
+	$(EMACS) --batch \
+		 --eval "(setq package-user-dir \"$$PWD/$(PACKAGES)\")" \
+		 -l test/init-check.el
 
 lint-file:
 	@printf "\n<<<------------ Lint file: $(filename) ------------>>>\n"
@@ -68,10 +66,14 @@ lint-file:
 			 --eval '(setq sentence-end-double-space nil)' \
 			 --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
 	@printf "\n--> Step: Run package-lint\n\n"
-	$(EMACS) --batch -l $(VENDOR)/package-lint/package-lint.el \
+	$(EMACS) --batch --eval "(setq package-user-dir \"$$PWD/$(PACKAGES)\")" \
+			 --eval "(package-initialize)" \
+			 --eval "(require 'package-lint)" \
 			 -f package-lint-batch-and-exit "$(filename)"
 	@printf "\n--> Step: Run relint\n\n"
-	$(EMACS) --batch -l $(VENDOR)/xr/xr.el -l $(VENDOR)/relint/relint.el \
+	$(EMACS) --batch --eval "(setq package-user-dir \"$$PWD/$(PACKAGES)\")" \
+			 --eval "(package-initialize)" \
+			 --eval "(require 'relint)" \
 			 -f relint-batch "$(filename)"
 	@printf "\n--> Step: Ensure maximum line length\n\n"
 	! grep -n '.\{$(MAX_LINE_LEN)\}' "$(filename)"

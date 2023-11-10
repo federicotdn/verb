@@ -117,3 +117,4 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-base-headers**
 - User Option: **verb-trim-body-end**
 - User Option: **verb-enable-elisp-completion**
+- User Option: **verb-enable-var-preview**
