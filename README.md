@@ -774,6 +774,7 @@ Content-Type: application/json; charset=utf-8
 If you wish to export the request to a particular format instead, use the `:op export ...` header argument on your source block. These are the values it can be used with:
 - `:op export curl`: Export this request to `curl` format and insert the results below.
 - `:op export verb`: Export this request to Verb format and insert the results below.
+- `:op export websocat`: Export this request to `websocat` format and insert the results below.
 
 So for example, if you wanted to export the previous example to `curl`, you would need to write:
 ```
