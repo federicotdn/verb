@@ -113,16 +113,16 @@ This handler is used when no appropriate handler was found in
                                 (const :tag "Text" nil))))
 
 (defcustom verb-export-functions
-  '(("verb" . verb--export-to-verb)
-    ("curl" . verb--export-to-curl)
-    ("eww" . verb--export-to-eww)
-    ("websocat" . verb--export-to-websocat))
+  '(("verb" ?v verb--export-to-verb)
+    ("curl" ?c verb--export-to-curl)
+    ("eww" ?e verb--export-to-eww)
+    ("websocat" ?w verb--export-to-websocat))
   "Alist of request specification export functions.
 Each element should have the form (NAME . FN), where NAME should be a
 user-friendly name for this function, and FN should be the function
 itself.  FN should take a `verb-request-spec' object as its only
 argument."
-  :type '(alist :key-type string :value-type function))
+  :type '(repeat (list string character function)))
 
 (defcustom verb-auto-kill-response-buffers nil
   "Whether to kill existing response buffers before sending a request.
@@ -416,9 +416,6 @@ other buffers without actually expanding the embedded code tags.")
     (define-key map (kbd "C-f") #'verb-send-request-on-point)
     (define-key map (kbd "C-k") #'verb-kill-all-response-buffers)
     (define-key map (kbd "C-e") #'verb-export-request-on-point)
-    (define-key map (kbd "C-u") #'verb-export-request-on-point-curl)
-    (define-key map (kbd "C-b") #'verb-export-request-on-point-verb)
-    (define-key map (kbd "C-w") #'verb-export-request-on-point-eww)
     (define-key map (kbd "C-v") #'verb-set-var)
     (define-key map (kbd "C-x") #'verb-show-vars)
     map)
@@ -475,6 +472,7 @@ If REMOVE is nil, add the necessary keywords to
         ["Export request to curl" verb-export-request-on-point-curl]
         ["Export request to Verb" verb-export-request-on-point-verb]
         ["Export request to EWW" verb-export-request-on-point-eww]
+        ["Export request to websocat" verb-export-request-on-point-websocat]
         "--"
         ["Customize Verb" verb-customize-group]
         ["Show log" verb-show-log]))
@@ -1482,13 +1480,25 @@ explicitly.  Lisp code tags are evaluated when exporting."
   (interactive)
   (verb--ensure-verb-mode)
   (let ((rs (verb--request-spec-from-hierarchy))
-        (exporter (or name
-                      (completing-read "Export function: "
-                                       verb-export-functions
-                                       nil t))))
-    (when-let ((fn (cdr (assoc exporter verb-export-functions))))
-      (funcall fn rs)
-      (verb--log nil 'I "Exported request to %s format" exporter))))
+        (prompt (string-join
+                 (append
+                  (mapcar (lambda (x)
+                            (format "[%c]: Export to %s" (nth 1 x) (nth 0 x)))
+                          verb-export-functions)
+                  '("Choice: "))
+                 "\n"))
+        (choice))
+    (unless name
+      (setq choice (read-char-choice prompt
+                                     (mapcar (lambda (x)
+                                               (nth 1 x))
+                                             verb-export-functions))))
+    (mapc (lambda (x)
+            (when (or (string= name (nth 0 x))
+                      (equal choice (nth 1 x)))
+              (funcall (nth 2 x) rs)
+              (verb--log nil 'I "Exported request to %s format" (nth 0 x))))
+          verb-export-functions)))
 
 ;;;###autoload
 (defun verb-export-request-on-point-verb ()
@@ -1510,6 +1520,13 @@ See `verb--export-to-curl' for more information."
 See `verb--export-to-eww' for more information."
   (interactive)
   (verb-export-request-on-point "eww"))
+
+;;;###autoload
+(defun verb-export-request-on-point-websocat ()
+  "Export request on point to websocat format.
+See `verb--export-to-websocat' for more information."
+  (interactive)
+  (verb-export-request-on-point "websocat"))
 
 (defun verb--export-to-verb (rs)
   "Export a request spec RS to Verb format.

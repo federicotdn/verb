@@ -12,6 +12,8 @@
 - Dropped support for Emacs 25. Emacs 26.3 is now the minimum supported version. Verb may still work partially or completely on Emacs 25, but this may change without prior warning.
 - Added default binding for `verb-show-vars`: <kbd>C-c C-r C-x</kbd>.
 - Added new export format `websocat`.
+- Added new function `verb-export-request-on-point-websocat`.
+- Removed default keybindings for all `verb-export-request-on-point-*` functions, and made export function querying faster in `verb-export-request-on-point`.
 
 ## **2.15.0** - 2021-11-03 (MELPA Stable)
 - Fixed font locking on indented Babel source blocks.

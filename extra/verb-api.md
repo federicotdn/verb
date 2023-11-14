@@ -62,6 +62,7 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - Command: **verb-export-request-on-point-verb**
 - Command: **verb-export-request-on-point-curl**
 - Command: **verb-export-request-on-point-eww**
+- Command: **verb-export-request-on-point-websocat**
 - Command: **verb-kill-response-buffer-and-window** *&optional keep-window*
 - Command: **verb-kill-buffer-and-window**
 - Command: **verb-toggle-show-headers**
