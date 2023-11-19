@@ -686,6 +686,9 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
   "Preview the value of a Verb variable in the minibuffer."
   (when-let* (((not (current-message)))
               (verb-enable-var-preview)
+              ((not (string= (buffer-substring (line-beginning-position)
+                                               (1+ (line-beginning-position)))
+                             "#")))
               ;; Get the contents inside the code tag: {{<content>}}
               (beg (save-excursion
                      (when (search-backward (car verb-code-tag-delimiters)
@@ -1930,6 +1933,16 @@ If CHARSET is nil, use `verb-default-request-charset'."
   "Replacement function for `url-http-user-agent-string'."
   nil)
 
+(defun verb--zlib-decompress-region (args)
+  "Advice ARGS for function `zlib-decompress-region'.
+The function ensures that the ALLOW-PARTIAL argument is always set to
+nil when the original function is called.  Setting it to a non-nil
+value will make `zlib-decompress-region' partially decompress
+contents, which means it can potentially delete a response body if the
+`Content-Encoding' header was incorrectly set to `gzip' when the
+response body was actually not compressed."
+  (list (nth 0 args) (nth 1 args)))
+
 (defun verb--advice-url ()
   "Advice some url.el functions.
 For more information, see `verb-advice-url'."
@@ -1937,7 +1950,11 @@ For more information, see `verb-advice-url'."
     (advice-add 'url-http-user-agent-string :override
                 #'verb--http-user-agent-string)
     (advice-add 'url-http-handle-authentication :override
-                #'verb--http-handle-authentication)))
+                #'verb--http-handle-authentication)
+    (when (and (fboundp 'zlib-available-p)
+               (zlib-available-p))
+      (advice-add 'zlib-decompress-region :filter-args
+                  #'verb--zlib-decompress-region))))
 
 (defun verb--unadvice-url ()
   "Undo advice from `verb--advice-url'."
@@ -1945,7 +1962,11 @@ For more information, see `verb-advice-url'."
     (advice-remove 'url-http-user-agent-string
                    #'verb--http-user-agent-string)
     (advice-remove 'url-http-handle-authentication
-                   #'verb--http-handle-authentication)))
+                   #'verb--http-handle-authentication)
+    (when (and (fboundp 'zlib-available-p)
+	       (zlib-available-p))
+      (advice-remove 'zlib-decompress-region
+                     #'verb--zlib-decompress-region))))
 
 (defun verb--get-accept-header (headers)
   "Retrieve the value of the \"Accept\" header from alist HEADERS.
@@ -2029,7 +2050,7 @@ loaded into."
                    h)))
 
     ;; Maybe log a warning if body is present but method usually
-    ;; doesn't take one
+    ;; doesn't take one (like GET)
     (when (and (member url-request-method verb--bodyless-http-methods)
                url-request-data)
       (verb--log num 'W "Body is present but request method is %s"

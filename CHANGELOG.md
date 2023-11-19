@@ -14,6 +14,7 @@
 - Added new export format `websocat`.
 - Added new function `verb-export-request-on-point-websocat`.
 - Removed default keybindings for all `verb-export-request-on-point-*` functions, and made export function querying faster in `verb-export-request-on-point`.
+- Add additional advice to url.el to prevent it from dropping the response body when the `Content-Encoding` is set to `gzip` but the contents themselves are not actually compressed.
 
 ## **2.15.0** - 2021-11-03 (MELPA Stable)
 - Fixed font locking on indented Babel source blocks.

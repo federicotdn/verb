@@ -187,6 +187,11 @@ async def sorted_headers(request: Request) -> HTTPResponse:
     return response.text("\n".join(headers), headers={"Content-Type": "text/plain"})
 
 
+@app.route("/not-compressed")
+async def not_compressed(request: Request) -> HTTPResponse:
+    return response.text("hello, world!", headers={"Content-Encoding": "gzip"})
+
+
 app.static("/image.png", "test/image.png")
 
 

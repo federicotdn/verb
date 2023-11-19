@@ -2240,19 +2240,28 @@
 (ert-deftest test-auto-kill-buffers ()
   (let ((num-buffers (length (buffer-list)))
         (verb-auto-kill-response-buffers t))
+    (verb-kill-all-response-buffers)
     (server-test "basic")
     (server-test "basic-json")
     (server-test "no-user-agent")
     (garbage-collect)
+    (kill-buffer "*Native-compile-Log*")
     (should (= (1+ num-buffers) (length (buffer-list))))))
 
 (ert-deftest test-headers ()
   (server-test "headers"
                (should (string= (buffer-string) "HeadersTest"))
                (should (string= (cdr (assoc "x-test-1"
-				            (oref verb-http-response headers))) "foo"))
+				            (oref verb-http-response headers)))
+                                "foo"))
                (should (string= (cdr (assoc "OTHER-TEST"
-				            (oref verb-http-response headers))) "bar"))))
+				            (oref verb-http-response headers)))
+                                "bar"))))
+
+(ert-deftest test-wrong-content-encoding-header ()
+  (server-test "not-compressed"
+               (should (string= "hello, world!"
+                                (buffer-string)))))
 
 (ert-deftest test-zero-bytes-json ()
   (server-test "zero-bytes-json"
