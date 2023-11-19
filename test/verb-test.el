@@ -2245,7 +2245,8 @@
     (server-test "basic-json")
     (server-test "no-user-agent")
     (garbage-collect)
-    (kill-buffer "*Native-compile-Log*")
+    (ignore-errors
+      (kill-buffer "*Native-compile-Log*"))
     (should (= (1+ num-buffers) (length (buffer-list))))))
 
 (ert-deftest test-headers ()
