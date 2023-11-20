@@ -1,6 +1,6 @@
 ;;; verb-test.el --- Tests for verb  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021  Federico Tedin
+;; Copyright (C) 2023  Federico Tedin
 
 ;; Author: Federico Tedin <federicotedin@gmail.com>
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
@@ -38,7 +38,7 @@
 (setq org-confirm-babel-evaluate nil)
 
 (defun join-lines (&rest args)
-  (mapconcat #'identity args "\n"))
+  (string-join args "\n"))
 
 (defun text-as-spec (&rest args)
   (verb-request-spec-from-string (mapconcat #'identity args "")))
@@ -315,14 +315,14 @@
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy)))
 
-    (setq outline-test
+  (setq outline-test
 	(join-lines "* Test :verb:"
 		    "get"))
-    (with-temp-buffer
-      (org-mode)
-      (verb-mode)
-      (insert outline-test)
-      (should-error (verb--request-spec-from-hierarchy)))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert outline-test)
+    (should-error (verb--request-spec-from-hierarchy)))
 
   (setq outline-test
 	(join-lines "* Test :verb:"
@@ -350,6 +350,26 @@
     (setq req-spec (verb--request-spec-from-hierarchy))
     (should (equal (oref req-spec metadata)
 		   '(("VERB-NAME" . "JOHN"))))))
+
+(ert-deftest test-request-spec-from-hierarchy-metadata-multiline ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+                        ":properties:"
+                        ":Verb-Foo: xyz"
+                        ":Verb-Name: X"
+                        ":end:"
+                        "** Test"
+                        ":properties:"
+                        ":Verb-Name: JOHN"
+                        ":verb-NAME+: DOE"
+                        ":verb-name+: Smith"
+                        ":end:"
+                        "get http://foobar.com"))
+
+    (should (equal (oref (verb--request-spec-from-hierarchy) metadata)
+		   '(("VERB-NAME" . "JOHN DOE Smith"))))))
 
 (ert-deftest test-request-spec-from-hierarchy-map-request ()
   (defun map-req-1 (rs)
@@ -390,6 +410,24 @@
                    '(("Content-Type" . "application/json")
                      ("X-Foo" . "Test"))))))
 
+(ert-deftest test-request-spec-from-hierarchy-map-request-lambda ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":verb-map-request:  (lambda (rs)"
+      ":Verb-Map-Request+:   (oset rs body (append (oref rs body) \"foobar\"))"
+      ":VERB-MAP-request+:   rs)"
+      ":end:"
+      "post http://localhost"
+      "Content-Type: application/json"))
+
+    (should (string= (oref (verb--request-spec-from-hierarchy) body)
+                     "foobar"))))
+
 (ert-deftest test-request-spec-from-hierarchy-map-request-no-fn ()
   (with-temp-buffer
     (org-mode)
@@ -399,6 +437,19 @@
       "* Test :verb:"
       ":properties:"
       ":Verb-Map-Request: helloworld"
+      ":end:"
+      "post http://localhost"))
+
+    (should-error (verb--request-spec-from-hierarchy)))
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Map-Request: (not a function)"
       ":end:"
       "post http://localhost"))
 
@@ -418,6 +469,20 @@
       "* Test :verb:"
       ":properties:"
       ":Verb-Map-Request: map-req-3"
+      ":end:"
+      "post http://localhost"))
+
+    (should-error (verb--request-spec-from-hierarchy))))
+
+(ert-deftest test-request-spec-from-hierarchy-map-request-bad-fn-lambda ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Map-Request: (lambda (rs) (oset rs body \"foobar\") \"string\")"
       ":end:"
       "post http://localhost"))
 
@@ -497,7 +562,7 @@
     (let ((org-use-tag-inheritance nil))
       (should (equal (verb--heading-tags) '("c")))))
 
-    (with-temp-buffer
+  (with-temp-buffer
     (org-mode)
     (verb-mode)
     (insert (join-lines "* H1"
@@ -518,24 +583,26 @@
 			":Verb-Y: foo"
 			":end:"))
     (should (equal (verb--heading-properties "verb-")
-		     '(("VERB-Y" . "foo"))))))
+		   '(("VERB-Y" . "foo"))))))
 
 (ert-deftest test-verb-heading-properties-with-inheritance ()
   (with-temp-buffer
     (org-mode)
     (insert (join-lines "* H1"
-			            ":properties:"
-			            ":Verb-X: something"
-			            ":Verb-Y: foobar"
-			            ":end:"
-			            "** H2"
-			            ":properties:"
-			            ":Verb-Y: hello"
-			            ":end:"))
-    (let ((org-use-property-inheritance t))
-      (should (equal (verb--heading-properties "verb-")
-		             '(("VERB-X" . "something")
-                       ("VERB-Y" . "hello")))))))
+			":properties:"
+			":Verb-X: something"
+			":Verb-Y: foobar"
+			":end:"
+			"** H2"
+			":properties:"
+			":Verb-Y: hello"
+			":end:"))
+    (let* ((org-use-property-inheritance t)
+           (properties (verb--heading-properties "verb-")))
+      (should (equal (assoc-string "VERB-X" properties)
+                     '("VERB-X" . "something")))
+      (should (equal (assoc-string "VERB-Y" properties)
+                     '("VERB-Y" . "hello"))))))
 
 (ert-deftest test-request-spec-from-text-comments-only ()
   (should-error (text-as-spec "# Hello\n" "# world")
@@ -931,7 +998,7 @@
 			  "Accept : text\n"
 			  "Foo:bar\n"
 			  "Quux:    Quuz\n"
-              "Example:      HeaderValue   \n"
+                          "Example:      HeaderValue   \n"
 			  " Referer   :host\n"
 			  "\n"
 			  "Content\n"))
@@ -942,20 +1009,20 @@
 		 (list (cons "Accept" "text")
 		       (cons "Foo" "bar")
 		       (cons "Quux" "Quuz")
-               (cons "Example" "HeaderValue")
+                       (cons "Example" "HeaderValue")
 		       (cons "Referer" "host"))))
   (should (string= (oref aux :body) "Content\n")))
 
 (ert-deftest test-request-spec-headers-underscore ()
   (setq aux (text-as-spec "get http://example.com/foobar\n"
-			              "Accept: text\n"
-			              "Foo_Bar: xyz\n"
+			  "Accept: text\n"
+			  "Foo_Bar: xyz\n"
                           "Baz-Bar: quux\n"
-			              "\n"
-			              "Content\n"))
+			  "\n"
+			  "Content\n"))
   (should (equal (oref aux :headers)
-		         '(("Accept" . "text")
-		           ("Foo_Bar" . "xyz")
+		 '(("Accept" . "text")
+		   ("Foo_Bar" . "xyz")
                    ("Baz-Bar" . "quux")))))
 
 (ert-deftest test-request-spec-override ()
@@ -1070,6 +1137,15 @@
     (should (= (length verb--vars) 3)))
   (with-temp-buffer
     (should-not verb--vars)))
+
+(ert-deftest test-verb-set-var-copy-kill-ring ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (verb--eval-string "(verb-var test-var-foo \"foo\")" (current-buffer))
+    (let ((current-prefix-arg '(4)))
+      (verb-set-var 'test-var-foo 123)
+      (should (string= (car kill-ring) "foo")))))
 
 (ert-deftest test-verb-set-var-empty-name ()
   (with-temp-buffer
@@ -1712,6 +1788,17 @@
     (verb-mode -1)
     (should (equal font-lock-keywords '(t nil)))))
 
+(ert-deftest test-verb-var-preview ()
+  (let ((code "(verb-var foobar 123123)"))
+    (with-temp-buffer
+      (org-mode)
+      (verb-mode)
+      (insert "{{" code "}}")
+      (verb--eval-string code (current-buffer))
+      (backward-char 4)
+      (message nil)
+      (should (string= "Current value for foobar: 123123" (verb--var-preview))))))
+
 (ert-deftest test-disable-verb-mode-completion-at-point ()
   (with-temp-buffer
     (should-not (member #'verb-elisp-completion-at-point completion-at-point-functions))
@@ -1720,7 +1807,7 @@
     (verb-mode -1)
     (should-not (member #'verb-elisp-completion-at-point completion-at-point-functions))))
 
-(setq elisp-code "system-")
+(defconst elisp-code "system-")
 
 (ert-deftest test-elisp-completion ()
   (with-temp-buffer
@@ -1748,14 +1835,14 @@
                     completion-at-point-functions))))
 
 (ert-deftest test-elisp-completion-outside-tag ()
-    (with-temp-buffer
+  (with-temp-buffer
     (org-mode)
     (verb-mode)
     (insert elisp-code)
     (should-not (verb-elisp-completion-at-point))))
 
 (ert-deftest test-elisp-completion-partial-tag ()
-    (with-temp-buffer
+  (with-temp-buffer
     (org-mode)
     (verb-mode)
     (insert "{{" elisp-code)
@@ -1763,10 +1850,10 @@
 
 ;; Tests using the test server (server.py)
 
-(setq test-file-name (expand-file-name "test/test.org"))
-(setq test-buf (find-file test-file-name))
+(defconst test-file-name (expand-file-name "test/test.org"))
+(defconst test-buf (find-file test-file-name))
 (with-current-buffer test-buf (verb-mode))
-(setq req-sleep-time 0.01)
+(defconst req-sleep-time 0.01)
 
 (defmacro server-test (test-name &rest body)
   (declare (indent 1))
@@ -1808,17 +1895,17 @@
   (let ((verb--requests-count 41)
         (verb-auto-kill-response-buffers nil))
     (server-test "basic"
-      (should (string-match-p "\\*HTTP Response 42\\*"
-			      (buffer-name)))))
+                 (should (string-match-p "\\*HTTP Response 42\\*"
+			                 (buffer-name)))))
 
   (let ((verb-auto-kill-response-buffers t))
     (server-test "basic"
-      (should (string= "*HTTP Response*" (buffer-name))))))
+                 (should (string= "*HTTP Response*" (buffer-name))))))
 
 (ert-deftest test-request-body-warning ()
   (clear-log)
   (server-test "get-with-body"
-    (should-log-contain "Body is present but request method is GET")))
+               (should-log-contain "Body is present but request method is GET")))
 
 (defun get-response-buffers ()
   (seq-filter (lambda (b) (buffer-local-value 'verb-http-response b))
@@ -1834,14 +1921,25 @@
       (verb-kill-all-response-buffers))
     (should (zerop (length (get-response-buffers))))))
 
+(ert-deftest test-kill-all-response-buffers-keep-n ()
+  (let ((verb-auto-kill-response-buffers 3))
+    (server-test "basic")
+    (server-test "basic")
+    (server-test "basic")
+    (server-test "basic")
+    (server-test "basic")
+    ;; We should have the 3 most recent response buffers, plus
+    ;; the one of the last request sent
+    (should (= (length (get-response-buffers)) 4))))
+
 (ert-deftest test-re-send-request ()
   (server-test "basic"
-    (erase-buffer)
-    (should (string= (buffer-string) ""))
-    (with-current-buffer (verb-re-send-request)
-      (while (eq verb-http-response t)
-        (sleep-for req-sleep-time))
-      (should (string= (buffer-string) "Hello, World!")))))
+               (erase-buffer)
+               (should (string= (buffer-string) ""))
+               (with-current-buffer (verb-re-send-request)
+                 (while (eq verb-http-response t)
+                   (sleep-for req-sleep-time))
+                 (should (string= (buffer-string) "Hello, World!")))))
 
 (ert-deftest test-send-no-window ()
   (with-temp-buffer
@@ -1927,11 +2025,11 @@
 
 (ert-deftest test-repeated-args ()
   (server-test "repeated-args"
-    (should (string= (buffer-string)
-		     (join-lines "a=1"
-				 "a=2"
-				 "a=3"
-				 "b=42")))))
+               (should (string= (buffer-string)
+		                (join-lines "a=1"
+				            "a=2"
+				            "a=3"
+				            "b=42")))))
 
 (ert-deftest test-object-of-class-p ()
   (should (verb--object-of-class-p (verb-request-spec) 'verb-request-spec))
@@ -1943,19 +2041,19 @@
 (ert-deftest test-server-basic-queue ()
   (let ((verb-url-retrieve-function #'url-queue-retrieve))
     (server-test "basic"
-      (should (string= (buffer-string) "Hello, World!")))))
+                 (should (string= (buffer-string) "Hello, World!")))))
 
 (ert-deftest test-server-basic ()
   (server-test "basic"
-    (should (string= (buffer-string) "Hello, World!"))
-    (should (eq major-mode 'text-mode))
-    (should verb-response-body-mode)
-    (should (verb--object-of-class-p verb-http-response 'verb-response))
-    (should (oref verb-http-response request))
-    (let ((req-url (verb-request-spec-url-to-string (oref verb-http-response request))))
-      (should (string= req-url (if (< emacs-major-version 26)
-                                   "http://127.0.0.1:8000/basic"
-                                 "http://localhost:8000/basic"))))))
+               (should (string= (buffer-string) "Hello, World!"))
+               (should (eq major-mode 'text-mode))
+               (should verb-response-body-mode)
+               (should (verb--object-of-class-p verb-http-response 'verb-response))
+               (should (oref verb-http-response request))
+               (let ((req-url (verb-request-spec-url-to-string (oref verb-http-response request))))
+                 (should (string= req-url (if (< emacs-major-version 26)
+                                              "http://127.0.0.1:8000/basic"
+                                            "http://localhost:8000/basic"))))))
 
 (ert-deftest test-server-basic-json ()
   (let ((verb-json-max-pretty-print-size nil))
@@ -1966,9 +2064,9 @@
 
 (ert-deftest test-body-bytes ()
   (server-test "basic"
-    (should (= 13 (oref verb-http-response body-bytes)))
-    (should (= 13 (length (oref verb-http-response body))))
-    (should (= 13 (buffer-size)))))
+               (should (= 13 (oref verb-http-response body-bytes)))
+               (should (= 13 (length (oref verb-http-response body))))
+               (should (= 13 (buffer-size)))))
 
 (define-derived-mode fake-handler-mode fundamental-mode "fake"
   "docs")
@@ -1979,21 +2077,21 @@
     (should (equal (verb--get-handler (cons "image/png" nil))
 		   '(fake-handler-mode t)))
     (server-test "image"
-      (should (equal major-mode 'fake-handler-mode))
-      (should (= (oref verb-http-response body-bytes) 4959))
-      (should-not enable-multibyte-characters)
-      (should (coding-system-equal buffer-file-coding-system 'binary)))))
+                 (should (equal major-mode 'fake-handler-mode))
+                 (should (= (oref verb-http-response body-bytes) 4959))
+                 (should-not enable-multibyte-characters)
+                 (should (coding-system-equal buffer-file-coding-system 'binary)))))
 
 (ert-deftest test-unknown-content-type ()
   (let ((verb-content-type-handlers nil))
     (server-test "basic-json"
-      (should (equal major-mode 'fundamental-mode))
-      (should (string= (buffer-string) "{\"foo\":true,\"hello\":\"world\"}")))))
+                 (should (equal major-mode 'fundamental-mode))
+                 (should (string= (buffer-string) "{\"foo\":true,\"hello\":\"world\"}")))))
 
 (ert-deftest test-repeated-header ()
   (clear-log)
   (server-test "repeated-sorted-headers"
-    (should-log-contain "Header \"MIME-Version\" will appear duplicated")))
+               (should-log-contain "Header \"MIME-Version\" will appear duplicated")))
 
 (ert-deftest test-server-basic-json-pretty ()
   (let ((verb-json-max-pretty-print-size 99999))
@@ -2012,103 +2110,103 @@
 (ert-deftest test-server-basic-json-mode ()
   (let ((verb-json-use-mode #'html-mode))
     (server-test "basic-json"
-      (should (eq major-mode 'html-mode)))))
+                 (should (eq major-mode 'html-mode)))))
 
 (ert-deftest test-server-error-400 ()
   (server-test "error-400"
-    (should (string-match "400" header-line-format))))
+               (should (string-match "400" header-line-format))))
 
 (ert-deftest test-server-error-401 ()
   ;; url.el should not handle 401 in any way
   (server-test "error-401"
-    (should (string-match "401" header-line-format))))
+               (should (string-match "401" header-line-format))))
 
 (ert-deftest test-server-error-404 ()
   (server-test "error-404"
-    (should (string-match "404" header-line-format))))
+               (should (string-match "404" header-line-format))))
 
 (ert-deftest test-server-error-405 ()
   (server-test "error-405"
-    (should (string-match "405" header-line-format))))
+               (should (string-match "405" header-line-format))))
 
 (ert-deftest test-server-root-with-args ()
   (server-test "root-with-args"
-    (should (string= (buffer-string) "OK"))))
+               (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-server-response-latin-1 ()
   (server-test "response-latin-1"
-    (should (coding-system-equal buffer-file-coding-system 'iso-latin-1-unix))
-    (should (string-match "ñáéíóúß" (buffer-string)))))
+               (should (coding-system-equal buffer-file-coding-system 'iso-latin-1-unix))
+               (should (string-match "ñáéíóúß" (buffer-string)))))
 
 (ert-deftest test-server-request-latin-1 ()
   (server-test "request-latin-1"
-    (should (string= (buffer-string) "OK"))))
+               (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-server-request-utf-8-default ()
   (server-test "request-utf-8-default"
-    (should (string= (buffer-string) "OK"))))
+               (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-server-request-utf-8-default-2 ()
   (server-test "request-utf-8-default-2"
-    (should (string= (buffer-string) "OK"))))
+               (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-server-request-utf-8-with-accept ()
   (server-test "utf-8-request-with-accept"
-    (should (string= (buffer-string) "語"))))
+               (should (string= (buffer-string) "語"))))
 
 (ert-deftest test-server-response-big5 ()
   (server-test "response-big5"
-    (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))
-    (should (string-match "常用字" (buffer-string)))))
+               (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))
+               (should (string-match "常用字" (buffer-string)))))
 
 (ert-deftest test-server-response-big5-size ()
   (server-test "response-big5"
-    ;; Six bytes, but three "characters"
-    (should (= 6 (oref verb-http-response body-bytes)))
-    (should (= 3 (buffer-size)))
-    (should (= 3 (length (oref verb-http-response body))))))
+               ;; Six bytes, but three "characters"
+               (should (= 6 (oref verb-http-response body-bytes)))
+               (should (= 3 (buffer-size)))
+               (should (= 3 (length (oref verb-http-response body))))))
 
 (ert-deftest test-server-response-utf-8-default ()
   (server-test "response-utf-8-default"
 	       ;; (should (string= (cdr (assoc-string "Content-Type"
-		   ;;  			   (oref verb-http-response headers)))
-		   ;;   "text/plain"))
-    (should (string= verb-default-response-charset "utf-8"))
-    (should (coding-system-equal buffer-file-coding-system 'utf-8-unix))
-    (should (string-match "ñáéíóúß" (buffer-string)))))
+	       ;;  			   (oref verb-http-response headers)))
+	       ;;   "text/plain"))
+               (should (string= verb-default-response-charset "utf-8"))
+               (should (coding-system-equal buffer-file-coding-system 'utf-8-unix))
+               (should (string-match "ñáéíóúß" (buffer-string)))))
 
 (ert-deftest test-redirect-302 ()
   (server-test "redirect-302"
-    (should (string= (buffer-string) "Hello, World!"))))
+               (should (string= (buffer-string) "Hello, World!"))))
 
 (ert-deftest test-redirect-301 ()
   (server-test "redirect-301"
-    (should (string= (buffer-string) "Hello, World!"))))
+               (should (string= (buffer-string) "Hello, World!"))))
 
 (ert-deftest test-redirect-308 ()
   (server-test "redirect-308"
-    (should (string= (buffer-string) "Redirect successful"))))
+               (should (string= (buffer-string) "Redirect successful"))))
 
 (ert-deftest test-no-user-agent ()
   ;; default user agent from url.el should not be included
   (server-test "no-user-agent"
-    (should (string= (buffer-string) "OK"))))
+               (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-image-upload-md5 ()
   (server-test "upload-image"
-    (should (string= (buffer-string)
-                     "935ef9d8ab56be5b6265becf6135e1d9"))))
+               (should (string= (buffer-string)
+                                "935ef9d8ab56be5b6265becf6135e1d9"))))
 
 (ert-deftest test-bin-upload-md5 ()
   (server-test "upload-binary"
-    (should (string= (buffer-string)
-                     "aa0f16d7831947b778dac603c29871fd"))))
+               (should (string= (buffer-string)
+                                "aa0f16d7831947b778dac603c29871fd"))))
 
 (ert-deftest test-content-length-request ()
   (server-test "content-length-1"
-    (should (string= (buffer-string) "OK")))
+               (should (string= (buffer-string) "OK")))
   (server-test "content-length-2"
-    (should (string= (buffer-string) "OK"))))
+               (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-buffers-created ()
   (let ((verb-auto-kill-response-buffers nil))
@@ -2127,77 +2225,87 @@
 (ert-deftest test-show-request ()
   (let ((verb-auto-kill-response-buffers t))
     (server-test "request-latin-1"
-      (with-current-buffer (verb-show-request)
-        (should (string=
-                 (string-trim (buffer-string))
-                 (join-lines
-                  "* Corresponding HTTP request for response in *HTTP Response*"
-                  (format "POST %s/request-latin-1" (if (< emacs-major-version 26)
-                                                        "http://127.0.0.1:8000"
-                                                      "http://localhost:8000"))
-                  "Content-Type: text/plain; charset=latin1"
-                  ""
-                  "áéíóúñü")))))))
+                 (with-current-buffer (verb-show-request)
+                   (should (string=
+                            (string-trim (buffer-string))
+                            (join-lines
+                             "* Corresponding HTTP request for response in *HTTP Response*"
+                             (format "POST %s/request-latin-1" (if (< emacs-major-version 26)
+                                                                   "http://127.0.0.1:8000"
+                                                                 "http://localhost:8000"))
+                             "Content-Type: text/plain; charset=latin1"
+                             ""
+                             "áéíóúñü")))))))
 
 (ert-deftest test-auto-kill-buffers ()
   (let ((num-buffers (length (buffer-list)))
         (verb-auto-kill-response-buffers t))
+    (verb-kill-all-response-buffers)
     (server-test "basic")
     (server-test "basic-json")
     (server-test "no-user-agent")
     (garbage-collect)
+    (ignore-errors
+      (kill-buffer "*Native-compile-Log*"))
     (should (= (1+ num-buffers) (length (buffer-list))))))
 
 (ert-deftest test-headers ()
   (server-test "headers"
-    (should (string= (buffer-string) "HeadersTest"))
-    (should (string= (cdr (assoc "x-test-1"
-				 (oref verb-http-response headers))) "foo"))
-    (should (string= (cdr (assoc "OTHER-TEST"
-				 (oref verb-http-response headers))) "bar"))))
+               (should (string= (buffer-string) "HeadersTest"))
+               (should (string= (cdr (assoc "x-test-1"
+				            (oref verb-http-response headers)))
+                                "foo"))
+               (should (string= (cdr (assoc "OTHER-TEST"
+				            (oref verb-http-response headers)))
+                                "bar"))))
+
+(ert-deftest test-wrong-content-encoding-header ()
+  (server-test "not-compressed"
+               (should (string= "hello, world!"
+                                (buffer-string)))))
 
 (ert-deftest test-zero-bytes-json ()
   (server-test "zero-bytes-json"
-    (should (zerop (buffer-size)))
-    (should (string-match "200" header-line-format))))
+               (should (zerop (buffer-size)))
+               (should (string-match "200" header-line-format))))
 
 (ert-deftest test-default-headers-accept ()
   (server-test "accept-sorted-headers"
-    (goto-char (point-min))
-    (should (search-forward "accept: hello-world"))
-    (goto-char (point-min))
-    (should (= (count-matches "accept:") 1))))
+               (goto-char (point-min))
+               (should (search-forward "accept: hello-world"))
+               (goto-char (point-min))
+               (should (= (count-matches "accept:") 1))))
 
 (ert-deftest test-default-headers ()
   (server-test "sorted-headers"
-    (let ((headers '("mime-version"
-		     "connection"
-		     "content-length"
-		     "host"
-		     "accept"
-		     "accept-encoding")))
-      (dolist (h headers)
-	(goto-char (point-min))
-	(should (search-forward (concat h ": "))))
+               (let ((headers '("mime-version"
+		                "connection"
+		                "content-length"
+		                "host"
+		                "accept"
+		                "accept-encoding")))
+                 (dolist (h headers)
+	           (goto-char (point-min))
+	           (should (search-forward (concat h ": "))))
 
-      (goto-char (point-min))
-      (delete-matching-lines "cookie") ; ignore cookie header
+                 (goto-char (point-min))
+                 (delete-matching-lines "cookie") ; ignore cookie header
 
-      (goto-char (point-min))
-      (delete-matching-lines "extension") ; ignore extension header
+                 (goto-char (point-min))
+                 (delete-matching-lines "extension") ; ignore extension header
 
-      (should (= (count-lines (point-min) (point-max))
-		 (length headers))))))
+                 (should (= (count-lines (point-min) (point-max))
+		            (length headers))))))
 
-(setq test-json (join-lines "{"
-			    "  \"foo\": {"
-			    "    \"test\": \"Hello, World!\","
-			    "    \"nested\": {\"x\": 99}"
-			    "  },"
-			    "  \"bar\": [42, 100, true, false, null],"
-			    "  \"empty-array\":  [],"
-			    "  \"empty-object\": {}"
-			    "}"))
+(defconst test-json (join-lines "{"
+			        "  \"foo\": {"
+			        "    \"test\": \"Hello, World!\","
+			        "    \"nested\": {\"x\": 99}"
+			        "  },"
+			        "  \"bar\": [42, 100, true, false, null],"
+			        "  \"empty-array\":  [],"
+			        "  \"empty-object\": {}"
+			        "}"))
 
 (ert-deftest test-headers-get ()
   (setq test-headers '(("Content-Type" . "application/json")
@@ -2257,9 +2365,9 @@
 
 (ert-deftest test-server-stored ()
   (server-test "stored"
-    (setq stored-resp (verb-stored-response "foobar"))
-    (should (string= (oref stored-resp body)
-		     "Hello, World!"))))
+               (setq stored-resp (verb-stored-response "foobar"))
+               (should (string= (oref stored-resp body)
+		                "Hello, World!"))))
 
 (ert-deftest test-cookies ()
   (setq verb-inhibit-cookies nil)
@@ -2267,33 +2375,33 @@
   (setq url-cookie-secure-storage nil)
 
   (server-test "get-cookies"
-    (should (= (buffer-size) 0)))
+               (should (= (buffer-size) 0)))
 
   (server-test "set-cookies"
-    (should (string= (buffer-string) "OK")))
+               (should (string= (buffer-string) "OK")))
 
   (server-test "get-cookies"
-    (should (string= (buffer-string) "foo=bar\nabc=123\n")))
+               (should (string= (buffer-string) "foo=bar\nabc=123\n")))
 
   (server-test "delete-cookies"
-    (should (string= (buffer-string) "OK")))
+               (should (string= (buffer-string) "OK")))
 
   (server-test "get-cookies"
-    (should (or (= (buffer-size) 0)
-                (string= (buffer-string)
-                         "foo=\nabc=\n")))))
+               (should (or (= (buffer-size) 0)
+                           (string= (buffer-string)
+                                    "foo=\nabc=\n")))))
 
 (ert-deftest test-cookies-disabled ()
   (setq verb-inhibit-cookies t)
 
   (server-test "get-cookies"
-    (should (= (buffer-size) 0)))
+               (should (= (buffer-size) 0)))
 
   (server-test "set-cookies"
-    (should (string= (buffer-string) "OK")))
+               (should (string= (buffer-string) "OK")))
 
   (server-test "get-cookies"
-    (should (= (buffer-size) 0))))
+               (should (= (buffer-size) 0))))
 
 (ert-deftest test-no-stored-response ()
   (should-error (verb-stored-response "adfsadfsadf")))
@@ -2325,6 +2433,27 @@
     (goto-char (point-min))
     (should (search-forward "Accept: text/xhtml"))
     (should (search-forward "Foo: Bar123"))))
+
+(defun should-websocat (rs-text &rest lines)
+  (should (string= (verb--export-to-websocat
+		    (verb-request-spec-from-string rs-text) t)
+		   (apply #'join-lines lines))))
+
+(ert-deftest test-websocat-export ()
+  (should-websocat (join-lines "GET http://example.com")
+	           "websocat 'ws://example.com'")
+
+  (should-websocat (join-lines "GET https://example.com")
+	           "websocat 'wss://example.com'")
+
+  (should-websocat (join-lines
+		    "GET http://example.com"
+		    "Header1: Val1")
+	           "websocat 'ws://example.com' \\\n-H 'Header1: Val1'")
+
+  (should-error (verb--export-to-websocat
+		 (verb-request-spec-from-string
+		  "POST http://abc.com"))))
 
 (defun should-curl (rs-text &rest lines)
   (should (string= (verb--export-to-curl
@@ -2565,16 +2694,16 @@
 
 (ert-deftest test-babel-send-get-body ()
   (babel-test (join-lines "* Heading 1"
-			"#+begin_src verb :op send get-body"
-			"get http://localhost:8000/basic"
-			"#+end_src")
+			  "#+begin_src verb :op send get-body"
+			  "get http://localhost:8000/basic"
+			  "#+end_src")
 	      (join-lines "Hello, World!")))
 
 (ert-deftest test-babel-send-get-body-tagged ()
   (babel-test (join-lines "* Heading 1            :verb:"
-			"#+begin_src verb :op send get-body"
-			"get http://localhost:8000/basic"
-			"#+end_src")
+			  "#+begin_src verb :op send get-body"
+			  "get http://localhost:8000/basic"
+			  "#+end_src")
 	      (join-lines "Hello, World!")))
 
 (ert-deftest test-babel-send-get-headers ()
@@ -2702,13 +2831,13 @@
 
 (ert-deftest test-multipart-boundary ()
   (setq aux (text-as-spec-nl "get https://hello.com"
-				             "Content-Type: multipart/form-data; boundary={{(verb-boundary \"abc\")}}"
-				             ""
-				             "{{(verb-part \"foobar-1\")}}"
+			     "Content-Type: multipart/form-data; boundary={{(verb-boundary \"abc\")}}"
+			     ""
+			     "{{(verb-part \"foobar-1\")}}"
                              "Content-Type: text/plain"
                              ""
                              "file-contents-here"
-				             "{{(verb-part \"foobar-2\")}}"
+			     "{{(verb-part \"foobar-2\")}}"
                              "Content-Type: text/plain"
                              ""
                              "other-file-contents-here"
@@ -2735,9 +2864,9 @@
 (ert-deftest test-multipart-boundary-warning-on-no-final-delimiter ()
   (clear-log)
   (text-as-spec-nl "get https://hello.com"
-				   "Content-Type: multipart/form-data; boundary={{(verb-boundary \"abc\")}}"
-				   ""
-				   "{{(verb-part \"foobar-1\")}}"
+		   "Content-Type: multipart/form-data; boundary={{(verb-boundary \"abc\")}}"
+		   ""
+		   "{{(verb-part \"foobar-1\")}}"
                    "Content-Type: text/plain"
                    ""
                    "file-contents-here") ;; No final boundary

@@ -12,7 +12,7 @@
 
 # From: https://openlibrary.org/developers/api
 
-template http://openlibrary.org
+template https://openlibrary.org
 User-Agent: Verb/Emacs Emacs/{{emacs-version}}
 Accept: application/json
 

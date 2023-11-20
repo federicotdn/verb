@@ -4,6 +4,17 @@
 - When sending a request, include the HTTP method in the message displayed.
 - The `verb-json-get` function now accepts negative integer arguments for accessing list elements.
 - Changed default binding of `verb-send-request-on-point-no-window` to <kbd>C-c C-r C-<return></kbd>.
+- Allow using single- or multi-line lambda expressions for `Verb-Map-Request`.
+- The `verb-auto-kill-response-buffers` customizable variable can now be set to an integer. This will cause all response buffers to be killed when a request is sent, except the N most recent ones.
+- Calling `verb-set-var` interactively with a prefix argument (<kbd>C-u</kbd>) will copy the variable value to the kill ring.
+- The current value of a Verb variable will be shown in the minibuffer when the point is moved over a code tag containing only `(verb-var xyz)`.
+- `verb-set-var` now has its own input history.
+- Dropped support for Emacs 25. Emacs 26.3 is now the minimum supported version. Verb may still work partially or completely on Emacs 25, but this may change without prior warning.
+- Added default binding for `verb-show-vars`: <kbd>C-c C-r C-x</kbd>.
+- Added new export format `websocat`.
+- Added new function `verb-export-request-on-point-websocat`.
+- Removed default keybindings for all `verb-export-request-on-point-*` functions, and made export function querying faster in `verb-export-request-on-point`.
+- Add additional advice to url.el to prevent it from dropping the response body when the `Content-Encoding` is set to `gzip` but the contents themselves are not actually compressed.
 
 ## **2.15.0** - 2021-11-03 (MELPA Stable)
 - Fixed font locking on indented Babel source blocks.

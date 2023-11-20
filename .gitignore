@@ -18,10 +18,10 @@
 test/server.pid
 
 # linting packages installation directory
-/vendor
+/packages
 
 # autoloads
 verb-autoloads.el
 
-# Emacs 25 binary
+# Emacs binary
 /emacs

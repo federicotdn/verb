@@ -108,6 +108,8 @@ Content-Type: image/png
 post /body-md5
 
 {{(verb-read-file "test.bin" 'binary)}}
+** not-compressed
+get /not-compressed
 ** set-cookies
 get /set-cookies?foo=bar&abc=123
 ** get-cookies

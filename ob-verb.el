@@ -1,13 +1,13 @@
 ;;; ob-verb.el --- Babel integration for Verb  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021  Federico Tedin
+;; Copyright (C) 2023  Federico Tedin
 
 ;; Author: Federico Tedin <federicotedin@gmail.com>
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: tools
 ;; Package-Version: 2.15.0
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "26.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -82,6 +82,8 @@ Called when :op `export' is passed to `org-babel-execute:verb'."
            result))))
     ("curl"
      (verb--export-to-curl rs t t))
+    ("websocat"
+     (verb--export-to-websocat rs t t))
     (_
      (user-error "Invalid export function: %s" name))))
 

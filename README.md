@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="verb" src="https://github.com/federicotdn/verb/raw/main/extra/logo/logo.png" width="50%">
+  <img alt="verb" src="https://github.com/federicotdn/verb/raw/main/extra/logo/logo2.png" width="50%">
   <br/>
 </p>
 
@@ -7,7 +7,7 @@
 
 The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to organize specifications for HTTP requests using Org's tree structure. Properties defined in the child headings extend or sometimes override properties defined in the parent headings - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Org mode with the common functionality provided by other HTTP clients. However, very little knowledge of Org mode is needed to use Verb.
 
-Verb requires at least Emacs version 25 to work.
+Verb requires at least Emacs version 26 to work.
 
 [![CI Status](https://github.com/federicotdn/verb/workflows/CI/badge.svg)](https://github.com/federicotdn/verb/actions)
 [![MELPA](https://melpa.org/packages/verb-badge.svg)](https://melpa.org/#/verb)
@@ -22,7 +22,7 @@ Verb requires at least Emacs version 25 to work.
 - Correctly handle text encodings (charsets) for requests and responses.
 - Display PDF, PNG, JPEG, BMP, GIF and SVG responses.
 - Embed Emacs Lisp expressions in specifications (with code completion!).
-- Can export requests to `curl` format.
+- Can export requests to `curl` and other external tools.
 - Integrates with Babel and EWW.
 - Includes mouse support (menu bar and mode line).
 - Supports file uploads.
@@ -71,10 +71,11 @@ Verb requires at least Emacs version 25 to work.
 - [Contributing](#contributing)
 - [Related Packages](#related-packages)
 - [Similar Packages](#similar-packages)
+- [Contributors](#contributors)
 - [License](#license)
 
 ## Installation
-### Emacs 25+
+### Emacs 26+
 
 You can install Verb by using the `package-install` command (make sure either [MELPA](https://melpa.org/) or [MELPA Stable](https://stable.melpa.org/) are included in your package sources):
 
@@ -195,7 +196,7 @@ To actually send the HTTP request, use one of the `verb-send-request-on-point` c
 - <kbd>C-c C-r C-r</kbd>: `verb-send-request-on-point-other-window-stay` sends the request and shows the response on a buffer in another window, but doesn't switch to that window.
 - <kbd>C-c C-r C-s</kbd>: `verb-send-request-on-point-other-window` sends the request, shows the response on a buffer in another window, and switches to it.
 - <kbd>C-c C-r C-f</kbd>: `verb-send-request-on-point` sends the request, and shows the response on a buffer in the currently selected window.
-- <kbd>C-c C-r C-m</kbd>: `verb-send-request-on-point-no-window` sends the request, but does not show the response buffer anywhere. The response status (e.g. `HTTP/1.1 200 OK | http://example.com`) will be shown on the minibuffer. This is useful for cases where one is only interested in the request's side effects.
+- <kbd>C-c C-r C-<return></kbd>: `verb-send-request-on-point-no-window` sends the request, but does not show the response buffer anywhere. The response status (e.g. `HTTP/1.1 200 OK | GET http://example.com`) will be shown on the minibuffer. This is useful for cases where one is only interested in the request's side effects.
 
 Request sending is asynchronous - you can do other stuff while Emacs waits for the server's response. If the response is taking too long to be received, a warning will be displayed in the minibuffer. You can modify this behaviour by modifying the `verb-show-timeout-warning` variable's value.
 
@@ -224,7 +225,7 @@ There's two recommended ways of closing response buffers:
 - If the response buffer is the current buffer, you can use the `verb-kill-response-buffer-and-window` command, which is bound by default to <kbd>C-c C-r C-k</kbd>. This command will also kill the associated response headers buffer (see the [Response Headers Buffer](https://github.com/federicotdn/verb#the-response-headers-buffer) section).
 - If the response buffer is not the current buffer (e.g. you are still on your `guide.org` buffer), you can kill **all** response buffers by using the `verb-kill-all-response-buffers`, which is bound to <kbd>C-c C-r C-k</kbd> by default. Response headers buffers will also be killed automatically.
 
-As you send more HTTP requests, more response buffers will be created, with `<N>` at the end of their name to distinguish between them. If you wish to automatically have old response buffers killed when making a new request, set the `verb-auto-kill-response-buffers` variable to `t`.
+As you send more HTTP requests, more response buffers will be created, with `<N>` at the end of their name to distinguish between them. If you wish to automatically have old response buffers killed when making a new request, set the `verb-auto-kill-response-buffers` variable to `t`. If wish for old response buffers to be killed, with the exception of the N most recent ones, then set `verb-auto-kill-response-buffers` to that integer number. This is useful for keeping track of the history of responses received, without creating too many buffers.
 
 ### Re-sending Requests
 
@@ -507,7 +508,7 @@ If you wish to use the last response's headers instead, you can use the `verb-he
 
 ### Storing Responses by Key
 
-When writing a request specification, you may add [properties](https://orgmode.org/manual/Property-syntax.html) via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
+When writing a request specification, you may add [properties](https://orgmode.org/manual/Property-Syntax.html) via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
 
 The `Verb-Store` property has a special meaning. When this property is set, Verb will automatically store the request's response under the specified value. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
 
@@ -565,6 +566,33 @@ baz
 ```
 
 When sent or exported, the request's body will by modified by `remove-body-newlines`, and the resulting body content will be a single line, `foo,bar,baz`.
+
+The function to be mapped can also be a `lambda` expression, like so:
+
+```
+** Upload file to user storage
+:properties:
+:Verb-Map-Request:  (lambda (rs)
+:Verb-Map-Request+:   (thread-last
+:Verb-Map-Request+:     (oref rs body)
+:Verb-Map-Request+:     (replace-regexp-in-string "\n" " ")
+:Verb-Map-Request+:     (oset rs body))
+:Verb-Map-Request+:   rs)
+:end:
+
+post /{{(verb-var user-id)}}/upload
+Content-Type: text/plain; charset=utf-8
+
+foo,
+bar,
+baz
+```
+
+This has the same effect as the previous example. Note also how we've used the feature of adding to a propertie's value. The final `lambda` expression will be equivalent to
+
+```elisp
+(lambda (rs) (thread-last (oref rs body) (replace-regexp-in-string "\n" " ") (oset rs body)) rs)
+```
 
 **Note**: The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overridden values from parent headings.
 
@@ -657,15 +685,11 @@ You can define a set of base headers for all your HTTP requests in all `.org` fi
 
 ### Export Requests
 
-You can export request specifications to other formats or tools by using the `verb-export-request-on-point` command, by default bound to <kbd>C-c C-r C-e</kbd>. When used, you will be prompted for an export function name. The ones currently available are:
+You can export request specifications to other formats or tools by using the `verb-export-request-on-point` command, by default bound to <kbd>C-c C-r C-e</kbd>. When used, you will be prompted for an export function. The ones currently available are:
 - `curl`: Convert the request specification into a [curl](https://curl.haxx.se/) command and add it to the kill ring (clipboard).
 - `verb`: Display the request specification in the same format Verb uses. This is still useful as the request displayed will be the one generated by combining the properties of the parent headings as well.
 - `eww`: Perform the request described by the specification using EWW (Emacs Web Wowser). This will only work on `GET` requests.
-
-Each export function is also bound individually to a key by default. The keys are:
-- `verb-export-request-on-point-curl`: <kbd>C-c C-r C-u</kbd>.
-- `verb-export-request-on-point-verb`: <kbd>C-c C-r C-b</kbd>.
-- `verb-export-request-on-point-eww`: <kbd>C-c C-r C-w</kbd>.
+- `websocat`: Convert the request specification into a [websocat](https://github.com/vi/websocat) command and add it to the kill ring.
 
 **Note:** Code tags will be evaluated when exporting a request.
 
@@ -745,6 +769,7 @@ Content-Type: application/json; charset=utf-8
 If you wish to export the request to a particular format instead, use the `:op export ...` header argument on your source block. These are the values it can be used with:
 - `:op export curl`: Export this request to `curl` format and insert the results below.
 - `:op export verb`: Export this request to Verb format and insert the results below.
+- `:op export websocat`: Export this request to `websocat` format and insert the results below.
 
 So for example, if you wanted to export the previous example to `curl`, you would need to write:
 ```
@@ -850,11 +875,16 @@ Verb's functionality can be extended via some related packages, such as:
   - Verb uses a tree-like structure to organize request specifications, `restclient` uses a flat one.
   - Verb displays HTTP response headers on a separate buffer, `restclient` includes them commented out in the main response buffer.
   - Verb correctly handles URLs such as https://api.ipify.org?format=json (400 when using `restclient`, 200 when using Verb and `curl`).
-  - Verb has only been tested on Emacs 25+, `restclient` was tested on those and older versions as well (which is important if you're using an older Emacs version).
   - In Verb, lines starting with `#` can be included in a request body (and `*` as well).
   - Licensing (GPLv3 vs. Public domain).
 - [walkman](https://github.com/abrochard/walkman): Write HTTP requests in Org mode and send them using `curl`.
 - [http.el](https://github.com/emacs-pe/http.el): I have not tested this package, so I can't provide a comparison.
+
+## Contributors
+These are the users that have contributed to developing Verb, via code and/or documentation (in order of date of first contribution):
+[stig](https://github.com/stig), [flashcode](https://github.com/flashcode), [ananthakumaran](https://github.com/ananthakumaran), [prashantvithani](https://github.com/prashantvithani), [c4710n](https://github.com/c4710n) and [bigodel](https://github.com/bigodel).
+
+Thank you!
 
 ## License
 
