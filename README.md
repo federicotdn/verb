@@ -882,7 +882,13 @@ Verb's functionality can be extended via some related packages, such as:
 
 ## Contributors
 These are the users that have contributed to developing Verb, via code and/or documentation (in order of date of first contribution):
-[stig](https://github.com/stig), [flashcode](https://github.com/flashcode), [ananthakumaran](https://github.com/ananthakumaran), [prashantvithani](https://github.com/prashantvithani), [c4710n](https://github.com/c4710n) and [bigodel](https://github.com/bigodel).
+- [stig](https://github.com/stig)
+- [flashcode](https://github.com/flashcode)
+- [ananthakumaran](https://github.com/ananthakumaran)
+- [prashantvithani](https://github.com/prashantvithani)
+- [c4710n](https://github.com/c4710n)
+- [bigodel](https://github.com/bigodel)
+- [agzam](https://github.com/agzam)
 
 Thank you!
 
