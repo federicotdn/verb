@@ -1616,7 +1616,8 @@ non-nil, do not add the command to the kill ring."
   (let ((status-line (oref response status))
         (elapsed (oref response duration))
         (headers (oref response headers))
-        (bytes (oref response body-bytes)))
+        (bytes (oref response body-bytes))
+        (path (oref (oref (oref response request) url) filename)))
     (concat
      (or status-line "No Response")
      " | "
@@ -1631,7 +1632,8 @@ non-nil, do not add the command to the kill ring."
                      bytes)))
        (format " | %s byte%s"
                (file-size-human-readable value)
-               (if (= value 1) "" "s"))))))
+               (if (= value 1) "" "s")))
+     " | " path)))
 
 (cl-defmethod verb-request-spec-url-to-string ((rs verb-request-spec))
   "Return RS's url member as a string if it is non-nil."
