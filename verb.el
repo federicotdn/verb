@@ -660,6 +660,15 @@ argument."
   (condition-case _err
       (verb--fn-form (read form))
     (end-of-file (user-error "`%s' is a malformed expression" form))))
+
+(defun verb--apply-map-response ()
+  "Apply function in VERB-MAP-RESPONSE property to response object."
+  (when-let ((res verb-last)
+             (rs (oref res request))
+             (form (verb--request-spec-metadata-get rs "map-response"))
+             (fn (verb--try-read-fn-form form)))
+    (funcall fn res)))
+
 (defvar verb-response-body-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r C-r") #'verb-toggle-show-headers)
@@ -691,7 +700,8 @@ argument."
           (if (eq verb-auto-show-headers-buffer 'when-empty)
               (when (zerop (oref verb-http-response body-bytes))
                 (verb-toggle-show-headers))
-            (verb-toggle-show-headers))))
+            (verb-toggle-show-headers)))
+        (add-hook 'verb-post-response-hook #'verb--apply-map-response))
     (setq header-line-format nil)))
 
 (defun verb-show-log ()
