@@ -93,8 +93,8 @@ update:
 
 run: ## Run emacs -Q with the working version of verb.el loaded.
 run: clean server-bg
-	make run-internal; \
+	make run-noserver; \
 	make server-kill
 
-run-internal:
+run-noserver:
 	FONT_SIZE=$(FONT_SIZE) $(EMACS) -Q -L . --load test/init.el

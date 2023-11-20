@@ -1,7 +1,7 @@
 # Verb Changelog
 ## **main** (MELPA)
 - Fixed LF being used instead of CRLF in multipart boundaries.
-- When sending a request, include the HTTP method in the message displayed.
+- When sending a request, include the HTTP method and path in the message displayed on the minibuffer.
 - The `verb-json-get` function now accepts negative integer arguments for accessing list elements.
 - Changed default binding of `verb-send-request-on-point-no-window` to <kbd>C-c C-r C-<return></kbd>.
 - Allow using single- or multi-line lambda expressions for `Verb-Map-Request`.

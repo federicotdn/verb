@@ -615,39 +615,44 @@
 		:type 'verb-empty-spec))
 
 (ert-deftest test-response-header-line-string ()
-  (should (string= (verb--response-header-line-string
-		    (verb-response
-		     :status "test"
-		     :duration 1.123
-		     :headers '(("Content-Type" . "hello")
-				("Content-Length" . "1"))
-		     :body-bytes 999))
-		   "test | 1.123s | hello | 1 byte"))
+  (let ((req (text-as-spec "get /hello")))
+    (should (string= (verb--response-header-line-string
+		      (verb-response
+		       :status "test"
+		       :duration 1.123
+		       :headers '(("Content-Type" . "hello")
+				  ("Content-Length" . "1"))
+		       :body-bytes 999
+                       :request req))
+		     "test | 1.123s | hello | 1 byte | /hello"))
 
-  (should (string= (verb--response-header-line-string
-		    (verb-response
-		     :status "test"
-		     :duration 1.123
-		     :headers '(("Content-Length" . "2024"))
-		     :body-bytes 999))
-		   (if (< emacs-major-version 27)
-		       "test | 1.123s | - | 2.0k bytes"
-		     "test | 1.123s | - | 2k bytes")))
+    (should (string= (verb--response-header-line-string
+		      (verb-response
+		       :status "test"
+		       :duration 1.123
+		       :headers '(("Content-Length" . "2024"))
+		       :body-bytes 999
+                       :request req))
+		     (if (< emacs-major-version 27)
+		         "test | 1.123s | - | 2.0k bytes | /hello"
+		       "test | 1.123s | - | 2k bytes | /hello")))
 
-  (should (string= (verb--response-header-line-string
-		    (verb-response
-		     :status "test"
-		     :duration 1.123
-		     :headers '(("Content-Type" . "hello"))
-		     :body-bytes 999))
-		   "test | 1.123s | hello | 999 bytes"))
+    (should (string= (verb--response-header-line-string
+		      (verb-response
+		       :status "test"
+		       :duration 1.123
+		       :headers '(("Content-Type" . "hello"))
+		       :body-bytes 999
+                       :request req))
+		     "test | 1.123s | hello | 999 bytes | /hello"))
 
-  (should (string= (verb--response-header-line-string
-		    (verb-response
-		     :status nil
-		     :duration 1.123
-		     :headers nil))
-		   "No Response | 1.123s | - | 0 bytes")))
+    (should (string= (verb--response-header-line-string
+		      (verb-response
+		       :status nil
+		       :duration 1.123
+		       :headers nil
+                       :request req))
+		     "No Response | 1.123s | - | 0 bytes | /hello"))))
 
 (ert-deftest test-request-spec-from-text-error ()
   (should-error (text-as-spec "foobar example.com")))
