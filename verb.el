@@ -635,11 +635,30 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
                "Number of bytes in response body."))
   "Represents an HTTP response to a request.")
 
+(defun verb--fn-form (form)
+  "Return a function object if FORM is a function FORM.
+If FORM is a function, also check whether it expects exactly one
+argument."
+  ;; Check explicitely for functions or conses, everything else should just
+  ;; return nil
+  (let* ((maybe-fn (eval form))
+         (arglist (help-function-arglist maybe-fn)))
+    (cond
+      ((functionp form)
+       (unless (= 1 (length arglist))
+         (signal 'wrong-number-of-arguments (list maybe-fn 1)))
+       form)
+      ((consp form)
+       (unless (functionp maybe-fn)
+         (user-error "Form `%s' is not a function" maybe-fn))
+       ;; If we got here, `maybe-fn' is a function, so just call this function
+       ;; again to check for the arglist
+       (verb--fn-form maybe-fn)))))
 
 (defun verb--try-read-fn-form (form)
   "Try `read'ing FORM and throw error if failed."
   (condition-case _err
-      (read form)
+      (verb--fn-form (read form))
     (end-of-file (user-error "`%s' is a malformed expression" form))))
 (defvar verb-response-body-mode-map
   (let ((map (make-sparse-keymap)))
@@ -1031,9 +1050,7 @@ After that, return RS."
   ;; Apply the request mapping function, if present
   (when-let ((form (verb--request-spec-metadata-get rs "map-request"))
              (fn (verb--try-read-fn-form form)))
-    (if (functionp fn)
-        (setq rs (funcall fn rs))
-      (user-error "`%s' is not a valid function" fn))
+    (setq rs (funcall fn rs))
     (unless (verb--object-of-class-p rs 'verb-request-spec)
       (user-error (concat "Request mapping function `%s' must return a "
                           "`verb-request-spec' value")
