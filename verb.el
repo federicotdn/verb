@@ -641,18 +641,18 @@ If FORM is a function, also check whether it expects exactly one
 argument."
   ;; Check explicitely for functions or conses, everything else should just
   ;; return nil
-  (let* ((maybe-fn (eval form))
-         (arglist (help-function-arglist maybe-fn)))
-    (cond
-      ((functionp form)
+  (cond
+    ((functionp form)
+     (let ((arglist (help-function-arglist form)))
        (unless (= 1 (length arglist))
-         (signal 'wrong-number-of-arguments (list maybe-fn 1)))
-       form)
-      ((consp form)
-       (unless (functionp maybe-fn)
-         (user-error "Form `%s' is not a function" maybe-fn))
+         (signal 'wrong-number-of-arguments (list form 1)))
+       form))
+    ((consp form)
+     (let ((maybe-fn (eval form)))
        ;; If we got here, `maybe-fn' is a function, so just call this function
        ;; again to check for the arglist
+       (unless (functionp maybe-fn)
+         (user-error "Form `%s' is not a function" maybe-fn))
        (verb--fn-form maybe-fn)))))
 
 (defun verb--try-read-fn-form (form)
