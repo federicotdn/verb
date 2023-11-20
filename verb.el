@@ -635,6 +635,12 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
                "Number of bytes in response body."))
   "Represents an HTTP response to a request.")
 
+
+(defun verb--try-read-fn-form (form)
+  "Try `read'ing FORM and throw error if failed."
+  (condition-case _err
+      (read form)
+    (end-of-file (user-error "`%s' is a malformed expression" form))))
 (defvar verb-response-body-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r C-r") #'verb-toggle-show-headers)
@@ -996,11 +1002,6 @@ This function is called from ob-verb.el (`org-babel-execute:verb')."
 CLASS must be an EIEIO class."
   (ignore-errors
     (object-of-class-p obj class)))
-
-(defun verb--try-read-fn-form (form)
-  "Try `read'ing FORM and throw error if failed."
-  (condition-case _err (read form)
-    (end-of-file (user-error "`%s' is a malformed expression" form))))
 
 (defun verb--request-spec-metadata-get (rs key)
   "Get the metadata value under KEY for request spec RS.
