@@ -1990,8 +1990,8 @@ If a validation does not pass, signal `user-error'."
       (user-error "%s" (concat "No URL specified\nMake sure you specify "
                                "a nonempty URL in the heading hierarchy")))
     (unless (url-host url)
-      (user-error "%s" (concat "URL has no schema or host defined\n"
-                               "Make sure you specify a schema and host "
+      (user-error "%s" (concat "URL has no scheme or host defined\n"
+                               "Make sure you specify a scheme and host "
                                "(e.g. \"https://github.com\") in the "
                                "heading hierarchy"))))
   rs)
@@ -2270,12 +2270,12 @@ described in `verb-request-spec-override'."
 
 (defun verb--url-port (url)
   "Return port used by an HTTP URL.
-Return nil if the port can be inferred from the URL's schema."
+Return nil if the port can be inferred from the URL's scheme."
   (let ((port (url-port url))
-        (schema (url-type url)))
+        (scheme (url-type url)))
     (if (and (numberp port)
-             (or (and (= port 80) (string= schema "http"))
-                 (and (= port 443) (string= schema "https"))))
+             (or (and (= port 80) (string= scheme "http"))
+                 (and (= port 443) (string= scheme "https"))))
         nil
       port)))
 
@@ -2286,7 +2286,7 @@ Do this using the rules described in `verb-request-spec-override'."
   (if (not (and original other))
       (or original other)
     ;; Override ORIGINAL with OTHER
-    (let ((schema (or (url-type other) (url-type original)))
+    (let ((scheme (or (url-type other) (url-type original)))
           (user (or (url-user other) (url-user original)))
           (password (or (url-password other) (url-password original)))
           (host (or (url-host other) (url-host original)))
@@ -2296,7 +2296,7 @@ Do this using the rules described in `verb-request-spec-override'."
           (fragment (or (url-target other) (url-target original)))
           (attributes (or (url-attributes other) (url-attributes original)))
           (fullness (or (url-fullness other) (url-fullness original))))
-      (url-parse-make-urlobj schema user password host
+      (url-parse-make-urlobj scheme user password host
                              port path fragment
                              attributes fullness))))
 
@@ -2446,8 +2446,8 @@ Additionally, given a URL like \"http://foo.com?a=b\", return
 \"http://foo.com/?a=b\". This is what curl does when the path is empty
 and there are query string arguments present.
 
-If a schema is not present, interpret the URL as a path, query string
-and fragment component of a URL with no host or schema defined."
+If a scheme is not present, interpret the URL as a path, query string
+and fragment component of a URL with no host or scheme defined."
   ;; If we're not expanding code tags, do not attempt to encode '{',
   ;; '}', etc., so that we keep the original URL text
   (let* ((encoded-url (if verb--inhibit-code-tags-evaluation
@@ -2455,20 +2455,20 @@ and fragment component of a URL with no host or schema defined."
                         (url-encode-url url)))
          (url-obj (url-generic-parse-url encoded-url))
          (path (url-filename url-obj))
-         (schema (url-type url-obj)))
-    (if (not schema)
-        ;; If no schema defined, interpret everything as path + query
+         (scheme (url-type url-obj)))
+    (if (not scheme)
+        ;; If no scheme defined, interpret everything as path + query
         ;; string + fragment
         (progn
           (setf (url-filename url-obj)
                 (concat (url-host url-obj)
                         (url-filename url-obj)))
           (setf (url-host url-obj) nil))
-      ;; Schema is present:
-      (unless (member schema '("http" "https"))
+      ;; Scheme is present:
+      (unless (member scheme '("http" "https"))
         (user-error (concat "The URL must specify \"http://\" or "
                             "\"https://\" (got: \"%s\")")
-                    schema))
+                    scheme))
       ;; If path is "" but there are query string arguments, set path
       ;; to "/" (taken from curl)
       ;; Note that `path' here contains path and query string
@@ -2499,10 +2499,10 @@ METHOD must be a method matched by `verb--http-methods-regexp' (that
 is, an HTTP method or the value of `verb--template-keyword').
 Matching is case-insensitive.
 
-URL must be a full URL, or a part of it.  If present, the schema must
-be \"http\" or \"https\".  If the schema is not present, the URL will
+URL must be a full URL, or a part of it.  If present, the scheme must
+be \"http\" or \"https\".  If the scheme is not present, the URL will
 be interpreted as a path, plus (if present) query string and fragment.
-Therefore, using just \"example.org\" (note no schema present) as URL
+Therefore, using just \"example.org\" (note no scheme present) as URL
 will result in a URL with its path set to \"example.org\", not as its
 host.
 

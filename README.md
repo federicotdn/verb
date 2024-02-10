@@ -367,7 +367,7 @@ Now, when we send the request under "Get users list", Verb will collect all the 
 
 - **Method:** The last heading's (i.e. the one with no children) method will be used. The value `template` does not count as a method and will be ignored.
 - **URL:**
-  - **Schema**: The last defined heading's URL schema will be used (`http` or `https`).
+  - **Scheme**: The last defined heading's URL scheme will be used (`http` or `https`).
   - **Host**: The last defined heading's URL host will be used.
   - **Port**: The last defined heading's URL port will be used.
   - **Path**: All paths will be concatenated, starting with the first heading (i.e. the topmost parent).
@@ -378,7 +378,7 @@ Now, when we send the request under "Get users list", Verb will collect all the 
 
 If you try to send a request from the level 1 header, you'll get an error, as at that level there's no specified HTTP method.
 
-You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.org` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL schema, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources (e.g. `users`, `products`, etc.), and the level 3 headings will specify actions to run on those resources (e.g. `post`, `put`, etc.). For example (unrelated to `guide.org`):
+You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.org` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL scheme, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources (e.g. `users`, `products`, etc.), and the level 3 headings will specify actions to run on those resources (e.g. `post`, `put`, etc.). For example (unrelated to `guide.org`):
 
 ```
 * Foobar Blog API                    :verb:

@@ -1298,7 +1298,7 @@
   (should (string= (url-recreate-url (verb--clean-url "https://foo.com?test=hello world"))
 		   "https://foo.com/?test=hello%20world"))
 
-  ;; No schema
+  ;; No scheme
   (should (string= (url-recreate-url (verb--clean-url "foo/bar"))
 		   "foo/bar"))
 
@@ -1618,7 +1618,7 @@
 		 (verb--clean-url expected))))
 
 (ert-deftest test-override-url ()
-  ;; Schema
+  ;; Scheme
   (assert-url-override "https://hello.com"
 		       "http://hello.com"
 		       "http://hello.com")
