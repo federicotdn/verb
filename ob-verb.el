@@ -66,6 +66,29 @@ The default value for OPERATION is \"send\"."
       (_
        (user-error "Invalid value for :op argument: %s" op)))))
 
+(defun org-babel-expand-body:verb (body params)
+  "Expand BODY according to PARAMS, return the expanded body.
+This simply exports the block as verb and returns it.
+
+This function is called by `org-babel-expand-src-block'.
+
+See `org-babel-execute:verb' for details of PARAMS."
+  (let* ((processed-params (org-babel-process-params params))
+         (vars (mapcar #'cdr (seq-filter (lambda (x) (eq (car x) :var))
+                                         processed-params)))
+         (rs (verb--request-spec-from-babel-src-block (point) body vars)))
+    (ob-verb--export-to-verb rs)))
+
+(defun ob-verb--export-to-verb (rs)
+  "Export a request spec RS to Verb format.
+Like `verb--export-to-verb' but returns string instead of a
+buffer."
+  (save-window-excursion
+    (with-current-buffer (verb--export-to-verb rs)
+      (let ((result (verb--buffer-string-no-properties)))
+        (kill-buffer)
+        result))))
+
 (defun ob-verb--export-request (rs name)
   "Export the request specified by the selected Babel source block.
 RS should contain the request spec extracted from the source block.
@@ -75,11 +98,7 @@ with the contents of the exported request.
 Called when :op `export' is passed to `org-babel-execute:verb'."
   (pcase name
     ("verb"
-     (save-window-excursion
-       (with-current-buffer (verb--export-to-verb rs)
-         (let ((result (verb--buffer-string-no-properties)))
-           (kill-buffer)
-           result))))
+     (ob-verb--export-to-verb rs))
     ("curl"
      (verb--export-to-curl rs t t))
     ("websocat"
