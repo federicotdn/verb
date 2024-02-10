@@ -66,7 +66,7 @@ The default value for OPERATION is \"send\"."
       (_
        (user-error "Invalid value for :op argument: %s" op)))))
 
-(defun org-babel-expand-body:verb (body params)
+(defun ob-verb-expand-body (body params)
   "Expand BODY according to PARAMS, return the expanded body.
 This simply exports the block as verb and returns it.
 
@@ -78,6 +78,12 @@ See `org-babel-execute:verb' for details of PARAMS."
                                          processed-params)))
          (rs (verb--request-spec-from-babel-src-block (point) body vars)))
     (ob-verb--export-to-verb rs)))
+
+;; Added to ensure linter succeeds.
+(define-obsolete-function-alias
+  'org-babel-expand-body:verb
+  'ob-verb-expand-body
+  "2024-02-10")
 
 (defun ob-verb--export-to-verb (rs)
   "Export a request spec RS to Verb format.
