@@ -19,7 +19,7 @@
 - Added additional advice to url.el to prevent it from dropping the response body when the `Content-Encoding` is set to `gzip` but the contents themselves are not actually compressed.
 - Added support for using `org-babel-expand-src-block` on `verb` Babel source blocks.
 
-## **2.15.0** - 2021-11-03 (MELPA Stable)
+## **2.15.0** - 2021-11-03
 - Fixed font locking on indented Babel source blocks.
 - Added `verb-part` and `verb-boundary` functions, to facilitate building requests using `multipart/form-data`.
 
