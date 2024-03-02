@@ -96,5 +96,5 @@ run: clean server-bg
 	make run-noserver; \
 	make server-kill
 
-run-noserver:
+run-noserver: ## Same as "run", but without the test HTTP server running.
 	FONT_SIZE=$(FONT_SIZE) $(EMACS) -Q -L . --load test/init.el
