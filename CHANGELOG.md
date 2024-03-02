@@ -1,5 +1,7 @@
 # Verb Changelog
 ## **main** (MELPA)
+
+## **2.16.0** - 2024-03-02 (MELPA Stable)
 - Fixed LF being used instead of CRLF in multipart boundaries.
 - When sending a request, include the HTTP method and path in the message displayed on the minibuffer.
 - The `verb-json-get` function now accepts negative integer arguments for accessing list elements.
