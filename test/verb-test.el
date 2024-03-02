@@ -1148,7 +1148,8 @@
     (org-mode)
     (verb-mode)
     (verb--eval-string "(verb-var test-var-foo \"foo\")" (current-buffer))
-    (let ((current-prefix-arg '(4)))
+    (let ((current-prefix-arg '(4))
+          (inhibit-message t))
       (verb-set-var 'test-var-foo 123)
       (should (string= (car kill-ring) "foo")))))
 
@@ -1798,11 +1799,12 @@
     (with-temp-buffer
       (org-mode)
       (verb-mode)
-      (insert "{{" code "}}")
-      (verb--eval-string code (current-buffer))
-      (backward-char 4)
-      (message nil)
-      (should (string= "Current value for foobar: 123123" (verb--var-preview))))))
+      (let ((inhibit-message t))
+        (insert "{{" code "}}")
+        (verb--eval-string code (current-buffer))
+        (backward-char 4)
+        (message nil)
+        (should (string= "Current value for foobar: 123123" (verb--var-preview)))))))
 
 (ert-deftest test-disable-verb-mode-completion-at-point ()
   (with-temp-buffer
@@ -1952,14 +1954,16 @@
     (verb-mode)
     (insert (join-lines "* test :verb:"
                         "get http://localhost:8000/basic"))
+    (setq inhibit-message t)
     (let ((w (selected-window))
           (b (current-buffer))
-          (resp (verb-send-request-on-point-no-window))
-          (inhibit-message t))
+          (resp (verb-send-request-on-point-no-window)))
       (while (eq (buffer-local-value 'verb-http-response resp) t)
         (sleep-for req-sleep-time))
       (should (equal w (selected-window)))
-      (should (equal b (current-buffer))))))
+      (should (equal b (current-buffer))))
+
+    (setq inhibit-message nil)))
 
 (ert-deftest test-c-u-temp-buffer-contents ()
   (with-temp-buffer
@@ -1978,28 +1982,30 @@
     (should (search-forward "{{(+ 40 2)}}"))))
 
 (ert-deftest test-c-u-verb-var ()
-  (with-temp-buffer
-    (org-mode)
-    (verb-mode)
-    (verb-var testvar1 "World!")
-    (insert (join-lines "* test :verb:"
-                        "post http://localhost:8000/echo"
-                        ""
-                        "Hello, {{(verb-var testvar1)}}"))
-    ;; C-u M-x verb-send-request-on-point
-    (let ((current-prefix-arg '(4)))
-      (cl-letf (((symbol-function 'verb--split-window) (lambda () (selected-window))))
-        (call-interactively 'verb-send-request-on-point)))
-    (should (string= (buffer-name) "*Edit HTTP Request*"))
+  (let ((inhibit-message t))
+    (with-temp-buffer
+      (org-mode)
+      (verb-mode)
+      (verb-var testvar1 "World!")
+      (insert (join-lines "* test :verb:"
+                          "post http://localhost:8000/echo"
+                          ""
+                          "Hello, {{(verb-var testvar1)}}"))
+      ;; C-u M-x verb-send-request-on-point
+      (let ((current-prefix-arg '(4)))
+        (cl-letf (((symbol-function 'verb--split-window) (lambda () (selected-window))))
+          (call-interactively 'verb-send-request-on-point)))
+      (should (string= (buffer-name) "*Edit HTTP Request*"))
 
-    ;; C-c C-c
-    (with-current-buffer (call-interactively (local-key-binding (kbd "C-c C-c")))
-      (while (eq verb-http-response t)
-        (sleep-for req-sleep-time))
-      (should (string= (buffer-string) "Hello, World!")))))
+      ;; C-c C-c
+      (with-current-buffer (call-interactively (local-key-binding (kbd "C-c C-c")))
+        (while (eq verb-http-response t)
+          (sleep-for req-sleep-time))
+        (should (string= (buffer-string) "Hello, World!"))))))
 
 (ert-deftest test-c-u-send-request ()
-  (setq verb--stored-responses nil)
+  (setq verb--stored-responses nil
+        inhibit-message t)
   (with-temp-buffer
     (org-mode)
     (verb-mode)
@@ -2026,7 +2032,9 @@
       (while (eq verb-http-response t)
         (sleep-for req-sleep-time))
       (should (string= (buffer-string) "Foobar!!??"))
-      (should (string= (oref (verb-stored-response "test-c-u") body) "Foobar!!??")))))
+      (should (string= (oref (verb-stored-response "test-c-u") body) "Foobar!!??"))))
+
+  (setq inhibit-message nil))
 
 (ert-deftest test-repeated-args ()
   (server-test "repeated-args"
@@ -2432,7 +2440,8 @@
   (setq test-rs (text-as-spec-nl "GET http://localhost:8000/sorted-headers"
                                  "Accept: text/xhtml"
                                  "Foo: Bar123"))
-  (verb--request-spec-send-eww test-rs)
+  (let ((inhibit-message t))
+    (verb--request-spec-send-eww test-rs))
   (with-current-buffer (get-buffer "*eww*")
     (sleep-for 0.5)
     (goto-char (point-min))
@@ -2556,7 +2565,8 @@
 			"template http://localhost:8000/basic"
 			"#+end_src"))
     (re-search-backward "template")
-    (should-error (org-ctrl-c-ctrl-c))))
+    (let ((inhibit-message t))
+      (should-error (org-ctrl-c-ctrl-c)))))
 
 (ert-deftest test-babel-request-name ()
   (with-temp-buffer
@@ -2571,7 +2581,8 @@
 			"get http://localhost:8000/basic"
 			"#+end_src"))
     (re-search-backward "get")
-    (org-ctrl-c-ctrl-c)
+    (let ((inhibit-message t))
+      (org-ctrl-c-ctrl-c))
     (should (equal (oref (oref verb-last request) metadata)
 		   '(("VERB-NAME" . "JOHN"))))))
 
@@ -2583,7 +2594,8 @@
 			"get http://localhost:8000/basic"
 			"#+end_src"))
     (re-search-backward "get")
-    (should-error (org-ctrl-c-ctrl-c))))
+    (let ((inhibit-message t))
+      (should-error (org-ctrl-c-ctrl-c)))))
 
 (ert-deftest test-babel-invalid-export ()
   (with-temp-buffer
@@ -2593,7 +2605,8 @@
 			"get http://localhost:8000/basic"
 			"#+end_src"))
     (re-search-backward "get")
-    (should-error (org-ctrl-c-ctrl-c))))
+    (let ((inhibit-message t))
+      (should-error (org-ctrl-c-ctrl-c)))))
 
 (ert-deftest test-babel-invalid-send-arg ()
   (with-temp-buffer
@@ -2603,7 +2616,8 @@
 			"get http://localhost:8000/basic"
 			"#+end_src"))
     (re-search-backward "get")
-    (should-error (org-ctrl-c-ctrl-c))))
+    (let ((inhibit-message t))
+      (should-error (org-ctrl-c-ctrl-c)))))
 
 (defun babel-test (input output)
   (with-temp-buffer

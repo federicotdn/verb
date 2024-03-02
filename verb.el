@@ -587,10 +587,19 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
           (throw 'end nil)))
       t)))
 
+(cl-deftype verb--http-method-type ()
+  '(or null (satisfies verb--http-method-p)))
+
+(cl-deftype verb--alist-type ()
+  '(or null (satisfies verb--alist-p)))
+
+(cl-deftype verb--http-headers-type ()
+  '(or null (satisfies verb--http-headers-p)))
+
 (defclass verb-request-spec ()
   ((method :initarg :method
            :initform nil
-           :type (or null verb--http-method)
+           :type verb--http-method-type
            :documentation "HTTP method.")
    (url :initarg :url
         :initform nil
@@ -598,7 +607,7 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
         :documentation "Request URL.")
    (headers :initarg :headers
             :initform ()
-            :type (or null verb--http-headers)
+            :type verb--http-headers-type
             :documentation "HTTP headers.")
    (body :initarg :body
          :initform nil
@@ -606,7 +615,7 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
          :documentation "Request body.")
    (metadata :initarg :metadata
              :initform nil
-             :type (or null verb--alist)
+             :type verb--alist-type
              :documentation "User-defined request metadata."))
   "Represents an HTTP request to be made.")
 
@@ -615,7 +624,7 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
             :type verb-request-spec
             :documentation "Corresponding request.")
    (headers :initarg :headers
-            :type (or null verb--http-headers)
+            :type verb--http-headers-type
             :documentation "Response headers.")
    (status :initarg :status
            :type (or null string)
