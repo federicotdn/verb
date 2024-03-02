@@ -90,7 +90,7 @@ See `org-babel-execute:verb' for details of PARAMS."
 Like `verb--export-to-verb' but returns string instead of a
 buffer."
   (save-window-excursion
-    (with-current-buffer (verb--export-to-verb rs)
+    (with-current-buffer (verb--export-to-verb rs t)
       (let ((result (verb--buffer-string-no-properties)))
         (kill-buffer)
         result))))

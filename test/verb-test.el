@@ -2531,7 +2531,7 @@
 				   "Test2: Foo"
 				   ""
 				   "Body contents"))
-  (with-current-buffer (verb--export-to-verb test-spec)
+  (with-current-buffer (verb--export-to-verb test-spec t)
     (should (string= (verb--buffer-string-no-properties)
 		     (verb-request-spec-to-string test-spec)))
     ;; We should be able to parse the string back to a request-spec and

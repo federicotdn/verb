@@ -772,6 +772,11 @@ If `verb-enable-log' is nil, do not log anything."
         (when (> (line-number-at-pos) (1+ line))
           (newline))))))
 
+(defun verb--ensure-org-mode ()
+  "Ensure `org-mode' is enabled in the current buffer."
+  (unless (derived-mode-p 'org-mode)
+    (org-mode)))
+
 (defun verb--ensure-verb-mode ()
   "Ensure `verb-mode' is enabled in the current buffer."
   (unless verb-mode
@@ -1260,8 +1265,7 @@ buffer used to show the request."
         (name (buffer-name)))
     (with-current-buffer (get-buffer-create "*Show HTTP Request*")
       ;; Set up buffer
-      (unless (derived-mode-p 'org-mode)
-        (org-mode))
+      (verb--ensure-org-mode)
       (verb--ensure-verb-mode)
       (erase-buffer)
 
@@ -1397,8 +1401,7 @@ After the user has finished modifying the buffer, they can press
   (switch-to-buffer-other-window (get-buffer-create "*Edit HTTP Request*"))
   ;; "Reset" the buffer in case it wasn't killed correctly
   (erase-buffer)
-  (unless (derived-mode-p 'org-mode)
-    (org-mode))
+  (verb--ensure-org-mode)
   (verb--ensure-verb-mode)
 
   ;; Don't require tagging for this temp buffer
@@ -1531,11 +1534,15 @@ See `verb--export-to-websocat' for more information."
   (interactive)
   (verb-export-request-on-point "websocat"))
 
-(defun verb--export-to-verb (rs)
+(defun verb--export-to-verb (rs &optional omit-heading)
   "Export a request spec RS to Verb format.
-Return a new buffer with the export results inserted into it."
-  (with-current-buffer (generate-new-buffer "*HTTP Request Spec*")
-    (verb-mode)
+Return a new buffer with the export results inserted into it.
+If OMIT-HEADING is non-nil, do not insert an Org heading on the top."
+  (with-current-buffer (generate-new-buffer "*Exported HTTP Request*")
+    (verb--ensure-org-mode)
+    (verb--ensure-verb-mode)
+    (unless omit-heading
+      (insert (format "* Exported HTTP Request  :%s:\n" verb-tag)))
     (insert (verb-request-spec-to-string rs))
     (switch-to-buffer-other-window (current-buffer))
     (current-buffer)))
