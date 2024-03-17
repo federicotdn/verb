@@ -788,7 +788,18 @@ Content-Type: application/json; charset=utf-8
 And then execute the source block again with <kbd>C-c C-c</kbd>, which will execute the export and insert the results below.
 
 ### Proxies
-To use an HTTP(S) proxy with Verb, refer to the Emacs documentation for [Proxies and Gatewaying](https://www.gnu.org/software/emacs/manual/html_node/url/Proxies.html).
+There's two ways of using HTTP proxies in Verb. The first one is to manually configure the `url-proxy-services` variable like explained in [Proxies and Gatewaying](https://www.gnu.org/software/emacs/manual/html_node/url/Proxies.html). The second one is to specify a proxy address by using the `Verb-Proxy` heading property:
+
+```
+** Make a request using an HTTP proxy
+:properties:
+:Verb-Proxy: my-proxy:5050
+:end:
+
+get http://internal-api/users
+```
+
+When the request is sent, the value of `Verb-Proxy` will automatically be added to `url-proxy-services`, and then automatically removed.
 
 ### Customization
 

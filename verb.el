@@ -897,7 +897,7 @@ Return t if there was a heading to move towards to and nil otherwise."
 
 (defun verb--heading-properties (prefix)
   "Return alist of current heading properties starting with PREFIX.
-Does not use property inheritance.  Matching is case-insensitive."
+Respects `org-use-property-inheritance'.  Matching is case-insensitive."
   (verb--back-to-heading)
   (thread-last
     ;; 1) Get all doc properties and filter them by prefix. This will push the
@@ -1752,6 +1752,8 @@ NUM is this request's identification number."
 
   ;; Remove url.el advice
   (verb--unadvice-url)
+  ;; Undo proxy setup
+  (verb--undo-setup-proxy rs)
 
   ;; Handle errors first
   (when-let ((http-error (plist-get status :error))
@@ -1987,6 +1989,16 @@ For more information, see `verb-advice-url'."
       (advice-remove 'zlib-decompress-region
                      #'verb--zlib-decompress-region))))
 
+(defun verb--setup-proxy (rs)
+  "Set up any HTTP proxy configuration specified by RS."
+  (when-let ((proxy (verb--request-spec-metadata-get rs "proxy")))
+    (push (cons "http" proxy) url-proxy-services)))
+
+(defun verb--undo-setup-proxy (rs)
+  "Undo any HTTP proxy configuration specified by RS."
+  (when-let ((proxy (verb--request-spec-metadata-get rs "proxy")))
+    (setq url-proxy-services (cdr url-proxy-services))))
+
 (defun verb--get-accept-header (headers)
   "Retrieve the value of the \"Accept\" header from alist HEADERS.
 If the header is not present, return \"*/*\" as default."
@@ -2060,6 +2072,9 @@ loaded into."
     ;; Advice url.el functions
     (verb--advice-url)
 
+    ;; Configure proxy if needed
+    (verb--setup-proxy rs)
+
     ;; Look for headers that might get duplicated by url.el
     (dolist (h verb--url-pre-defined-headers)
       (when (assoc-string h url-request-extra-headers t)
@@ -2102,6 +2117,8 @@ loaded into."
                (kill-buffer response-buf)
                ;; Undo advice
                (verb--unadvice-url)
+               ;; Undo proxy setup
+               (verb--undo-setup-proxy rs)
 
                (let ((msg (format "Error sending request: %s" (cadr err))))
                  ;; Log the error
@@ -2139,13 +2156,15 @@ Note: this function is unrelated to `verb--request-spec-send'."
         (url-request-extra-headers (verb--prepare-http-headers
                                     (oref rs headers))))
     (verb--advice-url)
+    (verb--setup-proxy rs)
     (unwind-protect
         (prog1
             (eww (verb-request-spec-url-to-string rs))
           ;; "Use" the variable to avoid compiler warning.
           ;; This variable is not available in some Emacs versions.
           eww-accept-content-types)
-      (verb--unadvice-url))))
+      (verb--unadvice-url)
+      (verb--undo-setup-proxy rs))))
 
 (cl-defmethod verb-request-spec-to-string ((rs verb-request-spec))
   "Return request spec RS as a string.

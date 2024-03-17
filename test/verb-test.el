@@ -2891,5 +2891,26 @@
                    "file-contents-here") ;; No final boundary
   (should-log-contain "Detected an unfinished multipart form"))
 
+(ert-deftest test-proxy-setup ()
+  (should-not url-proxy-services)
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Proxy: myproxy:8181"
+      ":end:"
+      "post http://localhost"))
+
+    (let ((rs (verb--request-spec-from-hierarchy)))
+      (verb--setup-proxy rs)
+      (should (equal url-proxy-services '(("http" . "myproxy:8181"))))
+      (verb--undo-setup-proxy rs)))
+
+  (should-not url-proxy-services))
+
 (provide 'verb-test)
 ;;; verb-test.el ends here
