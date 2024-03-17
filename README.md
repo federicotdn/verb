@@ -284,7 +284,7 @@ If you include one of these headers in one of your requests (except `Accept`), V
 To add a body to your HTTP request, simply insert it below the method, URL and headers. A blank line **must** be left between the headers and the body. Continuing with our previous example, add the following contents at the end of the file:
 
 ```
-* Create a user
+* Create a user         :verb:
 post https://reqres.in/api/users
 Accept: application/json
 Content-Type: application/json; charset=utf-8
@@ -306,7 +306,7 @@ If your body contains binary data (i.e. raw bytes that do not correspond to any 
 The request body can also be wrapped inside a Babel source block. If this is the case, the lines containing the `#+begin_src` and `#+end_src` delimiters will be automatically erased before the request is sent. For example, the request body above could be wrapped with a `javascript` source block for better font locking:
 
 ```
-* Create a user
+* Create a user         :verb:
 post https://reqres.in/api/users
 Accept: application/json
 Content-Type: application/json; charset=utf-8
@@ -494,6 +494,8 @@ If you wish to explicitly re-set the value of a variable set with `verb-var`, us
 If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). The following example does this; add it to the ending of your `guide.org` file:
 
 ```
+(...)
+
 ** Get last created user
 # Extract the "id" value from the previous
 # JSON response body.
@@ -515,6 +517,8 @@ The `Verb-Store` property has a special meaning. When this property is set, Verb
 So, for example, we could modify our create/retrieve user endpoints like so:
 
 ```
+(...)
+
 ** Create a user
 :properties:
 :Verb-Store: new-user
@@ -552,6 +556,8 @@ So, for example, having the following function:
 We could add the following level 2 heading to the example in the previous section:
 
 ```
+(...)
+
 ** Upload file to user storage
 :properties:
 :Verb-Map-Request: remove-body-newlines
@@ -570,6 +576,8 @@ When sent or exported, the request's body will by modified by `remove-body-newli
 The function to be mapped can also be a `lambda` expression, like so:
 
 ```
+(...)
+
 ** Upload file to user storage
 :properties:
 :Verb-Map-Request:  (lambda (rs)
@@ -603,6 +611,8 @@ This has the same effect as the previous example. Note also how we've used the f
 You may have noticed that because headings start with `*`, you cannot include lines starting with `*` in your request bodies, because Org will interpret them as a new heading. To get around this, you can prefix request body lines starting with `*` with an empty code tag, `{{}}`. The empty code tag will evaluate to the empty string, so it won't modify the content of your request body. Following from our previous example, we can modify it like so:
 
 ```
+(...)
+
 ** Upload file to user storage
 post /{{(verb-var user-id)}}/upload
 Content-Type: text/markdown; charset=utf-8
@@ -618,6 +628,8 @@ Content-Type: text/markdown; charset=utf-8
 To upload a file, you can use the included `verb-read-file` function. This function reads a file into a buffer and sets its `verb-kill-this-buffer` variable to `t`, and then returns the buffer. Use it from inside code tags to insert the contents of a local file in a request. To test this, we can modify the previous example so that instead of manually writing a Markdown file, we now read one from disk:
 
 ```
+(...)
+
 ** Upload file to user storage
 post /{{(verb-var user-id)}}/upload
 Content-Type: text/markdown; charset=utf-8
@@ -640,6 +652,8 @@ On the other hand, the `verb-part` function can be used in code tags to start ne
 The following is an example that combines these two functions, along with `verb-read-file`:
 
 ```
+(...)
+
 ** Upload two files to user storage
 post /{{(verb-var user-id)}}/upload
 Content-Type: multipart/form-data; boundary={{(verb-boundary)}}
@@ -658,6 +672,8 @@ Content-Type: application/xml
 In HTTP, the end-of-line marker is CRLF (`\r\n`) instead of LF (`\n`). Although some web servers handle LF as CRLF for compatibility, some do not. If you encounter a similar problem, try to insert CR (`\r`) manually. For example:
 
 ```
+(...)
+
 ** Upload two files to user storage
 post /{{(verb-var user-id)}}/upload
 Content-Type: multipart/form-data; boundary={{(verb-boundary)}}
@@ -705,7 +721,7 @@ To enable this feature, remember to add `verb` to the `org-babel-load-languages`
 
 Once that's done, simply wrap your HTTP request specification (excluding the Org heading) with `#+begin_src`/`#+end_src` using `verb` as the source block language. For example, given the following request:
 ```
-* Make a request to an API
+* Make a request to an API         :verb:
 
 post https://example.com/api/users
 Content-Type: application/json; charset=utf-8
@@ -718,7 +734,7 @@ Content-Type: application/json; charset=utf-8
 
 The Babel-compatible version would be:
 ```
-* Make a request to an API
+* Make a request to an API         :verb:
 
 #+begin_src verb :wrap src ob-verb-response
 post https://example.com/api/users
@@ -752,7 +768,7 @@ As opposed to requests sent with the `verb-send-request-on-point-*` commands, re
 Instead of specifying just `:op send`, you may add an additional argument: `get-headers` or `get-body`. Using the former will change the result of executing the source block to just the response headers. Using the latter will do the same, but for the response body. Here's an example:
 
 ```
-* Make a request to an API (get body only)
+* Make a request to an API (get body only)         :verb:
 #+begin_src verb :wrap src ob-verb-response :op send get-body
 post https://example.com/api/users
 Content-Type: application/json; charset=utf-8
@@ -773,7 +789,7 @@ If you wish to export the request to a particular format instead, use the `:op e
 
 So for example, if you wanted to export the previous example to `curl`, you would need to write:
 ```
-* Export request to curl
+* Export request to curl         :verb:
 #+begin_src verb :op export curl
 post https://example.com/api/users
 Content-Type: application/json; charset=utf-8
@@ -791,7 +807,7 @@ And then execute the source block again with <kbd>C-c C-c</kbd>, which will exec
 There's two ways of using HTTP proxies in Verb. The first one is to manually configure the `url-proxy-services` variable like explained in [Proxies and Gatewaying](https://www.gnu.org/software/emacs/manual/html_node/url/Proxies.html). The second one is to specify a proxy address by using the `Verb-Proxy` heading property:
 
 ```
-** Make a request using an HTTP proxy
+** Make a request using an HTTP proxy         :verb:
 :properties:
 :Verb-Proxy: my-proxy:5050
 :end:
