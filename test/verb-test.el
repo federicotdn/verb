@@ -1871,9 +1871,7 @@
      (let ((inhibit-message t))
        (with-current-buffer (verb-send-request-on-point nil)
          (while (eq verb-http-response t)
-           (sleep-for req-sleep-time)
-           (when (eq verb-url-retrieve-function #'url-queue-retrieve)
-             (ert-run-idle-timers)))
+           (sleep-for req-sleep-time))
          ,@body))))
 
 (defun clear-log ()
@@ -2050,11 +2048,6 @@
   (should-not (verb--object-of-class-p t 'verb-response))
   (should-not (verb--object-of-class-p nil 'verb-response))
   (should-not (verb--object-of-class-p 42 'verb-response)))
-
-(ert-deftest test-server-basic-queue ()
-  (let ((verb-url-retrieve-function #'url-queue-retrieve))
-    (server-test "basic"
-                 (should (string= (buffer-string) "Hello, World!")))))
 
 (ert-deftest test-server-basic ()
   (server-test "basic"

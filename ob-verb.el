@@ -129,14 +129,6 @@ variable.
 
 Called when :op `send' is passed to `org-babel-execute:verb'.  An
 optional argument may follow `send'."
-  (when (eq verb-url-retrieve-function #'url-queue-retrieve)
-    ;; TODO: url-queue isn't working here because of the use of
-    ;; `sleep-for'. Maybe we could use `ert-run-idle-timers' but that
-    ;; sounds like a bad idea.
-    (user-error "%s"
-                (concat "Using `url-queue-retrieve' with"
-                        " Babel is currently not supported\n"
-                        "Please try again using `url-retrieve'")))
   (when (and part (not (member part '("get-body" "get-headers"))))
     (user-error "Invalid send argument: %s" part))
   (let* ((start (time-to-seconds))

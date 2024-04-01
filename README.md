@@ -26,7 +26,6 @@ Verb requires at least Emacs version 26 to work.
 - Integrates with Babel and EWW.
 - Includes mouse support (menu bar and mode line).
 - Supports file uploads.
-- Optionally uses `url-queue` backend.
 - Has no dependencies!
 - Easy to use! (hopefully).
 

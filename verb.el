@@ -36,7 +36,6 @@
 (require 'eieio)
 (require 'subr-x)
 (require 'url)
-(require 'url-queue)
 (require 'mm-util)
 (require 'json)
 (require 'js)
@@ -196,6 +195,9 @@ info node `(url)Retrieving URLs'."
                  (function-item
                   :tag "url-queue-retrieve from url-queue.el"
                   url-queue-retrieve)))
+(make-obsolete-variable 'verb-url-retrieve-function
+                        "this feature is no longer supported."
+                        "2024-04-02")
 
 (defcustom verb-json-max-pretty-print-size (* 1 1024 1024)
   "Max JSON file size (bytes) to automatically prettify when received.
@@ -2098,16 +2100,15 @@ loaded into."
 
     ;; Send the request!
     (condition-case err
-        (funcall verb-url-retrieve-function
-                 url
-                 #'verb--request-spec-callback
-                 (list rs
-                       response-buf
-                       start-time
-                       timeout-timer
-                       where
-                       num)
-                 t verb-inhibit-cookies)
+        (url-retrieve url
+                      #'verb--request-spec-callback
+                      (list rs
+                            response-buf
+                            start-time
+                            timeout-timer
+                            where
+                            num)
+                      t verb-inhibit-cookies)
       (error (progn
                ;; Cancel timer
                (when timeout-timer

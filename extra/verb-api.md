@@ -111,7 +111,6 @@ All hooks, variables, functions and classes starting with `verb-` but not starti
 - User Option: **verb-tag**
 - User Option: **verb-show-timeout-warning**
 - User Option: **verb-code-tag-delimiters**
-- User Option: **verb-url-retrieve-function**
 - User Option: **verb-json-max-pretty-print-size**
 - User Option: **verb-json-use-mode**
 - User Option: **verb-babel-timeout**
