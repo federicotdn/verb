@@ -41,7 +41,7 @@
 (require 'js)
 (require 'seq)
 (require 'verb-util)
-(require 'verb-websocket)
+(require 'verb-ws)
 
 (defgroup verb nil
   "An HTTP client for Emacs that extends Org mode."

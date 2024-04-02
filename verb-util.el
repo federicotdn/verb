@@ -113,6 +113,8 @@ If `verb-enable-log' is nil, do not log anything."
       (let ((inhibit-read-only t)
             (last "")
             (msg (apply #'format args)))
+        (unless (= (buffer-size) 0)
+          (insert "\n"))
         ;; Get last logged request number
         (when (re-search-backward "^\\(-\\|[[:digit:]]+\\)\\s-"
                                   nil t)
@@ -124,11 +126,13 @@ If `verb-enable-log' is nil, do not log anything."
                             (make-string (length request) ? )
                           request)
                         level)
-                msg "\n")
+                msg)
         ;; If logged messaged contained newlines, add a blank line
         ;; to make things more readable
         (when (string-match-p "\n" msg)
-          (newline))))))
+          (newline)))
+      (dolist (w (get-buffer-window-list (current-buffer) nil t))
+        (set-window-point w (point-max))))))
 
 (defun verb-show-log ()
   "Switch to the *Verb Log* buffer."

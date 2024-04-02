@@ -1,4 +1,4 @@
-;;; verb-websocket.el --- Websocket support for Verb  -*- lexical-binding: t -*-
+;;; verb-ws.el --- Websocket support for Verb  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2024  Federico Tedin
 
@@ -35,35 +35,35 @@
 (require 'url)
 (require 'verb-util)
 
-(defconst verb--ws-key-alphabet
+(defconst verb-ws--key-alphabet
   (concat "abcdefghijklmnopqrstuvwxyz"
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
           "0123456789")
   "TODO: Docs.")
 
-(defconst verb--ws-key-length 16
+(defconst verb-ws--key-length 16
   "TODO: Docs.")
 
-(defconst verb--ws-version "13"
+(defconst verb-ws--version "13"
   "TODO: Docs.")
 
-(defconst verb--ws-states '(handshake)
+(defconst verb-ws--states '(handshake)
   "TODO: Docs.")
 
-(defun verb--ws-state-p (s)
+(defun verb-ws--state-p (s)
   "TODO: Docs S."
-  (memq s verb--ws-states))
+  (memq s verb-ws--states))
 
-(cl-deftype verb--ws-state-type ()
-  '(satisfies verb--ws-state-p))
+(cl-deftype verb-ws--state-type ()
+  '(satisfies verb-ws--state-p))
 
-(defclass verb--ws ()
+(defclass verb-ws--conn ()
   ((url :initarg :url
         :type url
         :documentation "WebSocket URL.")
    (state :initarg :state
           :initform 'handshake
-          :type verb--ws-state-type
+          :type verb-ws--state-type
           :documentation "Current state..")
    (connection :initarg :connection
                :type process
@@ -80,57 +80,57 @@
            :documentation "Arguments for user-provided callback."))
   "TODO: Docs.")
 
-(defun verb--ws-get-headers (url key)
+(defun verb-ws--get-headers (url key)
   "TODO: Docs URL KEY."
   (append url-request-extra-headers
           (list (cons "Host" (url-host url))
                 (cons "Upgrade" "websocket")
                 (cons "Connection" "Upgrade")
                 (cons "Sec-WebSocket-Key" key)
-                (cons "Sec-WebSocket-Version" verb--ws-version))))
+                (cons "Sec-WebSocket-Version" verb-ws--version))))
 
-(defun verb--ws-generate-key ()
+(defun verb-ws--generate-key ()
   "TODO: Docs."
   (let (chars i)
-    (dotimes (_ verb--ws-key-length)
-      (setq i (% (abs (random t)) (length verb--ws-key-alphabet)))
-      (push (substring verb--ws-key-alphabet i (1+ i)) chars))
+    (dotimes (_ verb-ws--key-length)
+      (setq i (% (abs (random t)) (length verb-ws--key-alphabet)))
+      (push (substring verb-ws--key-alphabet i (1+ i)) chars))
     (base64-encode-string (mapconcat #'identity chars ""))))
 
-(defun verb--ws-retrieve (url callback &optional cbargs)
+(defun verb-ws--retrieve (url callback &optional cbargs)
   "TODO: Docs URL CALLBACK CBARGS."
   (let* ((url (if (stringp url) (url-generic-parse-url url) url))
-         (connection (verb--ws-open-stream url))
-         (ws (verb--ws :url url
+         (connection (verb-ws--open-stream url))
+         (ws (verb-ws--conn :url url
                        :connection connection
                        :callback callback
                        :cbargs cbargs))
-         (recv-fn (verb--ws-recv-fn ws)))
+         (recv-fn (verb-ws--recv-fn ws)))
 	(set-process-filter connection recv-fn)
-    (verb--ws-initialize ws)))
+    (verb-ws--initialize ws)))
 
-(defun verb--ws-recv-fn (ws)
+(defun verb-ws--recv-fn (ws)
   "TODO: Docs WS."
   (lambda (_ data)
-    (verb--ws-recv-internal ws data)))
+    (verb-ws--recv-internal ws data)))
 
-(defun verb--ws-send-fn (ws)
+(defun verb-ws--send-fn (ws)
   "TODO: Docs WS."
   (lambda (s)
-    (verb--ws-send-internal ws s)))
+    (verb-ws--send-internal ws s)))
 
-(cl-defmethod verb--ws-initialize ((ws verb--ws))
+(cl-defmethod verb-ws--initialize ((ws verb-ws--conn))
   "TODO: Docs WS."
   (let* ((url (oref ws url))
          (path (or (verb--nonempty-string (car (url-path-and-query url)))
                    "/"))
-         (key (verb--ws-generate-key)))
-    (verb--ws-send-internal ws (format "GET %s HTTP/1.1\r\n" path))
-    (dolist (h (verb--ws-get-headers url key))
-      (verb--ws-send-internal ws (format "%s: %s\r\n" (car h) (cdr h))))
-    (verb--ws-send-internal ws "\r\n")))
+         (key (verb-ws--generate-key)))
+    (verb-ws--send-internal ws (format "GET %s HTTP/1.1\r\n" path))
+    (dolist (h (verb-ws--get-headers url key))
+      (verb-ws--send-internal ws (format "%s: %s\r\n" (car h) (cdr h))))
+    (verb-ws--send-internal ws "\r\n")))
 
-(cl-defmethod verb--ws-recv-internal ((ws verb--ws) data)
+(cl-defmethod verb-ws--recv-internal ((ws verb-ws--conn) data)
   "TODO: Docs WS DATA."
   (let ((state (oref ws state))
         (buf (oref ws buffer)))
@@ -172,11 +172,11 @@
       (_
        (error "Unknown state: %s" state)))))
 
-(cl-defmethod verb--ws-send-internal ((ws verb--ws) data)
+(cl-defmethod verb-ws--send-internal ((ws verb-ws--conn) data)
   "TODO: Docs WS DATA."
   (process-send-string (oref ws connection) data))
 
-(defun verb--ws-open-stream (url)
+(defun verb-ws--open-stream (url)
   "TODO: Docs URL."
   ;; Heavily based on code from url-http.el (url-http-find-free-connection).
   (let ((url-current-object url)
@@ -200,7 +200,7 @@
 	    (set-process-query-on-exit-flag (get-buffer-process buffer) nil))
 	  (kill-buffer buffer))))
 
-;; (defun verb--test-ws ()
+;; (defun verb-ws-ws ()
 ;;   (interactive)
 ;;   (eval-buffer)
 ;;   (setq cb
@@ -208,7 +208,7 @@
 ;;           (funcall send-fn "test data")
 ;;           (funcall send-fn "test data")))
 
-;;   (verb--ws-retrieve "ws://localhost:8000/ws/echo" cb))
+;;   (verb-ws--retrieve "ws://localhost:8000/ws/echo" cb))
 
-(provide 'verb-websocket)
-;;; verb-websocket.el ends here
+(provide 'verb-ws)
+;;; verb-ws.el ends here
