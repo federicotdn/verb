@@ -40,6 +40,7 @@
 (require 'json)
 (require 'js)
 (require 'seq)
+(require 'verb-websocket)
 
 (defgroup verb nil
   "An HTTP client for Emacs that extends Org mode."
