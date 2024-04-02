@@ -4,6 +4,10 @@
 
 ;; Author: Federico Tedin <federicotedin@gmail.com>
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
+;; Homepage: https://github.com/federicotdn/verb
+;; Keywords: tools
+;; Package-Version: 2.16.0
+;; Package-Requires: ((emacs "26.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,21 +32,26 @@
 
 ;;; Code:
 
+(require 'url)
+(require 'verb-util)
+
 (defconst verb--ws-key-alphabet
   (concat "abcdefghijklmnopqrstuvwxyz"
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
           "0123456789")
-  "TODO")
+  "TODO: Docs.")
 
 (defconst verb--ws-key-length 16
-  "TODO")
+  "TODO: Docs.")
 
 (defconst verb--ws-version "13"
-  "TODO")
+  "TODO: Docs.")
 
-(defconst verb--ws-states '(handshake))
+(defconst verb--ws-states '(handshake)
+  "TODO: Docs.")
 
 (defun verb--ws-state-p (s)
+  "TODO: Docs S."
   (memq s verb--ws-states))
 
 (cl-deftype verb--ws-state-type ()
@@ -69,9 +78,10 @@
    (cbargs :initarg :cbargs
            :type list
            :documentation "Arguments for user-provided callback."))
-  "TODO: Docs")
+  "TODO: Docs.")
 
 (defun verb--ws-get-headers (url key)
+  "TODO: Docs URL KEY."
   (append url-request-extra-headers
           (list (cons "Host" (url-host url))
                 (cons "Upgrade" "websocket")
@@ -80,7 +90,7 @@
                 (cons "Sec-WebSocket-Version" verb--ws-version))))
 
 (defun verb--ws-generate-key ()
-  "TODO"
+  "TODO: Docs."
   (let (chars i)
     (dotimes (_ verb--ws-key-length)
       (setq i (% (abs (random t)) (length verb--ws-key-alphabet)))
@@ -88,29 +98,29 @@
     (base64-encode-string (mapconcat #'identity chars ""))))
 
 (defun verb--ws-retrieve (url callback &optional cbargs)
-  "TODO: Docs"
+  "TODO: Docs URL CALLBACK CBARGS."
   (let* ((url (if (stringp url) (url-generic-parse-url url) url))
          (connection (verb--ws-open-stream url))
          (ws (verb--ws :url url
                        :connection connection
                        :callback callback
                        :cbargs cbargs))
-         (send-fn (verb--ws-send-fn ws))
          (recv-fn (verb--ws-recv-fn ws)))
-
 	(set-process-filter connection recv-fn)
     (verb--ws-initialize ws)))
 
 (defun verb--ws-recv-fn (ws)
-  (lambda (proc data)
+  "TODO: Docs WS."
+  (lambda (_ data)
     (verb--ws-recv-internal ws data)))
 
 (defun verb--ws-send-fn (ws)
+  "TODO: Docs WS."
   (lambda (s)
     (verb--ws-send-internal ws s)))
 
 (cl-defmethod verb--ws-initialize ((ws verb--ws))
-  "TODO: Docs"
+  "TODO: Docs WS."
   (let* ((url (oref ws url))
          (path (or (verb--nonempty-string (car (url-path-and-query url)))
                    "/"))
@@ -121,9 +131,10 @@
     (verb--ws-send-internal ws "\r\n")))
 
 (cl-defmethod verb--ws-recv-internal ((ws verb--ws) data)
-  "TODO: Docs"
+  "TODO: Docs WS DATA."
   (let ((state (oref ws state))
         (buf (oref ws buffer)))
+    (verb--log nil 'D "ws-recv-internal; state=%s" state)
     (pcase state
       ('handshake ; Receiving handshake response from server
        ;; Create buffer lazily
@@ -131,36 +142,42 @@
          (setq buf (oset ws buffer (generate-new-buffer " *verb-ws*"))))
 
        (with-current-buffer buf
-         (insert data))
+         (insert data)
+         (when (re-search-backward "\r\n\r\n" nil t)
+           (let (status-code headers)
+             (goto-char (point-min))
+             ;; Read status line
+             (if (re-search-forward verb--http-status-parse-regexp
+                                    (line-end-position) t)
+                 (setq status-code (match-string 1))
+               (error "TODO status-code not found"))
 
-       (when (re-search-backward "\r\n\r\n" nil t)
-         (let (status-line headers)
-           (goto-char (point-min))
-           ;; Read status line
-           (setq status-line
-                 (verb--nonempty-string
-                  (buffer-substring-no-properties (point) (line-end-position))))
-           (forward-line)
+             (verb--log nil 'D "ws-recv-internal; status-code=%s" status-code)
 
-           ;; Read all headers
-           (while (re-search-forward verb--http-header-parse-regexp
-                                     (line-end-position) t)
-             (let ((key (string-trim (match-string 1)))
-                   (value (string-trim (match-string 2))))
-               ;; Save header to alist
-               (push (cons key value) headers)
-               (unless (eobp) (forward-char))))
+             (unless (string= status-code "101")
+               (error "TODO non-101 response"))
 
-           )))
+             (unless (eobp) (forward-char))
+
+             ;; Read all headers
+             (while (re-search-forward verb--http-header-parse-regexp
+                                       (line-end-position) t)
+               (let ((key (string-trim (match-string 1)))
+                     (value (string-trim (match-string 2))))
+                 ;; Save header to alist
+                 (push (cons key value) headers)
+                 (unless (eobp) (forward-char))))
+
+             (verb--log nil 'D "ws-recv-internal; headers=%s" headers)))))
       (_
        (error "Unknown state: %s" state)))))
 
 (cl-defmethod verb--ws-send-internal ((ws verb--ws) data)
-  "TODO: Docs"
+  "TODO: Docs WS DATA."
   (process-send-string (oref ws connection) data))
 
 (defun verb--ws-open-stream (url)
-  "TODO: Docs"
+  "TODO: Docs URL."
   ;; Heavily based on code from url-http.el (url-http-find-free-connection).
   (let ((url-current-object url)
         (host (url-host url))
@@ -183,13 +200,15 @@
 	    (set-process-query-on-exit-flag (get-buffer-process buffer) nil))
 	  (kill-buffer buffer))))
 
-(defun verb---test ()
-  (setq cb
-        (lambda (event send-fn)
-          (funcall send-fn "test data")
-          (funcall send-fn "test data")))
+;; (defun verb--test-ws ()
+;;   (interactive)
+;;   (eval-buffer)
+;;   (setq cb
+;;         (lambda (event send-fn)
+;;           (funcall send-fn "test data")
+;;           (funcall send-fn "test data")))
 
-  (verb--ws-retrieve "ws://localhost:8000/ws/echo" cb))
+;;   (verb--ws-retrieve "ws://localhost:8000/ws/echo" cb))
 
 (provide 'verb-websocket)
 ;;; verb-websocket.el ends here
