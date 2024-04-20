@@ -2380,7 +2380,6 @@
 		                "Hello, World!"))))
 
 (ert-deftest test-cookies ()
-  (skip-unless nil)
   (setq verb-inhibit-cookies nil)
   (setq url-cookie-storage nil)
   (setq url-cookie-secure-storage nil)
