@@ -221,6 +221,16 @@ async def delete_cookies(request: Request) -> HTTPResponse:
     return resp
 
 
+@app.route("/form-urlencoded")
+async def form_urlencoded(request: Request) -> HTTPResponse:
+    if request.form["hello"] != ["world"]:
+        return response.text("FAIL")
+    if request.form["foo"] != ["{\"test\":123}"]:
+        return response.text("FAIL")
+
+    return response.text("OK")
+
+
 @app.exception(NotFound)
 async def not_found(request: Request, exception: NotFound) -> HTTPResponse:
     return response.text("Not found", status=404)

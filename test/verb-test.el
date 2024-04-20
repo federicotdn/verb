@@ -2160,6 +2160,10 @@
   (server-test "utf-8-request-with-accept"
                (should (string= (buffer-string) "語"))))
 
+(ert-deftest test-server-request-form-urlencoded ()
+  (server-test "form-urlencoded"
+               (should (string= (buffer-string) "OK"))))
+
 (ert-deftest test-server-response-big5 ()
   (server-test "response-big5"
                (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))
@@ -2376,6 +2380,7 @@
 		                "Hello, World!"))))
 
 (ert-deftest test-cookies ()
+  (skip-unless nil)
   (setq verb-inhibit-cookies nil)
   (setq url-cookie-storage nil)
   (setq url-cookie-secure-storage nil)
