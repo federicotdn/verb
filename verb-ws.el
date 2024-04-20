@@ -47,7 +47,7 @@
 (defconst verb-ws--version "13"
   "TODO: Docs.")
 
-(defconst verb-ws--states '(handshake)
+(defconst verb-ws--states '(handshake read-frame-1)
   "TODO: Docs.")
 
 (defun verb-ws--state-p (s)
@@ -78,6 +78,19 @@
    (cbargs :initarg :cbargs
            :type list
            :documentation "Arguments for user-provided callback."))
+  "TODO: Docs.")
+
+(defclass verb-ws--frame ()
+  ((fin :initarg :fin)
+   (rsv1 :initarg :rsv1)
+   (rsv2 :initarg :rsv2)
+   (rsv3 :initarg :rsv3)
+   (op :initarg :op)
+   (mask :initarg :mask)
+   (payload-len :initarg :payload-len)
+   (ex-payload-len :initarg :ex-payload-len)
+   (masking-key :initarg :masking-key)
+   (payload :initarg :payload))
   "TODO: Docs.")
 
 (defun verb-ws--get-headers (url key)
@@ -132,43 +145,64 @@
 
 (cl-defmethod verb-ws--recv-internal ((ws verb-ws--conn) data)
   "TODO: Docs WS DATA."
-  (let ((state (oref ws state))
-        (buf (oref ws buffer)))
+  (let ((buf (oref ws buffer)))
+    (unless buf
+      (setq buf (oset ws buffer (generate-new-buffer " *verb-ws*")))
+      (with-current-buffer buf (set-buffer-multibyte nil)))
+    (with-current-buffer buf
+      (insert data)
+      (verb-ws--recv-internal-1 ws data))))
+
+(cl-defmethod verb-ws--recv-internal-1 ((ws verb-ws--conn) data)
+  "TODO: Docs WS DATA."
+  (let ((state (oref ws state)))
     (verb--log nil 'D "ws-recv-internal; state=%s" state)
     (pcase state
+
       ('handshake ; Receiving handshake response from server
-       ;; Create buffer lazily
-       (unless buf
-         (setq buf (oset ws buffer (generate-new-buffer " *verb-ws*"))))
+       (when (re-search-backward "\r\n\r\n" nil t)
+         (let (status-code headers)
+           (goto-char (point-min))
+           ;; Read status line
+           (if (re-search-forward verb--http-status-parse-regexp
+                                  (line-end-position) t)
+               (setq status-code (match-string 1))
+             (error "TODO status-code not found"))
 
-       (with-current-buffer buf
-         (insert data)
-         (when (re-search-backward "\r\n\r\n" nil t)
-           (let (status-code headers)
-             (goto-char (point-min))
-             ;; Read status line
-             (if (re-search-forward verb--http-status-parse-regexp
-                                    (line-end-position) t)
-                 (setq status-code (match-string 1))
-               (error "TODO status-code not found"))
+           (verb--log nil 'D "ws-recv-internal; status-code=%s" status-code)
 
-             (verb--log nil 'D "ws-recv-internal; status-code=%s" status-code)
+           (unless (string= status-code "101")
+             (error "TODO non-101 response"))
 
-             (unless (string= status-code "101")
-               (error "TODO non-101 response"))
+           (unless (eobp) (forward-char))
 
-             (unless (eobp) (forward-char))
+           ;; Read all headers
+           (while (re-search-forward verb--http-header-parse-regexp
+                                     (line-end-position) t)
+             (let ((key (string-trim (match-string 1)))
+                   (value (string-trim (match-string 2))))
+               ;; Save header to alist
+               (push (cons key value) headers)
+               (unless (eobp) (forward-char))))
 
-             ;; Read all headers
-             (while (re-search-forward verb--http-header-parse-regexp
-                                       (line-end-position) t)
-               (let ((key (string-trim (match-string 1)))
-                     (value (string-trim (match-string 2))))
-                 ;; Save header to alist
-                 (push (cons key value) headers)
-                 (unless (eobp) (forward-char))))
+           (verb--log nil 'D "ws-recv-internal; headers=%s" headers)
 
-             (verb--log nil 'D "ws-recv-internal; headers=%s" headers)))))
+           ;; Skip blank line after headers
+           (unless (eobp) (forward-char))
+           (unless (eobp) (forward-char))
+           ;; Delete everything before point
+           (delete-region (point-min) (point))
+
+           ;; Transition to connected and maybe read more data
+           (oset ws state 'read-frame)
+           (when (< 0 (buffer-size))
+             (verb-ws--recv-internal ws "")))))
+
+      ('read-frame-1 ; Receiving a frame
+       (when (< 2 (buffer-size))
+         (let ((b1 (buffer-substring 1 2))
+               (b2 (buffer-substring 2 3)))
+           )))
       (_
        (error "Unknown state: %s" state)))))
 
@@ -200,15 +234,16 @@
 	    (set-process-query-on-exit-flag (get-buffer-process buffer) nil))
 	  (kill-buffer buffer))))
 
-;; (defun verb-ws-ws ()
-;;   (interactive)
-;;   (eval-buffer)
-;;   (setq cb
-;;         (lambda (event send-fn)
-;;           (funcall send-fn "test data")
-;;           (funcall send-fn "test data")))
+(defun verb-ws-ws ()
+  (interactive)
+  (eval-buffer)
+  (setq cb
+        (lambda (event send-fn)
+          (message "GOT event %s" event)
+          (funcall send-fn "test data")
+          (funcall send-fn "test data")))
 
-;;   (verb-ws--retrieve "ws://localhost:8000/ws/echo" cb))
+  (verb-ws--retrieve "ws://localhost:8000/ws/echo" cb))
 
 (provide 'verb-ws)
 ;;; verb-ws.el ends here
