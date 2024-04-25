@@ -1,6 +1,6 @@
 import os
 import logging
-from sanic import Sanic, response
+from sanic import Sanic, response, Websocket
 from sanic.log import logger
 from sanic.request import Request
 from sanic.response import HTTPResponse
@@ -200,14 +200,14 @@ async def set_cookies(request: Request) -> HTTPResponse:
     resp = response.text("OK")
     for key in request.args:
         val = request.args.get(key)
-        resp.cookies[key] = val
+        resp.add_cookie(key, val, secure=False)
 
     return resp
 
 
 @app.route("/get-cookies")
 async def get_cookies(request: Request) -> HTTPResponse:
-    val = "".join(f"{key}={val}\n" for key, val in request.cookies.items())
+    val = "".join(f"{key}={val[0]}\n" for key, val in request.cookies.items())
     return response.text(val)
 
 
@@ -216,7 +216,7 @@ async def delete_cookies(request: Request) -> HTTPResponse:
     resp = response.text("OK")
     for key in request.args:
         if key in request.cookies:
-            del resp.cookies[key]
+            resp.delete_cookie(key)
 
     return resp
 
@@ -252,6 +252,7 @@ def main() -> None:
         port=int(os.environ.get("PORT", "8000")),
         access_log=False,
         debug=True,
+        motd=False,
     )
 
 

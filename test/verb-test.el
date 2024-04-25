@@ -2396,6 +2396,8 @@
   (server-test "delete-cookies"
                (should (string= (buffer-string) "OK")))
 
+  (url-cookie-clean-up)
+
   (server-test "get-cookies"
                (should (or (= (buffer-size) 0)
                            (string= (buffer-string)
