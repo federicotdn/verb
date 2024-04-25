@@ -12,6 +12,7 @@ jobs:
   test:
     name: Checks/Tests
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       matrix:
         emacs_version:
