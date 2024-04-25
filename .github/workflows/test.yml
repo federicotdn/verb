@@ -15,14 +15,16 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
+        # Add 'snapshot' to test on Emacs master
         emacs_version:
           - '26.3'
           - '29.2'
-          # TODO: Re-enable in future
-          # - snapshot
         os:
           - ubuntu-latest
           - macos-latest
+        exclude:
+          - os: macos-latest
+            emacs_version: '26.3'
     steps:
       - uses: purcell/setup-emacs@master
         with:
