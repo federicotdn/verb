@@ -55,6 +55,8 @@ setup-check: ## Install packages required for linting.
 		 --eval "(setq package-user-dir \"$$PWD/$(PACKAGES)\")" \
 		 -l test/init-check.el
 
+setup: setup-check setup-tests
+
 lint-file:
 	@printf "\n<<<------------ Lint file: $(filename) ------------>>>\n"
 	@printf "\n--> Step: Byte-compile file\n\n"

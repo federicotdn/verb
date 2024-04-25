@@ -897,14 +897,9 @@ Verb's functionality can be extended via some related packages, such as:
 
 ## Similar Packages
 
-- [restclient](https://github.com/pashky/restclient.el): Verb is an attempt to improve upon the core idea of the `restclient` package: writing request specifications on a buffer, and receiving the responses on another. The most important differences between the two packages are:
-  - Verb uses a tree-like structure to organize request specifications, `restclient` uses a flat one.
-  - Verb displays HTTP response headers on a separate buffer, `restclient` includes them commented out in the main response buffer.
-  - Verb correctly handles URLs such as https://api.ipify.org?format=json (400 when using `restclient`, 200 when using Verb and `curl`).
-  - In Verb, lines starting with `#` can be included in a request body (and `*` as well).
-  - Licensing (GPLv3 vs. Public domain).
+- [restclient](https://github.com/pashky/restclient.el): Verb is an attempt to improve upon the core idea of the `restclient` package: writing request specifications on a buffer, and receiving the responses on another. As of April 17, 2024 `restclient` has been archived and is no longer maintained.
 - [walkman](https://github.com/abrochard/walkman): Write HTTP requests in Org mode and send them using `curl`.
-- [http.el](https://github.com/emacs-pe/http.el): I have not tested this package, so I can't provide a comparison.
+- [plz-see.el](https://github.com/astoff/plz-see.el): An interactive HTTP client for Emacs based on the [plz.el](https://github.com/alphapapa/plz.el) library.
 
 ## Contributors
 These are the users that have contributed to developing Verb, via code and/or documentation (in order of date of first contribution):
@@ -915,7 +910,7 @@ These are the users that have contributed to developing Verb, via code and/or do
 - [c4710n](https://github.com/c4710n)
 - [bigodel](https://github.com/bigodel)
 - [agzam](https://github.com/agzam)
-- [isamert](https://github.com/isamert).
+- [isamert](https://github.com/isamert)
 
 Thank you!
 
