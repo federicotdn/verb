@@ -206,7 +206,7 @@ After you have sent the request and the server has answered back successfully, y
 The buffer will have an active [header line](https://www.gnu.org/software/emacs/manual/html_node/elisp/Header-Lines.html), showing something similar to:
 
 ```
-HTTP/1.1 200 OK | 0.754s | application/json | 1020 bytes
+HTTP/1.1 200 OK | 0.754s | application/json | 1020 bytes | /foo
 ```
 
 This text indicates the status of the HTTP response, the time in seconds it took for it to be completed, the type of the contents received (or `-` if the content type is unknown), and the number of bytes in the response body (read from the `Content-Length` header, when possible, otherwise from the local buffer size).
@@ -483,6 +483,8 @@ Content-Type: application/json; charset=utf-8
 The example now uses the `verb-var` macro in the first code tag. This macro essentially returns the value associated with the specified symbol - in this case, `token`. If the symbol does not have any associated value yet, the user is prompted for one using `read-string`. The value is then associated with the symbol and returned. If you don't wish to be prompted for a value, you can specify a second parameter, which will be used as the default value. That value will be associated to the symbol the first time `verb-var` is invoked.
 
 If you wish to explicitly re-set the value of a variable set with `verb-var`, use the `verb-set-var` interactive command. The command is bound to <kbd>C-c C-r C-v</kbd> by default, and works similarly to the built-in `set-variable` command. You will be prompted for a variable that has been previously set with `verb-var`. You may also specify a completely new variable name, in which case it will be created and its value set. To see the current value of all variables, use the `verb-show-vars` command. To unset all variable values, use the `verb-unset-vars` command.
+
+To quickly copy the value of a variable into the clipboard, use the keyboard prefix argument <kbd>C-u</kbd> before invoking `verb-set-var`.
 
 `verb-var` and `verb-set-var` are useful for writing requests that include sensitive information (such as passwords or tokens), or for writing requests that can be parameterized with different values (such as IDs or search terms).
 

@@ -885,6 +885,19 @@
 			   "Accept: text\n"
 			   "hello\n")))
 
+  (should-error
+   (setq aux (text-as-spec "GET example.com\n"
+			   "# Accept: text\n"
+			   "hello\n")))
+
+  (should-error
+   (setq aux (text-as-spec "GET example.com\n"
+			   "Accept: text\n"
+			   "# Accept: text\n"
+			   "Foo: bar\n"
+			   "# Foo: bar\n"
+			   "hello\n")))
+
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"
 			  "\n"))
@@ -930,6 +943,21 @@
 			  ":END:\n"
 			  "get http://example.com"))
   (should (string= (oref aux :method) "GET")))
+
+(ert-deftest test-request-spec-multiline-header-code-tag ()
+  (setq ml "Hello: 54321\nQuuz: quux")
+  (setq ml2 "Hello: 12345\nGoodbye: xyz")
+  (setq aux (text-as-spec-nl
+             "get http://example.com/foobar"
+			 "Accept: text"
+			 "{{ml}}"
+			 "# {{ml2}}"
+			 ""
+			 "Content"))
+  (should (equal (oref aux :headers)
+		         '(("Accept" . "text")
+                   ("Hello" . "54321")
+                   ("Quuz" . "quux")))))
 
 (ert-deftest test-request-spec-from-text-commented-headers ()
   (setq aux (text-as-spec "get http://example.com/foobar\n"

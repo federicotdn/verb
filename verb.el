@@ -2456,7 +2456,7 @@ signal an error.
 Before returning the request specification, set its metadata to
 METADATA."
   (let ((context (current-buffer))
-        method url headers body)
+        method url headers headers-start body)
     (with-temp-buffer
       (insert text)
       (goto-char (point-min))
@@ -2511,26 +2511,36 @@ METADATA."
 
       ;; Skip newline after URL line
       (unless (eobp) (forward-char))
+      (setq headers-start (point))
 
       ;;; HEADERS
 
-      ;; Search for HTTP headers, stop as soon as we find a blank line
+      ;; Scan forward until we find a blank line (headers end).  In
+      ;; the region covered, delete all lines starting with '#', as
+      ;; these headers have been commented out.  Finally, go back to
+      ;; where we started
+      (save-excursion
+        (while (re-search-forward "^\\(.+\\)$" (line-end-position) t)
+          (unless (eobp) (forward-char)))
+        (delete-matching-lines "^[[:blank:]]*#" headers-start (point)))
+
+      ;; Expand code tags in the rest of the buffer (if any)
+      (save-excursion
+        (verb--eval-code-tags-in-buffer (current-buffer) context))
+
+      ;; Parse HTTP headers, stop as soon as we find a blank line
       (while (re-search-forward "^\\(.+\\)$" (line-end-position) t)
         (let ((line (match-string 1)))
-          ;; Process line if it doesn't start with '#'
-          (unless (string-prefix-p "#" (string-trim-left line))
-            ;; Check if line matches KEY: VALUE after evaluating any
-            ;; present code tags
-            (setq line (verb--eval-code-tags-in-string line context))
-            (if (string-match verb--http-header-parse-regexp line)
-                ;; Line matches, trim KEY and VALUE and store them
-                (push (cons (string-trim (match-string 1 line))
-                            (string-trim (match-string 2 line)))
-                      headers)
-              (user-error (concat "Invalid HTTP header: \"%s\"\n"
-                                  "Make sure there's a blank line between"
-                                  " the headers and the request body")
-                          line))))
+          ;; Check if line matches KEY: VALUE
+          (if (string-match verb--http-header-parse-regexp line)
+              ;; Line matches, trim KEY and VALUE and store them
+              (push (cons (string-trim (match-string 1 line))
+                          (string-trim (match-string 2 line)))
+                    headers)
+            (user-error (concat "Invalid HTTP header: \"%s\"\n"
+                                "Make sure there's a blank line between"
+                                " the headers and the request body")
+                        line)))
         (unless (eobp) (forward-char)))
       (setq headers (nreverse headers))
 
@@ -2542,10 +2552,6 @@ METADATA."
       ;; XML, etc.). Here we delete the source block delimiters so
       ;; that they are not included in the actual request.
       (delete-matching-lines "^[[:blank:]]*#\\+\\(begin\\|end\\)_src")
-
-      ;; Expand code tags in the rest of the buffer (if any)
-      (save-excursion
-        (verb--eval-code-tags-in-buffer (current-buffer) context))
 
       ;; Skip blank line after headers
       (unless (eobp) (forward-char))

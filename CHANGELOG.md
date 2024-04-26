@@ -3,6 +3,7 @@
 - Added support for `Verb-Proxy` heading property.
 - Removed support for the `url-queue` backend.
 - Improved `*Verb Log*` buffer formatting.
+- Headers can now contain code tags that expand to multiple lines.
 
 ## **2.16.0** - 2024-03-02 (MELPA Stable)
 - Fixed LF being used instead of CRLF in multipart boundaries.
