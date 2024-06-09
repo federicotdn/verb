@@ -1126,6 +1126,11 @@
 
   (should (string= (verb--eval-string "") "")))
 
+(ert-deftest test-eval-string-literally ()
+  ;; If the result of evaluating a code tag contains escape sequences,
+  ;; they should be read literally and not interpreted as such.
+  (verb--eval-code-tags-in-string "{{\"\\\\X\"}}"))
+
 (ert-deftest test-verb-var ()
   (with-temp-buffer
     (org-mode)

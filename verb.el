@@ -213,10 +213,6 @@ This variable only applies if `verb-handler-json' is being used to
 handle JSON responses."
   :type 'function)
 
-(defcustom verb-enable-log t
-  "When non-nil, log different events in the *Verb Log* buffer."
-  :type 'boolean)
-
 (defcustom verb-post-response-hook nil
   "Hook run after receiving an HTTP response.
 The hook is run with the response body buffer as the current buffer.
@@ -2351,7 +2347,7 @@ tags are delimited with `verb-code-tag-delimiters'."
         (let ((result (verb--eval-string (match-string 1) context)))
           (cond
            ((stringp result)
-            (replace-match result))
+            (replace-match result nil t))
            ((bufferp result)
             (goto-char (match-beginning 0))
             (delete-region (match-beginning 0) (match-end 0))
@@ -2359,7 +2355,7 @@ tags are delimited with `verb-code-tag-delimiters'."
             (when (buffer-local-value 'verb-kill-this-buffer result)
               (kill-buffer result)))
            (t
-            (replace-match (format "%s" result)))))))))
+            (replace-match (format "%s" result) nil t))))))))
 
 (defun verb--eval-code-tags-in-string (s &optional context)
   "Like `verb--eval-code-tags-in-buffer', but in a string S.

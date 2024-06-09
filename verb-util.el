@@ -60,6 +60,11 @@ E = Error.")
   "^http/1\\..\\s-*\\([[:digit:]]+\\).*$"
   "Regexp for parsing HTTP status lines.")
 
+(defcustom verb-enable-log t
+  "When non-nil, log different events in the *Verb Log* buffer."
+  :group :verb
+  :type 'boolean)
+
 (define-derived-mode verb-log-mode special-mode "Verb[Log]"
   "Major mode for displaying Verb logs.
 
