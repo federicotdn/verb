@@ -7,6 +7,7 @@
 - Escape sequences ('\\') contained in strings resulting from evaluating code tags will not be interepreted, i.e. all contents will be taken as literal.
 - URLs can now span multiple lines, place '\\' at the end of the URL line to continue it in the next one. Leading whitespace in the additional lines will be skipped.
 - Removed `verb-view-log` command (use `verb-show-log` instead).
+- All `verb-log-*` variables containing faces are no longer part of the package's public API.
 
 ## **2.16.0** - 2024-03-02 (MELPA Stable)
 - Fixed LF being used instead of CRLF in multipart boundaries.

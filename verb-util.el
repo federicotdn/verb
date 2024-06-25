@@ -40,16 +40,16 @@ I = Information.
 W = Warning.
 E = Error.")
 
-(defface verb-log-debug '((t :inherit font-lock-constant-face))
+(defface verb--log-debug '((t :inherit font-lock-constant-face))
   "Face for highlighting D entries in the log buffer.")
 
-(defface verb-log-info '((t :inherit homoglyph))
+(defface verb--log-info '((t :inherit homoglyph))
   "Face for highlighting I entries in the log buffer.")
 
-(defface verb-log-warning '((t :inherit warning))
+(defface verb--log-warning '((t :inherit warning))
   "Face for highlighting W entries in the log buffer.")
 
-(defface verb-log-error '((t :inherit error))
+(defface verb--log-error '((t :inherit error))
   "Face for highlighting E entries in the log buffer.")
 
 (defconst verb--http-header-parse-regexp
@@ -90,16 +90,16 @@ message is logged.  To turn off logging, set `verb-enable-log' to nil."
           (0 'bold))
          ;; Log level D after request number
          ("^[[:digit:]-]*\\s-+\\(D\\)"
-          (1 'verb-log-debug))
+          (1 'verb--log-debug))
          ;; Log level I after request number
          ("^[[:digit:]-]*\\s-+\\(I\\)"
-          (1 'verb-log-info))
+          (1 'verb--log-info))
          ;; Log level W after request number
          ("^[[:digit:]-]*\\s-+\\(W\\)"
-          (1 'verb-log-warning))
+          (1 'verb--log-warning))
          ;; Log level E after request number
          ("^[[:digit:]-]*\\s-+\\(E\\)"
-          (1 'verb-log-error)))))
+          (1 'verb--log-error)))))
 
 (defun verb--log (request level &rest args)
   "Log a message in the *Verb Log* buffer.
