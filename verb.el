@@ -2507,13 +2507,13 @@ METADATA."
                 (end-of-line)
                 (if (eobp)
                     (user-error
-                     "Backslash was not followed by additional line")
+                     "Backslash in URL not followed by additional line")
                   (forward-char))
                 (back-to-indentation)
                 (setq line (funcall get-line-fn))
                 (when (string-empty-p line)
                   (user-error
-                   "Backslash was not followed by additional content"))
+                   "Backslash in URL not followed by additional content"))
 
                 (setq url (concat url (string-remove-suffix "\\" line)))))
 
