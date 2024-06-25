@@ -145,5 +145,9 @@ If `verb-enable-log' is nil, do not log anything."
       nil
     s))
 
+(defun verb-util--string= (s1 s2)
+  "Return non-nil if strings S1 and S2 are equal, ignoring case."
+  (string= (downcase s1) (downcase s2)))
+
 (provide 'verb-util)
 ;;; verb-util.el ends here

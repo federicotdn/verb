@@ -1819,7 +1819,7 @@ Return a new alist, does not modify HEADERS."
     (when accept
       (setq headers (cl-delete "Accept" headers
                                :key #'car
-                               :test #'verb--string=)))
+                               :test #'verb-util--string=)))
     ;; Encode all text to `us-ascii'
     (mapcar (lambda (e)
               (cons (verb--to-ascii (car e))
@@ -2102,10 +2102,6 @@ buffer BUFFER is live.  NUM is the request's identification number."
     (message "Request to %s is taking longer than expected"
              (verb-request-spec-url-to-string rs))))
 
-(defun verb--string= (s1 s2)
-  "Return non-nil if strings S1 and S2 are equal, ignoring case."
-  (string= (downcase s1) (downcase s2)))
-
 (defun verb--override-alist (original other &optional case-fold)
   "Override alist ORIGINAL with OTHER.
 That is, overwrite (KEY . VALUE) pairs present in ORIGINAL with ones
@@ -2125,7 +2121,7 @@ alist.  If CASE-FOLD is non-nil, ignore case when comparing KEYs."
           (setq result (cl-delete key result
                                   :key #'car
                                   :test (if case-fold
-                                            #'verb--string=
+                                            #'verb-util--string=
                                           #'string=))))
         (push key-value result)
         ;; Remember we deleted this key from ORIGINAL so that we don't
@@ -2439,14 +2435,18 @@ be \"http\" or \"https\".  If the scheme is not present, the URL will
 be interpreted as a path, plus (if present) query string and fragment.
 Therefore, using just \"example.org\" (note no scheme present) as URL
 will result in a URL with its path set to \"example.org\", not as its
-host.
+host.  URL may end in a backslash, in which case the following line
+will be appended to it (ignoring its leading whitespace).  The process
+is repeated as long as the current line ends with a backslash.
 
 Each HEADER must be in the form of KEY: VALUE.  KEY must be a nonempty
 string, VALUE can be the empty string.  HEADER may also start with
 \"#\", in which case it will be ignored.
 
 BODY can contain arbitrary data.  Note that there must be a blank
-line between the HEADER list and BODY.
+line between the HEADER list and BODY.  If BODY contains a properly
+formatted Babel source block, the block beginning and end lines will
+be removed.
 
 As a special case, if the text specification consists exclusively of
 comments and/or whitespace, or is the empty string, signal

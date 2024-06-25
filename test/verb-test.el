@@ -1834,10 +1834,10 @@
   (should-not (verb--alist-p "asdf")))
 
 (ert-deftest test-string= ()
-  (should (verb--string= "hello" "hello"))
-  (should (verb--string= "HELLO" "hello"))
-  (should (verb--string= "HELLO_" "hello_"))
-  (should-not (verb--string= "foo" "hello")))
+  (should (verb-util--string= "hello" "hello"))
+  (should (verb-util--string= "HELLO" "hello"))
+  (should (verb-util--string= "HELLO_" "hello_"))
+  (should-not (verb-util--string= "foo" "hello")))
 
 (ert-deftest test-http-method-p ()
   (should (verb--http-method-p "GET"))
