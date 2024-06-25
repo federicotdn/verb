@@ -32,7 +32,6 @@ test: clean server-bg
 		 --eval "(ert-run-tests-batch-and-exit '$(SELECTOR))"; \
 	ret=$$?; \
 	make server-kill; \
-	sleep 1; \
 	exit $$ret
 
 server: ## Run a testing HTTP server on port 8000 (default).
@@ -45,6 +44,7 @@ server-bg:
 
 server-kill:
 	kill $$(cat test/server.pid)
+	sleep 1
 
 clean: ## Clean up all temporary files created during testing/runtime.
 	rm -f verb-autoloads.el test/server.pid
@@ -84,7 +84,7 @@ lint-file:
 check: ## Lint all Emacs Lisp files in the package.
 check: clean
 	make lint-file filename=verb.el
-	make lint-file filename=verb-util.el || true # TODO: Enable
+	make lint-file filename=verb-util.el
 	make lint-file filename=ob-verb.el
 	test $$(cat *.el | grep Package-Version | uniq | wc -l) -eq 1
 

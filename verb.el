@@ -273,6 +273,11 @@ minibuffer, when the point is moved over a code tag containing only
 a call to `verb-var'."
   :type 'boolean)
 
+(defcustom verb-enable-log t
+  "When non-nil, log different events in the *Verb Log* buffer."
+  :group :verb
+  :type 'boolean)
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
                                 :weight bold))
   "Face for highlighting HTTP methods.")
@@ -452,7 +457,7 @@ If REMOVE is nil, add the necessary keywords to
         ["Export request to websocat" verb-export-request-on-point-websocat]
         "--"
         ["Customize Verb" verb-customize-group]
-        ["Show log" verb-show-log]))
+        ["Show log" verb-util-show-log]))
     map)
   "Keymap for `verb-mode'.")
 
@@ -476,10 +481,10 @@ more details on how to use it."
                     nil 'local))
         (add-hook 'post-command-hook #'verb--var-preview nil t)
         (when (buffer-file-name)
-          (verb--log nil 'I
+          (verb-util--log nil 'I
                      "Verb mode enabled in buffer: %s"
                      (buffer-name))
-          (verb--log nil 'I "Org version: %s, GNU Emacs version: %s"
+          (verb-util--log nil 'I "Org version: %s, GNU Emacs version: %s"
                      (org-version)
                      emacs-version)))
     ;; Disable verb-mode
@@ -920,7 +925,7 @@ empty string, return nil.  KEY must NOT have the prefix
     (concat verb--metadata-prefix key)
     (assoc-string (oref rs metadata) t)
     cdr
-    verb--nonempty-string))
+    verb-util--nonempty-string))
 
 (defun verb--request-spec-post-process (rs)
   "Validate and prepare request spec RS to be used.
@@ -1407,7 +1412,8 @@ explicitly.  Lisp code tags are evaluated when exporting."
             (when (or (string= name (nth 0 x))
                       (equal choice (nth 1 x)))
               (funcall (nth 2 x) rs)
-              (verb--log nil 'I "Exported request to %s format" (nth 0 x))))
+              (verb-util--log nil 'I "Exported request to %s format"
+                              (nth 0 x))))
           verb-export-functions)))
 
 ;;;###autoload
@@ -1662,8 +1668,8 @@ NUM is this request's identification number."
       (kill-buffer response-buf)
       (let ((msg (format "Request error: could not connect to %s:%s"
                          (url-host url) (url-port url))))
-        (verb--log num 'E msg)
-        (verb--log num 'E "Error details: %s" http-error)
+        (verb-util--log num 'E msg)
+        (verb-util--log num 'E "Error details: %s" http-error)
         (user-error "%s" msg))))
 
   ;; No errors, continue to read response
@@ -1675,15 +1681,15 @@ NUM is this request's identification number."
     (widen)
     (goto-char (point-min))
     ;; Skip HTTP/1.X status line
-    (setq status-line (verb--nonempty-string
+    (setq status-line (verb-util--nonempty-string
                        (buffer-substring-no-properties (point)
                                                        (line-end-position))))
 
-    (verb--log num 'I "%s" status-line)
+    (verb-util--log num 'I "%s" status-line)
 
     (forward-line)
     ;; Skip all HTTP headers
-    (while (re-search-forward verb--http-header-parse-regexp
+    (while (re-search-forward verb-util--http-header-parse-regexp
                               (line-end-position) t)
       (let ((key (string-trim (match-string 1)))
             (value (string-trim (match-string 2))))
@@ -1752,7 +1758,7 @@ NUM is this request's identification number."
     (if binary-handler
         (progn
           ;; Response content is a binary format:
-          (verb--log num 'I "Using binary handler: %s" binary-handler)
+          (verb-util--log num 'I "Using binary handler: %s" binary-handler)
 
           (set-buffer-multibyte nil)
           (set-buffer-file-coding-system 'binary)
@@ -1760,7 +1766,7 @@ NUM is this request's identification number."
           (funcall binary-handler))
 
       ;; else: Response content is text:
-      (verb--log num 'I "Using text handler: %s" text-handler)
+      (verb-util--log num 'I "Using text handler: %s" text-handler)
 
       ;; Choose corresponding coding system for charset
       (setq coding-system (or (mm-charset-to-coding-system charset)
@@ -1973,7 +1979,7 @@ loaded into."
     ;; Look for headers that might get duplicated by url.el
     (dolist (h verb--url-pre-defined-headers)
       (when (assoc-string h url-request-extra-headers t)
-        (verb--log num 'W (concat "Header \"%s\" will appear duplicated "
+        (verb-util--log num 'W (concat "Header \"%s\" will appear duplicated "
                                   "in the request, as url.el adds its "
                                   "own version of it")
                    h)))
@@ -1982,13 +1988,13 @@ loaded into."
     ;; doesn't take one (like GET)
     (when (and (member url-request-method verb--bodyless-http-methods)
                url-request-data)
-      (verb--log num 'W "Body is present but request method is %s"
+      (verb-util--log num 'W "Body is present but request method is %s"
                  url-request-method))
 
     ;; Workaround for "localhost" not working on Emacs 25
     (when (and (< emacs-major-version 26)
                (string= (url-host url) "localhost"))
-      (verb--log num 'W "Replacing localhost with 127.0.0.1")
+      (verb-util--log num 'W "Replacing localhost with 127.0.0.1")
       (setf (url-host url) "127.0.0.1"))
 
     ;; Send the request!
@@ -2016,7 +2022,7 @@ loaded into."
 
                (let ((msg (format "Error sending request: %s" (cadr err))))
                  ;; Log the error
-                 (verb--log num 'E msg)
+                 (verb-util--log num 'E msg)
                  ;; Signal it
                  (user-error "%s" msg)))))
 
@@ -2026,7 +2032,7 @@ loaded into."
              (verb-request-spec-url-to-string rs))
 
     ;; Log the request
-    (verb--log num 'I "%s %s"
+    (verb-util--log num 'I "%s %s"
                (oref rs method)
                (verb-request-spec-url-to-string rs))
 
@@ -2091,7 +2097,7 @@ buffer must contain the response's processed body."
 This function should be run `verb-show-timeout-warning' seconds after
 an HTTP request has been sent.  Show the warning only when response
 buffer BUFFER is live.  NUM is the request's identification number."
-  (verb--log num 'W "%s" "Request is taking longer than expected.")
+  (verb-util--log num 'W "%s" "Request is taking longer than expected.")
   (when (buffer-live-p buffer)
     (message "Request to %s is taking longer than expected"
              (verb-request-spec-url-to-string rs))))
@@ -2553,7 +2559,7 @@ METADATA."
       (while (re-search-forward "^\\(.+\\)$" (line-end-position) t)
         (let ((line (match-string 1)))
           ;; Check if line matches KEY: VALUE
-          (if (string-match verb--http-header-parse-regexp line)
+          (if (string-match verb-util--http-header-parse-regexp line)
               ;; Line matches, trim KEY and VALUE and store them
               (push (cons (string-trim (match-string 1 line))
                           (string-trim (match-string 2 line)))
@@ -2590,7 +2596,7 @@ METADATA."
                           (concat verb-trim-body-end "$") "" rest)
                        rest))))
       (when (buffer-local-value 'verb--multipart-boundary context)
-        (verb--log nil 'W "Detected an unfinished multipart form"))
+        (verb-util--log nil 'W "Detected an unfinished multipart form"))
       ;; Return a `verb-request-spec'
       (verb-request-spec :method method
                          :url (unless (string-empty-p (or url ""))

@@ -30,42 +30,37 @@
 
 ;;; Code:
 
-(defconst verb--log-buffer-name "*Verb Log*"
+(defconst verb-util--log-buffer-name "*Verb Log*"
   "Default name for log buffer.")
 
-(defconst verb--log-levels '(D I W E)
+(defconst verb-util--log-levels '(D I W E)
   "Log levels for the log buffer.
 D = Debug.
 I = Information.
 W = Warning.
 E = Error.")
 
-(defface verb--log-debug '((t :inherit font-lock-constant-face))
+(defface verb-util--log-debug '((t :inherit font-lock-constant-face))
   "Face for highlighting D entries in the log buffer.")
 
-(defface verb--log-info '((t :inherit homoglyph))
+(defface verb-util--log-info '((t :inherit homoglyph))
   "Face for highlighting I entries in the log buffer.")
 
-(defface verb--log-warning '((t :inherit warning))
+(defface verb-util--log-warning '((t :inherit warning))
   "Face for highlighting W entries in the log buffer.")
 
-(defface verb--log-error '((t :inherit error))
+(defface verb-util--log-error '((t :inherit error))
   "Face for highlighting E entries in the log buffer.")
 
-(defconst verb--http-header-parse-regexp
+(defconst verb-util--http-header-parse-regexp
   "^\\s-*\\([[:alnum:]_-]+\\)\\s-*:\\(.*\\)$"
   "Regexp for parsing HTTP headers.")
 
-(defconst verb--http-status-parse-regexp
+(defconst verb-util--http-status-parse-regexp
   "^http/1\\..\\s-*\\([[:digit:]]+\\).*$"
   "Regexp for parsing HTTP status lines.")
 
-(defcustom verb-enable-log t
-  "When non-nil, log different events in the *Verb Log* buffer."
-  :group :verb
-  :type 'boolean)
-
-(define-derived-mode verb-log-mode special-mode "Verb[Log]"
+(define-derived-mode verb-util-log-mode special-mode "Verb[Log]"
   "Major mode for displaying Verb logs.
 
 Each line contains a short message representing an event that has been
@@ -90,31 +85,31 @@ message is logged.  To turn off logging, set `verb-enable-log' to nil."
           (0 'bold))
          ;; Log level D after request number
          ("^[[:digit:]-]*\\s-+\\(D\\)"
-          (1 'verb--log-debug))
+          (1 'verb-util--log-debug))
          ;; Log level I after request number
          ("^[[:digit:]-]*\\s-+\\(I\\)"
-          (1 'verb--log-info))
+          (1 'verb-util--log-info))
          ;; Log level W after request number
          ("^[[:digit:]-]*\\s-+\\(W\\)"
-          (1 'verb--log-warning))
+          (1 'verb-util--log-warning))
          ;; Log level E after request number
          ("^[[:digit:]-]*\\s-+\\(E\\)"
-          (1 'verb--log-error)))))
+          (1 'verb-util--log-error)))))
 
-(defun verb--log (request level &rest args)
+(defun verb-util--log (request level &rest args)
   "Log a message in the *Verb Log* buffer.
 REQUEST must be a number corresponding to an HTTP request made.  LEVEL
-must be a value in `verb--log-levels'.  Use the remaining ARGS to call
+must be a value in `verb-util--log-levels'.  Use the remaining ARGS to call
 `format', and then log the result in the log buffer.
 
 If `verb-enable-log' is nil, do not log anything."
   (setq request (if request (number-to-string request) "-"))
-  (unless (member level verb--log-levels)
+  (unless (member level verb-util--log-levels)
     (user-error "Invalid log level: \"%s\"" level))
-  (when verb-enable-log
-    (with-current-buffer (get-buffer-create verb--log-buffer-name)
-      (unless (derived-mode-p 'verb-log-mode)
-        (verb-log-mode))
+  (when (bound-and-true-p verb-enable-log) ; Var is defined in verb.el.
+    (with-current-buffer (get-buffer-create verb-util--log-buffer-name)
+      (unless (derived-mode-p 'verb-util-log-mode)
+        (verb-util-log-mode))
       (let ((inhibit-read-only t)
             (last "")
             (msg (apply #'format args)))
@@ -139,12 +134,12 @@ If `verb-enable-log' is nil, do not log anything."
       (dolist (w (get-buffer-window-list (current-buffer) nil t))
         (set-window-point w (point-max))))))
 
-(defun verb-show-log ()
+(defun verb-util-show-log ()
   "Switch to the *Verb Log* buffer."
   (interactive)
-  (switch-to-buffer (get-buffer-create verb--log-buffer-name)))
+  (switch-to-buffer (get-buffer-create verb-util--log-buffer-name)))
 
-(defun verb--nonempty-string (s)
+(defun verb-util--nonempty-string (s)
   "Return S. If S is the empty string, return nil."
   (if (string-empty-p s)
       nil

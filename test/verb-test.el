@@ -56,7 +56,7 @@
 				    :body body))))
 
 ;; Create log buffer now
-(verb--log nil 'I "")
+(verb-util--log nil 'I "")
 
 (ert-deftest test-up-heading ()
   (setq outline-test
@@ -505,8 +505,8 @@
                        "http://localhost/foo/bar")))))
 
 (ert-deftest test-nonempty-string ()
-  (should (string= (verb--nonempty-string "hello") "hello"))
-  (should-not (verb--nonempty-string "")))
+  (should (string= (verb-util--nonempty-string "hello") "hello"))
+  (should-not (verb-util--nonempty-string "")))
 
 (ert-deftest test-back-to-heading-no-headings ()
   ;; Empty buffer
@@ -1934,12 +1934,12 @@
          ,@body))))
 
 (defun clear-log ()
-  (with-current-buffer verb--log-buffer-name
+  (with-current-buffer verb-util--log-buffer-name
     (let ((inhibit-read-only t))
       (erase-buffer))))
 
 (defun should-log-contain (s)
-  (with-current-buffer verb--log-buffer-name
+  (with-current-buffer verb-util--log-buffer-name
     (save-excursion
       (goto-char (point-min))
       (should (search-forward s)))))
@@ -1947,13 +1947,13 @@
 (defun test-log ()
   (clear-log)
 
-  (verb--log nil 'I "Hello, World!")
+  (verb-util--log nil 'I "Hello, World!")
   (should-log-contain "- I Hello, World!")
 
-  (verb--log 1 'I "Hello, World!")
+  (verb-util--log 1 'I "Hello, World!")
   (should-log-contain "1 I Hello, World!")
 
-  (should-error (verb--log 1 'X "foo")))
+  (should-error (verb-util--log 1 'X "foo")))
 
 (ert-deftest test-response-buffer-name ()
   (let ((verb--requests-count 41)
