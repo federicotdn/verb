@@ -144,9 +144,6 @@ If `verb-enable-log' is nil, do not log anything."
   (interactive)
   (switch-to-buffer (get-buffer-create verb--log-buffer-name)))
 
-;; Old function name (<2.11.0)
-(defalias 'verb-view-log 'verb-show-log)
-
 (defun verb--nonempty-string (s)
   "Return S. If S is the empty string, return nil."
   (if (string-empty-p s)
