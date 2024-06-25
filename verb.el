@@ -482,11 +482,11 @@ more details on how to use it."
         (add-hook 'post-command-hook #'verb--var-preview nil t)
         (when (buffer-file-name)
           (verb-util--log nil 'I
-                     "Verb mode enabled in buffer: %s"
-                     (buffer-name))
+                          "Verb mode enabled in buffer: %s"
+                          (buffer-name))
           (verb-util--log nil 'I "Org version: %s, GNU Emacs version: %s"
-                     (org-version)
-                     emacs-version)))
+                          (org-version)
+                          emacs-version)))
     ;; Disable verb-mode
     (verb--setup-font-lock-keywords t)
     (remove-hook 'completion-at-point-functions
@@ -804,9 +804,9 @@ Respects `org-use-property-inheritance'.  Matching is case-insensitive."
     ;; property already `upcase''d, but only if there is no `string=' the
     ;; `upcase''d value
     (seq-reduce (lambda (properties property)
-                 (if (string-prefix-p prefix property t)
-                     (cl-pushnew (upcase property) properties :test #'string=)
-                   properties))
+                  (if (string-prefix-p prefix property t)
+                      (cl-pushnew (upcase property) properties :test #'string=)
+                    properties))
                 (org-buffer-property-keys)
                 '())
     ;; 2) Get the value for each of those properties and return an alist
@@ -1886,7 +1886,7 @@ For more information, see `verb-advice-url'."
     (advice-remove 'url-http-handle-authentication
                    #'verb--http-handle-authentication)
     (when (and (fboundp 'zlib-available-p)
-	       (zlib-available-p))
+	           (zlib-available-p))
       (advice-remove 'zlib-decompress-region
                      #'verb--zlib-decompress-region))))
 
@@ -1980,16 +1980,16 @@ loaded into."
     (dolist (h verb--url-pre-defined-headers)
       (when (assoc-string h url-request-extra-headers t)
         (verb-util--log num 'W (concat "Header \"%s\" will appear duplicated "
-                                  "in the request, as url.el adds its "
-                                  "own version of it")
-                   h)))
+                                       "in the request, as url.el adds its "
+                                       "own version of it")
+                        h)))
 
     ;; Maybe log a warning if body is present but method usually
     ;; doesn't take one (like GET)
     (when (and (member url-request-method verb--bodyless-http-methods)
                url-request-data)
       (verb-util--log num 'W "Body is present but request method is %s"
-                 url-request-method))
+                      url-request-method))
 
     ;; Workaround for "localhost" not working on Emacs 25
     (when (and (< emacs-major-version 26)
@@ -2033,8 +2033,8 @@ loaded into."
 
     ;; Log the request
     (verb-util--log num 'I "%s %s"
-               (oref rs method)
-               (verb-request-spec-url-to-string rs))
+                    (oref rs method)
+                    (verb-request-spec-url-to-string rs))
 
     (pcase where
       ('other-window (switch-to-buffer-other-window response-buf))
@@ -2412,7 +2412,7 @@ and fragment component of a URL with no host or scheme defined."
     url-obj))
 
 (define-error 'verb-empty-spec
-  "Request specification has no contents.")
+              "Request specification has no contents.")
 
 (defun verb-request-spec-from-string (text &optional metadata)
   "Create and return a request specification from string TEXT.
