@@ -32,6 +32,7 @@ test: clean server-bg
 		 --eval "(ert-run-tests-batch-and-exit '$(SELECTOR))"; \
 	ret=$$?; \
 	make server-kill; \
+	sleep 1; \
 	exit $$ret
 
 server: ## Run a testing HTTP server on port 8000 (default).

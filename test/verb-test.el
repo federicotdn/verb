@@ -745,6 +745,32 @@
 		 (list (cons "Foo-Bar" "text")
 		       (cons "Referer" "host.com")))))
 
+(ert-deftest test-request-spec-from-text-url-backslash ()
+  (setq aux (text-as-spec-nl "get http://example.com?\\"
+                             "a=b"))
+  (should (string= (verb-request-spec-url-to-string aux)
+		           "http://example.com/?a=b"))
+
+  (setq aux (text-as-spec-nl "get http://example.com?\\"
+                             "    a=b"))
+  (should (string= (verb-request-spec-url-to-string aux)
+		           "http://example.com/?a=b"))
+
+  (setq aux (text-as-spec-nl "get http://example.com?\\"
+                             "    a=b&\\"
+                             "\t\t\t\tc=d"))
+  (should (string= (verb-request-spec-url-to-string aux)
+		           "http://example.com/?a=b&c=d"))
+
+  (should-error
+   (text-as-spec-nl "get http://example.com?\\"))
+  (should-error
+   (text-as-spec-nl "get http://example.com?\\"
+                    "foobar\\"))
+  (should-error
+   (text-as-spec-nl "get http://example.com?\\"
+                    "  ")))
+
 (ert-deftest test-request-spec-from-text-body-trailing-chars ()
   (setq aux (text-as-spec-nl "GET example.com"
 			     "Accept: text"

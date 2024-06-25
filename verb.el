@@ -2457,7 +2457,7 @@ METADATA."
       (insert text)
       (goto-char (point-min))
 
-      ;;; COMMENTS / PROPERTIES
+      ;;; COMMENTS + PROPERTIES
 
       ;; Skip initial blank lines, comments and properties
       (while (and (re-search-forward "^\\s-*\\(\\(:\\|#\\).*\\)?$"
@@ -2474,23 +2474,48 @@ METADATA."
 
       ;; Read HTTP method and URL line
       ;; First, expand any code tags on it (if any)
-      (let ((case-fold-search t)
-            (line (verb--eval-code-tags-in-string
-                   (buffer-substring-no-properties (point)
-                                                   (line-end-position))
-                   context)))
+      (let* ((case-fold-search t)
+             (get-line-fn (lambda ()
+                            (verb--eval-code-tags-in-string
+                             (buffer-substring-no-properties
+                              (point) (line-end-position))
+                             context)))
+             (line (funcall get-line-fn)))
+        ;; Try to match:
+        ;; A) METHOD URL
+        ;; B) METHOD
         (if (string-match (concat "^\\s-*\\("
                                   (verb--http-methods-regexp)
                                   "\\)\\s-+\\(.+\\)$")
                           line)
-            ;; Matched method + URL, store them
-            (setq method (upcase (match-string 1 line))
-                  url (match-string 2 line))
+            ;; A) Matched method + URL, store them
+            (progn
+              (setq method (upcase (match-string 1 line))
+                    url (string-remove-suffix "\\" (match-string 2 line)))
+
+              ;; Subcase:
+              ;; If URL ends with '\', append following lines to it
+              ;; until one of them does not end with '\' (ignoring
+              ;; leading whitespace, for alignment).
+              (while (string-suffix-p "\\" line)
+                (end-of-line)
+                (if (eobp)
+                    (user-error
+                     "Backslash was not followed by additional line")
+                  (forward-char))
+                (back-to-indentation)
+                (setq line (funcall get-line-fn))
+                (when (string-empty-p line)
+                  (user-error
+                   "Backslash was not followed by additional content"))
+
+                (setq url (concat url (string-remove-suffix "\\" line)))))
+
           (when (string-match (concat "^\\s-*\\("
                                       (verb--http-methods-regexp)
                                       "\\)\\s-*$")
                               line)
-            ;; Matched method only, store it
+            ;; B) Matched method only, store it
             (setq method (upcase (match-string 1 line))))))
 
       ;; We've processed the URL line, move to the end of it
