@@ -41,16 +41,20 @@ W = Warning.
 E = Error.")
 
 (defface verb-util--log-debug '((t :inherit font-lock-constant-face))
-  "Face for highlighting D entries in the log buffer.")
+  "Face for highlighting D entries in the log buffer."
+  :group 'verb)
 
 (defface verb-util--log-info '((t :inherit homoglyph))
-  "Face for highlighting I entries in the log buffer.")
+  "Face for highlighting I entries in the log buffer."
+  :group 'verb)
 
 (defface verb-util--log-warning '((t :inherit warning))
-  "Face for highlighting W entries in the log buffer.")
+  "Face for highlighting W entries in the log buffer."
+  :group 'verb)
 
 (defface verb-util--log-error '((t :inherit error))
-  "Face for highlighting E entries in the log buffer.")
+  "Face for highlighting E entries in the log buffer."
+  :group 'verb)
 
 (defconst verb-util--http-header-parse-regexp
   "^\\s-*\\([[:alnum:]_-]+\\)\\s-*:\\(.*\\)$"
@@ -137,7 +141,7 @@ If `verb-enable-log' is nil, do not log anything."
 
 (defun verb-util--nonempty-string (s)
   "Return S. If S is the empty string, return nil."
-  (if (string-empty-p s)
+  (if (string= s "")
       nil
     s))
 
