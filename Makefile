@@ -21,7 +21,7 @@ setup-tests:  ## Install everything required for testing (Python dependencies).
 	python3 --version
 	test -d $(ENV) || python3 -m venv $(ENV)
 	$(ACTIVATE) && \
-	pip install -U pip wheel && \
+	pip install -U pip wheel setuptools && \
 	pip install -r test/requirements-dev.txt
 
 test: ## Run all ERT tests (set SELECTOR to specify only one).

@@ -32,6 +32,7 @@
 
 ;;; Code:
 (require 'org)
+(require 'org-element)
 (require 'ob)
 (require 'eieio)
 (require 'subr-x)
@@ -276,6 +277,14 @@ a call to `verb-var'."
 (defcustom verb-enable-log t
   "When non-nil, log different events in the *Verb Log* buffer."
   :group :verb
+  :type 'boolean)
+
+(defcustom verb-suppress-load-unsecure-prelude-warning nil
+  "When set to a non-nil, suppress warning about loading Elisp Preludes.
+Loading Emacs Lisp (.el) configuration files as a Prelude is potentially
+unsafe, if this setting is nil a warning prompt is shown asking user to allow
+it to be loaded and evaluated.  If non-nil, no warning is shown when loading
+Elisp Prelude external files."
   :type 'boolean)
 
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
@@ -889,6 +898,7 @@ Note that the entire buffer is considered when generating the request
 spec, not only the section contained by the source block.
 
 This function is called from ob-verb.el (`org-babel-execute:verb')."
+  (verb-load-prelude-files-from-hierarchy)
   (save-excursion
     (goto-char pos)
     (let* ((verb--vars (append vars verb--vars))
@@ -963,6 +973,10 @@ Once all the request specs have been collected, override them in
 inverse order according to the rules described in
 `verb-request-spec-override'.  After that, override that result with
 all the request specs in SPECS, in the order they were passed in."
+  ;; Load all prelude verb-var's before rest of the spec to be complete, unless
+  ;; specs already exists which means called from ob-verb block and loaded.
+  (unless specs
+    (verb-load-prelude-files-from-hierarchy))
   (let (done final-spec)
     (save-restriction
       (widen)
@@ -990,6 +1004,39 @@ all the request specs in SPECS, in the order they were passed in."
       (user-error (concat "No request specifications found\n"
                           "Remember to tag your headlines with :%s:")
                   verb-tag))))
+
+(defun verb-load-prelude-files-from-hierarchy ()
+  "Load all Verb-Prelude's of current heading and up, including buffer level.
+Children with same named verb-vars as parents, will override the parent
+settings."
+  (save-restriction
+    (widen)
+    (save-excursion
+      (let (preludes)
+        (while
+            (progn
+              (let* ((spec (verb-request-spec
+                            :metadata (verb--heading-properties
+                                       verb--metadata-prefix)))
+                     (prelude (verb--request-spec-metadata-get spec
+                                                               "prelude")))
+                (when prelude
+                  (push prelude preludes)))
+              (verb--up-heading)))
+        (let* ((prelude (car (org-element-map (org-element-parse-buffer)
+                                 'keyword
+                               (lambda (keyword)
+                                 (when (string= (upcase (concat
+                                                         verb--metadata-prefix
+                                                         "prelude"))
+                                                (org-element-property
+                                                 :key keyword))
+                                   (org-element-property :value keyword)))))))
+          (when prelude
+            (push prelude preludes)))
+        ;; Lower-level prelude files override same settings in hierarchy
+        (dolist (file preludes)
+          (verb-load-prelude-file file))))))
 
 (defun verb-kill-response-buffer-and-window (&optional keep-window)
   "Delete response window and kill its buffer.
@@ -1111,6 +1158,42 @@ This affects only the current buffer."
   (when (or (not (called-interactively-p 'any))
             (yes-or-no-p "Unset all Verb variables for current buffer? "))
     (setq verb--vars nil)))
+
+(defun verb-load-prelude-file (filename)
+  "Load a elisp or json configuration file, FILENAME, into verb variables."
+  (interactive)
+  (save-excursion
+    (let ((file-extension (file-name-extension filename)))
+      (when (member file-extension '("gpg" "gz" "z" "7z"))
+        (setq file-extension (file-name-extension (file-name-base filename))))
+      (cond
+       ((string= "el" (downcase file-extension)) ;; file is elisp
+        (if (or (bound-and-true-p verb-suppress-load-unsecure-prelude-warning)
+                (yes-or-no-p
+                 (concat (format "The file: %s may contain values " filename)
+                         "that may not be safe.\n\nDo you wish to load?")))
+            (load-file filename)))
+       ((string-match-p "^json.*" (downcase file-extension)) ;; file is json(c)
+        (let* ((file-contents
+                (with-temp-buffer
+                  (insert-file-contents filename)
+                  (set-auto-mode)
+                  (goto-char (point-min))
+                  ;; If a modern json / js package not installed, then comments
+                  ;; cannot be removed or supported. Also, not likely to have
+                  ;; json comments if this is the case.
+                  (when comment-start
+                    (comment-kill (count-lines (point-min) (point-max))))
+                  (verb--buffer-string-no-properties)))
+               (json-object-type 'plist)
+               (data (json-read-from-string file-contents)))
+          (cl-loop for (k v) on data by #'cddr
+                   do (verb-set-var (substring (symbol-name k) 1) v)
+                   if (and (listp v) (cl-evenp (length v)))
+                   do (cl-loop for (subk subv) on v by #'cddr
+                               do (verb-set-var
+                                   (substring (symbol-name subk) 1) subv)))))
+       (t (user-error "Unable to determine file type for %s" filename))))))
 
 (defun verb-show-vars ()
   "Show values of variables set with `verb-var' or `verb-set-var'.

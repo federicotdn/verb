@@ -150,6 +150,16 @@ Content-Type: application/xml
 
 bar2
 {{(verb-part)}}
+** prelude-elisp
+:properties:
+:Verb-Prelude: env.el
+:end:
+get /echo-args?{{(verb-var foo)}}={{(verb-var bar)}}
+** prelude-json
+:properties:
+:Verb-Prelude: env.json
+:end:
+get /echo-args?{{(verb-var foo)}}={{(verb-var bar)}}
 * connection-fail-port
 # Valid host but invalid port
 get http://localhost:1234/test

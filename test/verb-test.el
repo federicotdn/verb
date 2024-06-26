@@ -2226,6 +2226,15 @@
   (server-test "multipart"
                (should (string= (buffer-string) "OK"))))
 
+(ert-deftest test-server-request-prelude-elisp ()
+  (let ((verb-suppress-load-unsecure-prelude-warning t))
+    (server-test "prelude-elisp"
+               (should (string= (buffer-string) "hello=world")))))
+
+(ert-deftest test-server-request-prelude-json ()
+  (server-test "prelude-json"
+               (should (string= (buffer-string) "hello=world"))))
+
 (ert-deftest test-server-response-big5 ()
   (server-test "response-big5"
                (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))
