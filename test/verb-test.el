@@ -2932,8 +2932,8 @@
                                "other-file-contents-here"
                                "--abc--"))))
 
-(ert-deftest test-body-cr-to-crlf ()
-  (setq aux (verb-body-cr-to-crlf (text-as-spec-nl "get https://hello.com"
+(ert-deftest test-body-lf-to-crlf ()
+  (setq aux (verb-body-lf-to-crlf (text-as-spec-nl "get https://hello.com"
                                                    ""
                                                    "one"
                                                    "two")))

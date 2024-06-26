@@ -657,7 +657,7 @@ The following is an example that combines these two functions, along with `verb-
 
 ** Upload two files to user storage
 :properties:
-:Verb-Map-Request: verb-body-cr-to-crlf
+:Verb-Map-Request: verb-body-lf-to-crlf
 :end:
 
 post /{{(verb-var user-id)}}/upload
@@ -674,7 +674,7 @@ Content-Type: application/xml
 {{(verb-part)}}
 ```
 
-**Important**: In most cases, you will also need to apply the `verb-body-cr-to-crlf` function to your request before it is sent. This is needed to ensure that all line endings in the request body use CRLF instead of just LF. This is also shown in the example above.
+**Important**: In most cases, you will also need to apply the `verb-body-lf-to-crlf` function to your request before it is sent. This is needed to ensure that all line endings in the request body use CRLF instead of just LF. This is also shown in the example above.
 
 ### Base Headers
 

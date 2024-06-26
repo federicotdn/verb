@@ -2323,8 +2323,8 @@ part, insert the final boundary delimiter."
             verb--multipart-boundary nil)
       (concat "--" boundary "--"))))
 
-(defun verb-body-cr-to-crlf (rs)
-  "Prepend a line-feed before all carriage-returns in RS's body."
+(defun verb-body-lf-to-crlf (rs)
+  "Prepend a carriage-return before all line-feeds in RS's body."
   (oset rs body (replace-regexp-in-string "\n" "\r\n" (oref rs body)))
   rs)
 
