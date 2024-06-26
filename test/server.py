@@ -1,6 +1,6 @@
 import os
 import logging
-from sanic import Sanic, response, Websocket
+from sanic import Sanic, response
 from sanic.log import logger
 from sanic.request import Request
 from sanic.response import HTTPResponse
@@ -226,6 +226,16 @@ async def form_urlencoded(request: Request) -> HTTPResponse:
     if request.form["hello"] != ["world"]:
         return response.text("FAIL")
     if request.form["foo"] != ["{\"test\":123}"]:
+        return response.text("FAIL")
+
+    return response.text("OK")
+
+
+@app.route("/multipart")
+async def multipart(request: Request) -> HTTPResponse:
+    if request.form.get("foo1") != "bar1":
+        return response.text("FAIL")
+    if request.form.get("foo2") != "bar2":
         return response.text("FAIL")
 
     return response.text("OK")

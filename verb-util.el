@@ -56,10 +56,6 @@ E = Error.")
   "^\\s-*\\([[:alnum:]_-]+\\)\\s-*:\\(.*\\)$"
   "Regexp for parsing HTTP headers.")
 
-(defconst verb-util--http-status-parse-regexp
-  "^http/1\\..\\s-*\\([[:digit:]]+\\).*$"
-  "Regexp for parsing HTTP status lines.")
-
 (define-derived-mode verb-util-log-mode special-mode "Verb[Log]"
   "Major mode for displaying Verb logs.
 
@@ -80,19 +76,19 @@ logged:
 If this buffer is killed, it will be created again when the next
 message is logged.  To turn off logging, set `verb-enable-log' to nil."
   (font-lock-add-keywords
-   nil '(;; (request number e.g. 10)
+   nil '(;; Request number, e.g. 10.
          ("^[[:digit:]-]+\\s-"
           (0 'bold))
-         ;; Log level D after request number
+         ;; Log level D after request number.
          ("^[[:digit:]-]*\\s-+\\(D\\)"
           (1 'verb-util--log-debug))
-         ;; Log level I after request number
+         ;; Log level I after request number.
          ("^[[:digit:]-]*\\s-+\\(I\\)"
           (1 'verb-util--log-info))
-         ;; Log level W after request number
+         ;; Log level W after request number.
          ("^[[:digit:]-]*\\s-+\\(W\\)"
           (1 'verb-util--log-warning))
-         ;; Log level E after request number
+         ;; Log level E after request number.
          ("^[[:digit:]-]*\\s-+\\(E\\)"
           (1 'verb-util--log-error)))))
 
@@ -115,12 +111,12 @@ If `verb-enable-log' is nil, do not log anything."
             (msg (apply #'format args)))
         (unless (= (buffer-size) 0)
           (insert "\n"))
-        ;; Get last logged request number
+        ;; Get last logged request number.
         (when (re-search-backward "^\\(-\\|[[:digit:]]+\\)\\s-"
                                   nil t)
           (setq last (match-string 1)))
         (goto-char (point-max))
-        ;; Log new message
+        ;; Log new message.
         (insert (format "%-5s %s  "
                         (if (string= last request)
                             (make-string (length request) ? )
@@ -128,7 +124,7 @@ If `verb-enable-log' is nil, do not log anything."
                         level)
                 msg)
         ;; If logged messaged contained newlines, add a blank line
-        ;; to make things more readable
+        ;; to make things more readable.
         (when (string-match-p "\n" msg)
           (newline)))
       (dolist (w (get-buffer-window-list (current-buffer) nil t))

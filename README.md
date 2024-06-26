@@ -656,6 +656,10 @@ The following is an example that combines these two functions, along with `verb-
 (...)
 
 ** Upload two files to user storage
+:properties:
+:Verb-Map-Request: verb-body-cr-to-crlf
+:end:
+
 post /{{(verb-var user-id)}}/upload
 Content-Type: multipart/form-data; boundary={{(verb-boundary)}}
 
@@ -670,27 +674,7 @@ Content-Type: application/xml
 {{(verb-part)}}
 ```
 
-In HTTP, the end-of-line marker is CRLF (`\r\n`) instead of LF (`\n`). Although some web servers handle LF as CRLF for compatibility, some do not. If you encounter a similar problem, try to insert CR (`\r`) manually. For example:
-
-```
-(...)
-
-** Upload two files to user storage
-post /{{(verb-var user-id)}}/upload
-Content-Type: multipart/form-data; boundary={{(verb-boundary)}}
-
-{{(verb-part "file" "file1.txt")}}^M
-Content-Type: text/plain^M
-^M
-{{(verb-read-file "documents/file1.txt")}}^M
-{{(verb-part "file" "file2.xml")}}^M
-Content-Type: application/xml^M
-^M
-{{(verb-read-file "documents/file2.xml")}}^M
-{{(verb-part)}}^M
-```
-
-> `^M` is CR (`\r`) which is inserted by Emacs with <kbd>C-q C-m</kbd>.
+**Important**: In most cases, you will also need to apply the `verb-body-cr-to-crlf` function to your request before it is sent. This is needed to ensure that all line endings in the request body use CRLF instead of just LF. This is also shown in the example above.
 
 ### Base Headers
 

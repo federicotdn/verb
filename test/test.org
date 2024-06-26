@@ -134,6 +134,22 @@ get /form-urlencoded
 Content-Type: application/x-www-form-urlencoded
 
 hello=world&foo=%7B%22test%22%3A123%7D
+** multipart
+:properties:
+:Verb-Map-Request: verb-body-cr-to-crlf
+:end:
+get /multipart
+Content-Type: multipart/form-data; boundary={{(verb-boundary)}}
+
+{{(verb-part "foo1")}}
+Content-Type: text/plain
+
+bar1
+{{(verb-part "foo2")}}
+Content-Type: application/xml
+
+bar2
+{{(verb-part)}}
 * connection-fail-port
 # Valid host but invalid port
 get http://localhost:1234/test

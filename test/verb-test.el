@@ -55,12 +55,12 @@
 				    :headers headers
 				    :body body))))
 
-;; Create log buffer now
+;; Create log buffer now.
 (verb-util--log nil 'I "")
 
 (ert-deftest test-up-heading ()
   (setq outline-test
-	;; Test up-heading without level 1 heading
+	;; Test up-heading without level 1 heading.
 	(join-lines "** Level 2 heading"
 		    "*** Level 3 heading"
 		    "get http://test.com"))
@@ -74,7 +74,7 @@
     (should (= (point) 1)))
 
   (setq outline-test
-	;; Test up-heading without level 1 heading, with empty space
+	;; Test up-heading without level 1 heading, with empty space.
 	(join-lines "test"
 		    ""
 		    "** Level 2 heading"
@@ -169,7 +169,7 @@
 		     "hello world\n")))
 
   (setq outline-test
-	;; no headings
+	;; No headings.
 	(join-lines "get http://test.com"))
   (with-temp-buffer
     (org-mode)
@@ -458,7 +458,7 @@
 (ert-deftest test-request-spec-from-hierarchy-map-request-bad-fn ()
   (defun map-req-3 (rs)
     (oset rs body "foobarfoobar")
-    ;; return an int
+    ;; Return an int.
     42)
 
   (with-temp-buffer
@@ -509,12 +509,12 @@
   (should-not (verb-util--nonempty-string "")))
 
 (ert-deftest test-back-to-heading-no-headings ()
-  ;; Empty buffer
+  ;; Empty buffer.
   (with-temp-buffer
     (setq aux (verb--back-to-heading))
     (should (null aux))
     (should (= (point) 1)))
-  ;; With contents
+  ;; With contents.
   (with-temp-buffer
     (insert "foobar\nfoobar")
     (setq aux (verb--back-to-heading))
@@ -815,7 +815,7 @@
                              "hello"))
   (should (string= (oref aux :body) "<something/>\nhello"))
 
-  ;; Removes src block markers even when indented
+  ;; Removes src block markers even when indented.
   (setq aux (text-as-spec-nl "  GET example.com"
         		     "  Accept: text"
         		     ""
@@ -862,7 +862,7 @@
 
   (setq aux (text-as-spec "GET example.com\n"
 			  "Accept: text\n"
-			  "\n" ;; This line is ignored
+			  "\n" ;; This line is ignored.
 			  "hello world"))
   (should (string= (oref aux :body) "hello world")))
 
@@ -1190,10 +1190,10 @@
 					(current-buffer))
                      "bye"))
 
-    ;; Set same var again, should replace old entry
+    ;; Set same var again, should replace old entry.
     (verb-set-var "test-var-2" "byeee")
 
-    ;; Set var to a non-string value (e.g. integer)
+    ;; Set var to a non-string value (e.g. integer).
     (should (= (verb--eval-string "(verb-var test-var-3 8080)"
                                   (current-buffer))
                8080))
@@ -1270,7 +1270,7 @@
   (with-temp-buffer
     (org-mode)
     (verb-mode)
-    (setq fill-column 9000) ; buffer local
+    (setq fill-column 9000) ; Buffer local.
     (insert (join-lines "* H1 :verb:"
 			"get http://example.com/{{fill-column}}"))
     (should (equal (verb--request-spec-from-hierarchy)
@@ -1278,7 +1278,6 @@
 				      :url (verb--clean-url
 					    "http://example.com/9000")))))
   (with-temp-buffer
-    ;; yep!
     (should (= fill-column 70))))
 
 (ert-deftest test-verb-eval-lisp-code-in ()
@@ -1346,19 +1345,19 @@
   (should (string= (url-recreate-url (verb--clean-url "http://foo.com/a/path?a=b&b=c"))
 		   "http://foo.com/a/path?a=b&b=c"))
 
-  ;; URL encoding
+  ;; URL encoding.
   (should (string= (url-recreate-url (verb--clean-url "http://foo.com/test?q=hello world"))
 		   "http://foo.com/test?q=hello%20world"))
 
-  ;; Empty path + query string
+  ;; Empty path + query string.
   (should (string= (url-recreate-url (verb--clean-url "http://foo.com?test"))
 		   "http://foo.com/?test"))
 
-  ;; Empty path + query string, URL encoding
+  ;; Empty path + query string, URL encoding.
   (should (string= (url-recreate-url (verb--clean-url "https://foo.com?test=hello world"))
 		   "https://foo.com/?test=hello%20world"))
 
-  ;; No scheme
+  ;; No scheme.
   (should (string= (url-recreate-url (verb--clean-url "foo/bar"))
 		   "foo/bar"))
 
@@ -1375,7 +1374,7 @@
 		   "/foo/bar?a#b")))
 
 (ert-deftest test-clean-url-url-encoding ()
-  ;; Non-ascii example
+  ;; Non-ascii example.
   (should (equal (url-path-and-query (verb--clean-url "http://example.com?a=ñ"))
 		 (cons "/" "a=%C3%B1")))
   (should (equal (url-path-and-query (verb--clean-url "http://example.com?a=hello world"))
@@ -1678,12 +1677,12 @@
 		 (verb--clean-url expected))))
 
 (ert-deftest test-override-url ()
-  ;; Scheme
+  ;; Scheme.
   (assert-url-override "https://hello.com"
 		       "http://hello.com"
 		       "http://hello.com")
 
-  ;; Port
+  ;; Port.
   (assert-url-override "http://hello.com"
 		       "http://hello.com:8080"
 		       "http://hello.com:8080")
@@ -1692,7 +1691,7 @@
 		       "http://hello.com"
 		       "http://hello.com:8080")
 
-  ;; Host
+  ;; Host.
   (assert-url-override "http://hello.com"
 		       "http://foo.com"
 		       "http://foo.com")
@@ -1701,7 +1700,7 @@
 		       "http://foo.com"
 		       "http://foo.com/test")
 
-  ;; Path
+  ;; Path.
   (assert-url-override "http://hello.com"
 		       "/test"
 		       "http://hello.com/test")
@@ -1718,7 +1717,7 @@
 		       ""
 		       "http://hello.com/")
 
-  ;; Path + query string
+  ;; Path + query string.
   (assert-url-override "http://hello.com?a=b"
   		       "/hello"
   		       "http://hello.com/hello?a=b")
@@ -1739,7 +1738,7 @@
   		       "/hello/bye?a=c"
   		       "http://hello.com/foo/hello/bye?hello&a=c")
 
-  ;; Fragment
+  ;; Fragment.
   (assert-url-override "http://hello.com#a"
 		       "http://hello.com#b"
 		       "http://hello.com#b")
@@ -1748,7 +1747,7 @@
 		       "http://hello.com"
 		       "http://hello.com#a")
 
-  ;; Various things
+  ;; Various things.
   (assert-url-override "http://hello.com/user?a=1&a=2&foo#foobar"
 		       "http://hello.com/test?a=2&a=3&quux#baz"
 		       "http://hello.com/user/test?foo&a=2&a=3&quux#baz"))
@@ -1878,7 +1877,7 @@
 (ert-deftest test-elisp-completion ()
   (with-temp-buffer
     (insert elisp-code)
-    ;; Sanity checks
+    ;; Sanity checks.
     (let ((comp (elisp-completion-at-point)))
       (should (= (nth 0 comp) 1))
       (should (= (nth 1 comp) 8))))
@@ -1914,7 +1913,7 @@
     (insert "{{" elisp-code)
     (should-not (verb-elisp-completion-at-point))))
 
-;; Tests using the test server (server.py)
+;; Tests using the test server (server.py).
 
 (defconst test-file-name (expand-file-name "test/test.org"))
 (defconst test-buf (find-file test-file-name))
@@ -1993,7 +1992,7 @@
     (server-test "basic")
     (server-test "basic")
     ;; We should have the 3 most recent response buffers, plus
-    ;; the one of the last request sent
+    ;; the one of the last request sent.
     (should (= (length (get-response-buffers)) 4))))
 
 (ert-deftest test-re-send-request ()
@@ -2028,14 +2027,14 @@
     (verb-mode)
     (insert (join-lines "* test :verb:"
                         "get http://example.org/{{(+ 40 2)}}/"))
-    ;; C-u M-x verb-send-request-on-point
+    ;; C-u M-x verb-send-request-on-point.
     (let ((current-prefix-arg '(4)))
       (cl-letf (((symbol-function 'verb--split-window) (lambda () (selected-window))))
         (call-interactively 'verb-send-request-on-point)))
     (should (string= (buffer-name) "*Edit HTTP Request*"))
     (goto-char (point-min))
 
-    ;; Code tags should not have been evaluated
+    ;; Code tags should not have been evaluated.
     (should (search-forward "{{(+ 40 2)}}"))))
 
 (ert-deftest test-c-u-verb-var ()
@@ -2048,13 +2047,13 @@
                           "post http://localhost:8000/echo"
                           ""
                           "Hello, {{(verb-var testvar1)}}"))
-      ;; C-u M-x verb-send-request-on-point
+      ;; C-u M-x verb-send-request-on-point.
       (let ((current-prefix-arg '(4)))
         (cl-letf (((symbol-function 'verb--split-window) (lambda () (selected-window))))
           (call-interactively 'verb-send-request-on-point)))
       (should (string= (buffer-name) "*Edit HTTP Request*"))
 
-      ;; C-c C-c
+      ;; C-c C-c.
       (with-current-buffer (call-interactively (local-key-binding (kbd "C-c C-c")))
         (while (eq verb-http-response t)
           (sleep-for req-sleep-time))
@@ -2076,7 +2075,7 @@
                         ""
                         "Foobar"))
 
-    ;; C-u M-x verb-send-request-on-point
+    ;; C-u M-x verb-send-request-on-point.
     (let ((current-prefix-arg '(4)))
       (cl-letf (((symbol-function 'verb--split-window) (lambda () (selected-window))))
         (call-interactively 'verb-send-request-on-point)))
@@ -2084,7 +2083,7 @@
     (goto-char (point-max))
     (insert "!!??")
 
-    ;; C-c C-c
+    ;; C-c C-c.
     (with-current-buffer (call-interactively (local-key-binding (kbd "C-c C-c")))
       (while (eq verb-http-response t)
         (sleep-for req-sleep-time))
@@ -2137,7 +2136,7 @@
   "docs")
 
 (ert-deftest test-binary-image ()
-  ;; Can't really display images during testing, mock the handler
+  ;; Can't really display images during testing, mock the handler.
   (let ((verb-content-type-handlers '(("image/png" fake-handler-mode t))))
     (should (equal (verb--get-handler (cons "image/png" nil))
 		   '(fake-handler-mode t)))
@@ -2182,7 +2181,7 @@
                (should (string-match "400" header-line-format))))
 
 (ert-deftest test-server-error-401 ()
-  ;; url.el should not handle 401 in any way
+  ;; url.el should not handle 401 in any way.
   (server-test "error-401"
                (should (string-match "401" header-line-format))))
 
@@ -2223,6 +2222,10 @@
   (server-test "form-urlencoded"
                (should (string= (buffer-string) "OK"))))
 
+(ert-deftest test-server-multipart ()
+  (server-test "multipart"
+               (should (string= (buffer-string) "OK"))))
+
 (ert-deftest test-server-response-big5 ()
   (server-test "response-big5"
                (should (coding-system-equal buffer-file-coding-system 'chinese-big5-unix))
@@ -2230,16 +2233,13 @@
 
 (ert-deftest test-server-response-big5-size ()
   (server-test "response-big5"
-               ;; Six bytes, but three "characters"
+               ;; Six bytes, but three "characters".
                (should (= 6 (oref verb-http-response body-bytes)))
                (should (= 3 (buffer-size)))
                (should (= 3 (length (oref verb-http-response body))))))
 
 (ert-deftest test-server-response-utf-8-default ()
   (server-test "response-utf-8-default"
-	       ;; (should (string= (cdr (assoc-string "Content-Type"
-	       ;;  			   (oref verb-http-response headers)))
-	       ;;   "text/plain"))
                (should (string= verb-default-response-charset "utf-8"))
                (should (coding-system-equal buffer-file-coding-system 'utf-8-unix))
                (should (string-match "ñáéíóúß" (buffer-string)))))
@@ -2257,7 +2257,7 @@
                (should (string= (buffer-string) "Redirect successful"))))
 
 (ert-deftest test-no-user-agent ()
-  ;; default user agent from url.el should not be included
+  ;; Default user agent from url.el should not be included.
   (server-test "no-user-agent"
                (should (string= (buffer-string) "OK"))))
 
@@ -2358,10 +2358,10 @@
 	           (should (search-forward (concat h ": "))))
 
                  (goto-char (point-min))
-                 (delete-matching-lines "cookie") ; ignore cookie header
+                 (delete-matching-lines "cookie") ; Ignore cookie header.
 
                  (goto-char (point-min))
-                 (delete-matching-lines "extension") ; ignore extension header
+                 (delete-matching-lines "extension") ; Ignore extension header.
 
                  (should (= (count-lines (point-min) (point-max))
 		            (length headers))))))
@@ -2602,7 +2602,7 @@
     (should (string= (verb--buffer-string-no-properties)
 		     (verb-request-spec-to-string test-spec)))
     ;; We should be able to parse the string back to a request-spec and
-    ;; get the same thing
+    ;; get the same thing.
     (should (equal test-spec (verb-request-spec-from-string
 			      (verb--buffer-string-no-properties))))))
 
@@ -2688,25 +2688,25 @@
           result)
       (setq result (org-ctrl-c-ctrl-c))
       (when (< emacs-major-version 26)
-        ;; In Emacs 25, `org-ctrl-c-ctrl-c' does not return the result
+        ;; In Emacs 25, `org-ctrl-c-ctrl-c' does not return the result.
         (search-forward "#+results:")
         (forward-char)
         (setq start (point))
 
-        ;; Two cases to handle
+        ;; Two cases to handle:
         (if (looking-at-p ": ")
-            ;; Results have been inserted in lines with ": "
+            ;; Results have been inserted in lines with ": ".
             (while (re-search-forward "^: " nil t)
               (replace-match ""))
-          ;; Results have been inserted inside begin/end_src blocks
+          ;; Results have been inserted inside begin/end_src blocks.
           (delete-matching-lines "#\\+\\(begin\\|end\\)_\\(src\\|example\\)"))
 
-        ;; Replace 127.0.0.1 -> localhost
+        ;; Replace 127.0.0.1 -> localhost.
         (goto-char (point-min))
         (while (re-search-forward "127\\.0\\.0\\.1" nil t)
           (replace-match "localhost"))
 
-        ;; Set the result
+        ;; Set the result.
         (setq result (buffer-substring start (point-max))))
 
       (let ((result-trimmed (string-trim-right result))
@@ -2794,7 +2794,7 @@
                           "content-type: application/json")))
 
 (ert-deftest test-babel-org-variables ()
-  ;; Use :var for each variable
+  ;; Use :var for each variable.
   (babel-test (join-lines "* Heading 1"
                           "#+begin_src verb :op send get-body :var x=1 :var y=\"foo\""
                           "get http://localhost:8000/echo-args?a={{(verb-var x)}}&b={{(verb-var y)}}"
@@ -2802,7 +2802,7 @@
               (join-lines "a=1"
                           "b=foo"))
 
-  ;; Use :var only once
+  ;; Use :var only once.
   (babel-test (join-lines "* Heading 1"
                           "#+begin_src verb :op send get-body :var x=2 y=\"bar\""
                           "get http://localhost:8000/echo-args?a={{(verb-var x)}}&b={{(verb-var y)}}"
@@ -2920,17 +2920,26 @@
                              "other-file-contents-here"
                              "{{(verb-part)}}"))
   (should (string= (oref aux body)
-                   (join-lines "--abc\r"
+                   (join-lines "--abc"
                                "Content-Disposition: form-data; name=\"foobar-1\""
                                "Content-Type: text/plain"
                                ""
                                "file-contents-here"
-                               "--abc\r"
+                               "--abc"
                                "Content-Disposition: form-data; name=\"foobar-2\""
                                "Content-Type: text/plain"
                                ""
                                "other-file-contents-here"
                                "--abc--"))))
+
+(ert-deftest test-body-cr-to-crlf ()
+  (setq aux (verb-body-cr-to-crlf (text-as-spec-nl "get https://hello.com"
+                                                   ""
+                                                   "one"
+                                                   "two")))
+  (should (string= (oref aux body)
+                   (join-lines "one\r"
+                               "two"))))
 
 (ert-deftest test-multipart-boundary-error-no-boundary ()
   (should-error
@@ -2946,7 +2955,7 @@
 		   "{{(verb-part \"foobar-1\")}}"
                    "Content-Type: text/plain"
                    ""
-                   "file-contents-here") ;; No final boundary
+                   "file-contents-here") ; No final boundary.
   (should-log-contain "Detected an unfinished multipart form"))
 
 (ert-deftest test-proxy-setup ()
