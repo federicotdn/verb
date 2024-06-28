@@ -768,10 +768,6 @@ When you send a request or receive a response, some information is logged in the
 
 The Emacs `url` library also keeps its own internal log - it can be useful for debugging requests that are not working as expected. To enable `url` logging, set `url-debug` to `t` (by default, it's disabled). After sending a request, switch to the `*URL-DEBUG*` buffer to read any logged information.
 
-## Hooks, Variables, Functions
-
-To see a listing of Verb's publicly defined hooks, functions, variables and classes, see the [verb-api.md](extra/verb-api.md) file.
-
 ## Examples
 
 The [examples/](examples) directory contains various `.org` files which showcase different features of the package.
