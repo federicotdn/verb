@@ -62,7 +62,8 @@ lint-file:
 	@printf "\n<<<------------ Lint file: $(filename) ------------>>>\n"
 	@printf "\n--> Step: Byte-compile file\n\n"
 	$(EMACS) --batch -L . \
-			 --eval '(byte-compile-file "$(filename)")' 2>&1 | $(NOOUTPUT)
+			 --eval "(setq byte-compile-error-on-warn t)" \
+			 -f batch-byte-compile "$(filename)" 2>&1
 	@printf "\n--> Step: Run checkdoc\n\n"
 	yes n | $(EMACS) --batch \
 			 --eval '(find-file "$(filename)")' \
