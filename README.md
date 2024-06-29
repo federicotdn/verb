@@ -446,6 +446,80 @@ To quickly copy the value of a variable into the clipboard, use the keyboard pre
 
 **Note**: Values set with `verb-var` and `verb-set-var` will be lost if the buffer is killed.
 
+### Verb Variables from External Files
+
+To further keep sensitive information safe and separate from Verb `.org` files, Verb variables can also be loaded from either JSON or Emacs Lisp external configuration files. Use the `Verb-Prelude` Org mode property followed by the name of the external configuration file to load. Any file is loaded and applied as a prelude before the request being generated and sent.
+
+**Note**: Files that are GPG or EasyPG encrypted can opened and decrypted automatically by Emacs if configured appropriately. See: [Emacs Auth-source manual](https://www.gnu.org/software/emacs/manual/auth.html) for more information.
+
+The `Verb-Prelude` property may be set at the buffer level (very top of the Org document) as an Org mode file `keyword` or various heading levels, and every heading level in the hierarchy with the `Verb-Prelude` property will also be loaded. If the same setting within an environment configuration file is specified at a parent and a child level, then the child will override the parent. This allows more specific or different settings to be done for a lower-level request than at a higher-level. All other file unique variables would be additive to the collection of Verb variables. Because of the specific application usage of `Verb-Prelude`, the Org mode variable `org-use-property-inheritance` is not used for `Verb-Prelude` properties. They are always inherited.
+
+Below is an example of configuring external configuration files at top buffer level, and then a different file for *Foobar Development* at lower level 2.
+
+``` org
+#+Verb-Prelude: /path/to/prod-foobar-env.el.gpg
+
+* Foobar Blog API                    :verb:
+template https://foobar-blog-api.org/api/v1
+Accept: application/json
+
+** Foobar Production
+get /status
+
+** Foobar Development
+:properties:
+:Verb-Prelude: /path/to/dev-foobar-env.el.gpg
+:end:
+
+get /status
+```
+
+In the scenario, when sending the `get /status` request for Foobar Development, `prod-foobar-env.el.gpg` is loaded first from the `#+Verb-Prelude:` buffer property. And then `dev-foobar-env.el.gpg` is loaded from properties under *`** Foobar Development`* header. The dev file would override any variables having the same key name between the two environment files. Again, all other variables would be additive. A common example would be that an *api_token* variable would likely be different between the two environments, but *user_name* would be the same for both environments. It would be logical to then have *api_token* variable specified in both, depending on environments of requests. And *user_name* specified in highest level of the Org structure to be shared among Production and Development environments.
+
+For an Emacs Lisp Prelude file, it can run any code found in the `.el` file, (even to dynamically call and get a temporary `Bearer` token!). For this reason, a yes-no warning prompt is presented when loading those files unless `verb-suppress-load-unsecure-prelude-warning` is set to non-nil value. This, of course, is another reason to GPG encrypt the configuration files to help prevent configuration poisoning. Here's an example of loading `verb-var`'s using an Emacs Lisp file:
+
+``` elisp
+; prod-foobar-env
+(message "Setting up verb variables!")
+; "email" variable is set from emacs user-mail-address
+(verb-set-var "email" user-mail-address)
+(verb-set-var "global_api_key" "hc33Vzco7TAkMKLNzIVgps7KiKLnUYIWJ7y9T")
+(verb-set-var "account_id" "Kb9SVZXtTVFYzt7rvgYv5WXJS31lh7OT")
+(verb-set-var "zone-ids" '(:example.com "IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL"
+                           :myotherdomain.com "jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3"))
+(verb-set-var "example.com" "IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL")
+(verb-set-var "myotherdomain.com" "jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3")
+```
+
+In above, a couple of advantages to using Emacs Lisp Prelude files is shown, such as having comments; dynamically getting email address from Emacs `user-mail-address` variable; and outputting a message, which can be useful for logging and debugging.
+
+For JSON environment file, the values (and even sub-values) are simply set using `verb-set-var` for each key value pair.  Example of JSON configuration:
+
+``` json
+{
+  "email": "email@example.com",
+  "global_api_key": "hc33Vzco7TAkMKLNzIVgps7KiKLnUYIWJ7y9T",
+  "account_id": "Kb9SVZXtTVFYzt7rvgYv5WXJS31lh7OT",
+  "zone-ids": {
+    "example.com": "IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL",
+    "myotherdomain.com": "jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3"
+  }
+}
+```
+
+Results in this for `verb-show-vars` command:
+
+``` env
+email: email@example.com
+global_api_key: hc33Vzco7TAkMKLNzIVgps7KiKLnUYIWJ7y9T
+account_id: Kb9SVZXtTVFYzt7rvgYv5WXJS31lh7OT
+zone-ids: (:example.com IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL :myotherdomain.com jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3)
+example.com: IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL
+myotherdomain.com: jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3
+```
+
+This will result in the same `verb-show-vars` just above for the Emacs Lisp example (assuming `user-mail-address` is *"email@example.com"*). Notice, in the example, that `zone-ids` plist key value pairs are also flattened into their own key-value pairs for easy referencing.
+
 ### Last Response
 
 If you wish to access the last response's attributes, use the `verb-last` variable (type: `verb-response`). The following example does this; add it to the ending of your `guide.org` file:
