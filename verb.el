@@ -824,8 +824,14 @@ Respects `org-use-property-inheritance'.  Matching is case-insensitive."
     ;; 3) Discard all (key . nil) elements in the list.
     (seq-filter #'cdr)))
 
-(defun verb--heading-contents ()
-  "Return the current heading's text contents.
+(defun verb--heading-contents (&optional point)
+  "Return text under the current heading, with some conditions.
+If one or more Babel source blocks are present in the text, and the
+point is located inside one of them, return the content of that source
+block.  Otherwise, simply return the all the text content under the
+current heading.
+Additionally, assume point was at position POINT before it was moved
+to the heading.
 If not on a heading, signal an error."
   (unless (org-at-heading-p)
     (user-error "%s" "Can't get heading text contents: not at a heading"))
@@ -839,53 +845,58 @@ If not on a heading, signal an error."
                           (not (eobp)))
                  (backward-char))
                (point))))
-    (if (<= start end)
-        (buffer-substring-no-properties start end)
-      "")))
+    (when (< end start) (setq end start))
+    (verb--maybe-extract-babel-src-block point start end)))
 
-(defun verb--request-spec-from-heading ()
+(defun verb--maybe-extract-babel-src-block (point start end)
+  "Return the text between START and END, with some exceptions.
+If there are one or more Babel source blocks within the text, and the
+position POINT lies within one of these blocks, return that block's
+text contents.
+If POINT is nil, set it to START.  Also, clamp POINT between START and
+END."
+  (unless point (setq point start))
+  (when (< point start) (setq point start))
+  (when (< end point) (setq point end))
+  (save-excursion
+    (save-match-data
+      (goto-char point)
+      (let ((case-fold-search t)
+            block-start)
+        (when (re-search-backward "#\\+begin_src\\s-+verb" start t)
+          ;; Found the start.
+          (end-of-line)
+          (forward-char)
+          (setq block-start (point))
+          (goto-char point)
+          (when (re-search-forward "#\\+end_src" end t)
+            ;; Found the end.
+            (beginning-of-line)
+            (backward-char)
+            (setq start block-start)
+            (setq end (point))))
+        (buffer-substring-no-properties start end)))))
+
+(defun verb--request-spec-from-heading (point)
   "Return a request spec from the current heading's text contents.
 If a heading is found, get its contents using
-`verb--heading-contents'.  After getting the heading's text content,
-run it through `verb--maybe-extract-babel-src-block'.  From that
-result, try to parse a request specification.  Return nil if the
-heading has no text contents, if contains only comments, or if the
-heading does not have the tag `verb-tag'.
+`verb--heading-contents'.  From that result, try to parse a request
+specification.  Return nil if the heading has no text contents, if
+contains only comments, or if the heading does not have the tag
+`verb-tag'.
+Additionally, assume point was at position POINT before it was moved
+to the heading.
 If not on a heading, signal an error."
   (unless (org-at-heading-p)
     (user-error "%s" "Can't read request spec: not at a heading"))
   (when (or (member verb-tag (verb--heading-tags))
             (eq verb-tag t))
-    (let ((text (verb--maybe-extract-babel-src-block
-                 (verb--heading-contents)))
+    (let ((text (verb--heading-contents point))
           (metadata (verb--heading-properties verb--metadata-prefix)))
       (unless (string-empty-p text)
         (condition-case nil
             (verb-request-spec-from-string text metadata)
           (verb-empty-spec nil))))))
-
-(defun verb--maybe-extract-babel-src-block (text)
-  "Return contents of the first Verb Babel source block in TEXT.
-If no Verb Babel source blocks are found, return TEXT."
-  (with-temp-buffer
-    (insert text)
-    (goto-char (point-min))
-    (let ((case-fold-search t)
-          start result)
-      (when (re-search-forward "#\\+begin_src\\s-+verb" nil t)
-        ;; Found the start.
-        (end-of-line)
-        (forward-char)
-        (setq start (point))
-        (when (re-search-forward "#\\+end_src" nil t)
-          ;; Found the end.
-          (beginning-of-line)
-          (backward-char)
-          (setq result
-                (if (<= start (point))
-                    (buffer-substring-no-properties start (point))
-                  ""))))
-      (or result text))))
 
 (defun verb--request-spec-from-babel-src-block (pos body vars)
   "Return a request spec generated from a Babel source block.
@@ -977,7 +988,8 @@ all the request specs in SPECS, in the order they were passed in."
   ;; specs already exists which means called from ob-verb block and loaded.
   (unless specs
     (verb-load-prelude-files-from-hierarchy))
-  (let (done final-spec)
+  (let ((point (point))
+        done final-spec)
     (save-restriction
       (widen)
       (save-excursion
@@ -987,7 +999,7 @@ all the request specs in SPECS, in the order they were passed in."
         ;; If there's at least one heading above us, go up through the
         ;; headings tree taking a request specification from each level.
         (while (not done)
-          (let ((spec (verb--request-spec-from-heading)))
+          (let ((spec (verb--request-spec-from-heading point)))
             (when spec (push spec specs)))
           (setq done (not (verb--up-heading))))))
     (if specs

@@ -48,12 +48,12 @@
 
 (defun override-specs (s1 s2 &optional url method headers body)
   (should (equal (verb-request-spec-override
-		  (verb-request-spec-from-string (mapconcat #'identity s1 ""))
-		  (verb-request-spec-from-string (mapconcat #'identity s2 "")))
-		 (verb-request-spec :url (verb--clean-url url)
-				    :method method
-				    :headers headers
-				    :body body))))
+		          (verb-request-spec-from-string (mapconcat #'identity s1 ""))
+		          (verb-request-spec-from-string (mapconcat #'identity s2 "")))
+		         (verb-request-spec :url (verb--clean-url url)
+				                    :method method
+				                    :headers headers
+				                    :body body))))
 
 ;; Create log buffer now.
 (verb-util--log nil 'I "")
@@ -2819,77 +2819,67 @@
               (join-lines "a=2"
                           "b=bar")))
 
-(defun babel-src-test (input output)
-  (should (string= (verb--maybe-extract-babel-src-block input)
-		   output)))
+(defun babel-src-test (&rest args)
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert "* test :verb:")
+    (newline)
+    (insert (apply #'join-lines args))
+    ;; Search for the $ and delete it, leaving point there
+    (re-search-backward "\\$")
+    (delete-forward-char 1)
+    (verb--request-spec-from-hierarchy)))
 
 (ert-deftest test-maybe-extract-babel-source-block ()
-  (babel-src-test (join-lines "hello")
-		  (join-lines "hello"))
+  ;; $ marks the position where point should be moved to
+  (setq aux (babel-src-test "get http://example.com$"))
+  (should (string= (verb-request-spec-url-to-string aux)
+		           "http://example.com"))
 
-  (babel-src-test (join-lines "")
-		  (join-lines ""))
+  (setq aux (babel-src-test "#+begin_src verb"
+                            "get http://example2.com$"
+                            "#+end_src"))
+  (should (string= (verb-request-spec-url-to-string aux)
+		           "http://example2.com"))
 
-  (babel-src-test (join-lines "" "")
-		  (join-lines "" ""))
+  (setq aux (babel-src-test "foobar"
+                            "#+begin_src verb"
+                            "get http://example3.com$"
+                            "#+end_src"
+                            "fooooo"))
+  (should (string= (verb-request-spec-url-to-string aux)
+		           "http://example3.com"))
 
-  (babel-src-test (join-lines "test"
-			      "#+begin_src verb"
-			      "hello world"
-			      "#+end_src")
-		  (join-lines "hello world"))
+  (setq aux (babel-src-test "foobar"
+                            "#+begin_src verb"
+                            "get http://example4.com"
+                            "#+end_src"
+                            "test"
+                            "#+begin_src verb"
+                            "get http://example5.com$"
+                            "#+end_src"
+                            "fooooo"))
+  (should (string= (verb-request-spec-url-to-string aux)
+		           "http://example5.com"))
 
-  (babel-src-test (join-lines "test"
-			      "#+begin_src verb"
-			      "#+end_src")
-		  (join-lines ""))
+  (should-error (babel-src-test "foobar"
+                                "#+begin_src verb"
+                                "get http://example6.com"
+                                "#+end_src"
+                                "#+begin_src verb"
+                                "get http://example7.com"
+                                "#+end_src"
+                                "fooooo$"))
 
-  (babel-src-test (join-lines "test"
-			      "#+begin_src verb"
-			      ""
-			      "#+end_src")
-		  (join-lines ""))
-
-  (babel-src-test (join-lines "test"
-			      "#+begin_src verb"
-			      "something"
-			      "something else"
-			      "#+end_src"
-			      "test"
-			      "#+begin_src verb"
-			      "101010101"
-			      "#+end_src"
-			      )
-		  (join-lines "something"
-			      "something else"))
-
-  (babel-src-test (join-lines "test"
-			      "#+begin_src verb"
-			      "hello world"
-			      "#+end_src"
-			      "trailing stuff")
-		  (join-lines "hello world"))
-
-  (babel-src-test (join-lines "test"
-			      "#+begin_src verb"
-			      "hello world"
-			      "foobar"
-			      "#+end_src"
-			      "trailing stuff")
-		  (join-lines "hello world"
-			      "foobar"))
-
-  (babel-src-test (join-lines "test"
-			      "#+begin_SRC verb"
-			      "hello world"
-			      "#+eNd_src")
-		  (join-lines "hello world"))
-
-  (babel-src-test (join-lines "test"
-			      "#+begin_SRC verb abcdef"
-			      "hello world"
-			      "#+eNd_src")
-		  (join-lines "hello world")))
+  (should-error (babel-src-test "foobar$"
+                                "#+begin_src verb"
+                                "get http://example6.com"
+                                "#+end_src"
+                                "#+begin_src verb"
+                                "get http://example7.com"
+                                "#+end_src"
+                                "fooooo")))
 
 
 (ert-deftest test-verb-check-response-buffer ()
