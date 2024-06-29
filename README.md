@@ -778,6 +778,8 @@ As opposed to requests sent with the `verb-send-request-on-point-*` commands, re
 
 **Note:** The heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
+**Note:** It is still possible to send requests defined within Babel source blocks using the `verb-send-request-on-point-*` commands, as if they were defined without a source block. If more than one source blocks are found under an Org heading, then the one on point will be used.
+
 #### Send with Partial Retrieval (`:op send ...`)
 
 Instead of specifying just `:op send`, you may add an additional argument: `get-headers` or `get-body`. Using the former will change the result of executing the source block to just the response headers. Using the latter will do the same, but for the response body. Here's an example:
