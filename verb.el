@@ -872,12 +872,12 @@ If no Verb Babel source blocks are found, return TEXT."
     (goto-char (point-min))
     (let ((case-fold-search t)
           start result)
-      (when (re-search-forward "#\\+begin_src +verb" nil t)
+      (when (re-search-forward "#\\+begin_src\\s-+verb" nil t)
         ;; Found the start.
         (end-of-line)
         (forward-char)
         (setq start (point))
-        (when (search-forward "#+end_src" nil t)
+        (when (re-search-forward "#\\+end_src" nil t)
           ;; Found the end.
           (beginning-of-line)
           (backward-char)
