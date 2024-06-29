@@ -10,6 +10,7 @@
 - Renamed `verb-show-log` to `verb-util-show-log`.
 - All `verb-log-*` variables containing faces are no longer part of the package's public API.
 - Added new function `verb-body-lf-to-crlf` designed for use with requests sending multipart data.
+- Added new `Verb-Prelude` heading property, which can be used to specify an Emacs Lisp or JSON file to load variables from, before performing requests.
 
 ## **2.16.0** - 2024-03-02 (MELPA Stable)
 - Fixed LF being used instead of CRLF in multipart boundaries.
