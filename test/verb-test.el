@@ -2696,27 +2696,6 @@
           start
           result)
       (setq result (org-ctrl-c-ctrl-c))
-      (when (< emacs-major-version 26)
-        ;; In Emacs 25, `org-ctrl-c-ctrl-c' does not return the result.
-        (search-forward "#+results:")
-        (forward-char)
-        (setq start (point))
-
-        ;; Two cases to handle:
-        (if (looking-at-p ": ")
-            ;; Results have been inserted in lines with ": ".
-            (while (re-search-forward "^: " nil t)
-              (replace-match ""))
-          ;; Results have been inserted inside begin/end_src blocks.
-          (delete-matching-lines "#\\+\\(begin\\|end\\)_\\(src\\|example\\)"))
-
-        ;; Replace 127.0.0.1 -> localhost.
-        (goto-char (point-min))
-        (while (re-search-forward "127\\.0\\.0\\.1" nil t)
-          (replace-match "localhost"))
-
-        ;; Set the result.
-        (setq result (buffer-substring start (point-max))))
 
       (let ((result-trimmed (string-trim-right result))
             (output-trimmed (string-trim-right output)))
