@@ -34,6 +34,11 @@ test: clean server-bg
 	make server-kill; \
 	exit $$ret
 
+test-noserver:
+	$(EMACS) --batch -L . \
+		 -l test/verb-test.el \
+		 --eval "(ert-run-tests-batch-and-exit '$(SELECTOR))"; \
+
 server: ## Run a testing HTTP server on port 8000 (default).
 	$(ACTIVATE) && \
 	SKIP_PIDFILE=1 PORT=$(PORT) python3 test/server.py
