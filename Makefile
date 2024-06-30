@@ -1,7 +1,6 @@
 SHELL = bash
 EMACS ?= emacs
 PORT ?= 8000
-NOOUTPUT = grep -v '^Loading' | { ! grep '^'; }
 PACKAGES = packages
 FONT_SIZE ?= 180
 ENV ?= env
@@ -68,12 +67,11 @@ lint-file:
 	@printf "\n--> Step: Byte-compile file\n\n"
 	$(EMACS) --batch -L . \
 			 --eval "(setq byte-compile-error-on-warn t)" \
-			 -f batch-byte-compile "$(filename)" 2>&1
+			 -f batch-byte-compile "$(filename)"
 	@printf "\n--> Step: Run checkdoc\n\n"
 	yes n | $(EMACS) --batch \
-			 --eval '(find-file "$(filename)")' \
-			 --eval '(setq sentence-end-double-space nil)' \
-			 --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
+             -l test/checkdoc-batch.el \
+			 -f checkdoc-batch-and-exit "$(filename)"
 	@printf "\n--> Step: Run package-lint\n\n"
 	$(EMACS) --batch --eval "(setq package-user-dir \"$$PWD/$(PACKAGES)\")" \
 			 --eval "(package-initialize)" \
