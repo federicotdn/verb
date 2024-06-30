@@ -255,15 +255,13 @@
 
 (ert-deftest test-request-spec-from-hierarchy-base ()
   (let ((verb-base-headers '(("Foo" . "Bar")
-			     ("Quuz" . "Quux"))))
-    (setq outline-test
-	  (join-lines "* Test :verb:"
-		      "get http://hello.com"
-		      "Quuz: X"))
+			                 ("Quuz" . "Quux"))))
     (with-temp-buffer
       (org-mode)
       (verb-mode)
-      (insert outline-test)
+      (insert (join-lines "* Test :verb:"
+		                  "get http://hello.com"
+		                  "Quuz: X"))
       (setq req-spec (verb--request-spec-from-hierarchy))
       (should (equal (oref req-spec headers)
 		     '(("Foo" . "Bar")
@@ -1324,11 +1322,19 @@
   (should (null (verb--url-port (verb--clean-url "http://hello.com:80"))))
   (should (null (verb--url-port (verb--clean-url "https://hello.com:443"))))
   (should (= (verb--url-port (verb--clean-url "http://hello.com:8080"))
-	     8080))
+	         8080))
   (should (= (verb--url-port (verb--clean-url "https://hello.com:8080"))
-	     8080))
+	         8080))
   (should (= (verb--url-port (url-generic-parse-url "test://hello.com:80"))
-	     80)))
+	         80)))
+
+(ert-deftest test-rs-url-origin ()
+  (setq aux (text-as-spec "GET https://foo.com/test?a=b#adsf"))
+  (should (equal (verb--request-spec-url-origin aux)
+                 (url-parse-make-urlobj "https" nil nil "foo.com" 443)))
+
+  (setq aux (text-as-spec "GET /hello"))
+  (should-not (verb--request-spec-url-origin aux)))
 
 (ert-deftest test-clean-url ()
   (should-error (verb--clean-url "foo://hello.com"))
@@ -1382,89 +1388,97 @@
 
 (ert-deftest test-override-specs ()
   (override-specs '("GET http://test.com")
-		  '("TEMPLATE")
-		  "http://test.com"
-		  "GET")
+    	          '("TEMPLATE")
+    	          "http://test.com"
+    	          "GET")
 
   (override-specs '("GET")
-		  '("TEMPLATE http://hello.com")
-		  "http://hello.com"
-		  "GET")
+    	          '("TEMPLATE http://hello.com")
+    	          "http://hello.com")
 
-  (override-specs '("GET ?test=1")
-		  '("TEMPLATE http://hello.com")
-		  "http://hello.com/?test=1"
-		  "GET")
-
-  (override-specs '("TEMPLATE http://test.com")
-		  '("TEMPLATE")
-		  "http://test.com")
+  (override-specs '("GET http://hello.com?test=1")
+    	          '("TEMPLATE http://hello.com")
+    	          "http://hello.com/?test=1"
+    	          "GET")
 
   (override-specs '("TEMPLATE http://test.com")
-		  '("GET")
-		  "http://test.com"
-		  "GET")
+    	          '("TEMPLATE")
+    	          "http://test.com")
 
   (override-specs '("TEMPLATE http://test.com")
-		  '("GET /users")
-		  "http://test.com/users"
-		  "GET")
+    	          '("GET")
+    	          "http://test.com"
+    	          "GET")
+
+  (override-specs '("TEMPLATE http://test.com")
+    	          '("GET /users")
+    	          "http://test.com/users"
+    	          "GET")
 
   (override-specs '("TEMPLATE http://test.com?token=hello")
-		  '("GET /users")
-		  "http://test.com/users?token=hello"
-		  "GET")
+    	          '("GET /users")
+    	          "http://test.com/users?token=hello"
+    	          "GET")
 
   (override-specs '("GET http://test.com")
-		  '("POST /users")
-		  "http://test.com/users"
-		  "POST")
+    	          '("POST /users")
+    	          "http://test.com/users"
+    	          "POST")
+
+  (override-specs '("GET http://test.com/abc?a=b")
+    	          '("POST https://test.com/users")
+    	          "https://test.com/users"
+    	          "POST")
+
+  (override-specs '("GET http://test.com:90/abc")
+    	          '("POST https://test.com:91/users")
+    	          "https://test.com:91/users"
+    	          "POST")
 
   (override-specs '("TEMPLATE http://test.com\n"
-		    "Auth: Bearer hello")
-		  '("POST /users")
-		  "http://test.com/users"
-		  "POST"
-		  (list (cons "Auth" "Bearer hello")))
+    	            "Auth: Bearer hello")
+    	          '("POST /users")
+    	          "http://test.com/users"
+    	          "POST"
+    	          (list (cons "Auth" "Bearer hello")))
 
   (override-specs '("TEMPLATE http://test.com?a=b\n"
-		    "Auth: Bearer hello")
-		  '("POST /users?a=c#hello\n"
-		    "Auth: foobar")
-		  "http://test.com/users?a=c#hello"
-		  "POST"
-		  (list (cons "Auth" "foobar")))
+    	            "Auth: Bearer hello")
+    	          '("POST /users?a=c#hello\n"
+    	            "Auth: foobar")
+    	          "http://test.com/users?a=c#hello"
+    	          "POST"
+    	          (list (cons "Auth" "foobar")))
 
   (override-specs '("TEMPLATE http://test.com\n"
-		    "\n"
-		    "Random body")
-		  '("POST /users/1")
-		  "http://test.com/users/1"
-		  "POST"
-		  nil
-		  "Random body")
+    	            "\n"
+    	            "Random body")
+    	          '("POST /users/1")
+    	          "http://test.com/users/1"
+    	          "POST"
+    	          nil
+    	          "Random body")
 
   (override-specs '("TEMPLATE http://test.com\n")
-		  '("POST /users/1\n"
-		    "\n"
-		    "Random body")
-		  "http://test.com/users/1"
-		  "POST"
-		  nil
-		  "Random body")
+    	          '("POST /users/1\n"
+    	            "\n"
+    	            "Random body")
+    	          "http://test.com/users/1"
+    	          "POST"
+    	          nil
+    	          "Random body")
 
-  (override-specs '("TEMPLATE http://bye.com/x?a=1\n"
-		    "Test: 1")
-		  '("POST https://hello.com/users/1\n"
-		    "Hello: 2\n"
-		    "\n"
-		    "Test body")
-		  "https://hello.com/x/users/1?a=1"
-		  "POST"
-		  (list (cons "Test" "1")
-			(cons "Hello" "2"))
-		  "Test body")
-  )
+  (override-specs '("TEMPLATE https://bye.com/x?a=1\n"
+    	            "Test: 1")
+    	          '("POST https://bye.com/users/1\n"
+    	            "Hello: 2\n"
+    	            "\n"
+    	            "Test body")
+    	          "https://bye.com/x/users/1?a=1"
+    	          "POST"
+    	          (list (cons "Test" "1")
+    		            (cons "Hello" "2"))
+    	          "Test body"))
 
 (ert-deftest test-override-headers ()
   (should (equal (verb--override-headers (list) (list))

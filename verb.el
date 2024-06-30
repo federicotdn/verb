@@ -960,7 +960,8 @@ After that, return RS."
   ;; Use `verb-base-headers' if necessary.
   (when verb-base-headers
     (setq rs (verb-request-spec-override
-              (verb-request-spec :headers verb-base-headers)
+              (verb-request-spec :headers verb-base-headers
+                                 :url (oref rs url))
               rs)))
   ;; Apply the request mapping function, if present.
   (when-let ((form (verb--request-spec-metadata-get rs "map-request"))
@@ -2320,6 +2321,19 @@ Do this using the rules described in `verb-request-spec-override'."
                              port path fragment
                              attributes fullness))))
 
+(cl-defmethod verb--request-spec-url-origin ((rs verb-request-spec))
+  "TODO."
+  (when-let ((rs)
+             (url (oref rs url)))
+    (let ((type (url-type url))
+          (user (url-user url))
+          (password (url-password url))
+          (host (url-host url))
+          (port (url-port url)))
+      (when (or type user password host port)
+        (url-parse-make-urlobj type user password
+                               host port)))))
+
 (cl-defmethod verb-request-spec-override ((original verb-request-spec) other)
   "Override request spec ORIGINAL with OTHER, return the result.
 Override each member of request ORIGINAL with one from OTHER in the
@@ -2355,14 +2369,19 @@ metadata
 Modify neither request specification, return a new one."
   (unless (object-of-class-p other 'verb-request-spec)
     (user-error "%s" "Argument OTHER must be a `verb-request-spec'"))
-  (verb-request-spec :method (or (oref other method)
-                                 (oref original method))
-                     :url (verb--override-url (oref original url)
-                                              (oref other url))
-                     :headers (verb--override-headers (oref original headers)
-                                                      (oref other headers))
-                     :body (or (oref other body) (oref original body))
-                     :metadata (oref other metadata)))
+  (if (let ((original-origin (verb--request-spec-url-origin original))
+            (other-origin (verb--request-spec-url-origin other)))
+        (and other-origin
+             (not (equal original-origin other-origin))))
+      other
+    (verb-request-spec :method (or (oref other method)
+                                   (oref original method))
+                       :url (verb--override-url (oref original url)
+                                                (oref other url))
+                       :headers (verb--override-headers (oref original headers)
+                                                        (oref other headers))
+                       :body (or (oref other body) (oref original body))
+                       :metadata (oref other metadata))))
 
 (defun verb--http-methods-regexp ()
   "Return a regexp to match an HTTP method.
