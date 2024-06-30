@@ -359,8 +359,9 @@ This variable is only set on buffers showing HTTP response bodies.")
 (defvar-local verb-kill-this-buffer nil
   "If non-nil, kill this buffer after readings its contents.
 When Verb evaluates Lisp code tags, a tag may produce a buffer as a
-result. If the buffer-local value of this variable is non-nil for that
-buffer, Verb will kill it after it has finished reading its contents.")
+result.  If the buffer-local value of this variable is non-nil for
+that buffer, Verb will kill it after it has finished reading its
+contents.")
 
 (defvar-local verb--multipart-boundary nil
   "Current multipart form boundary available for use in specs.")
@@ -2322,7 +2323,11 @@ Do this using the rules described in `verb-request-spec-override'."
                              attributes fullness))))
 
 (cl-defmethod verb--request-spec-url-origin ((rs verb-request-spec))
-  "TODO."
+  "Return the origin of RS's URL.
+The URL origin consists of the scheme, user, password host and port
+properties.
+Return nil instead if RS has no URL, or if all of the properties
+making up for the origin are themselves nil."
   (when-let ((rs)
              (url (oref rs url)))
     (let ((type (url-type url))
