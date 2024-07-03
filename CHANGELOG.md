@@ -13,6 +13,7 @@
 - Added new `Verb-Prelude` heading property, which can be used to specify an Emacs Lisp or JSON file to load variables from, before performing requests.
 - Updated behaviour for `verb-send-request-on-point-*` functions when dealing with one or more Babel source blocks under a heading. Now, the actual source block on point will be used to build the request, instead of simply the first one. See [issue #53](https://github.com/federicotdn/verb/issues/53).
 - Removed all Emacs 25-specific code.
+- Defining a URL origin (scheme + host + port) in a request specification will now make Verb ignore all parent headings when computing what request to send. In other words, defining a new URL origin effectively creates a new tree of request specifications.
 
 ## **2.16.0** - 2024-03-02 (MELPA Stable)
 - Fixed LF being used instead of CRLF in multipart boundaries.
