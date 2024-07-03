@@ -280,11 +280,11 @@ a call to `verb-var'."
   :type 'boolean)
 
 (defcustom verb-suppress-load-unsecure-prelude-warning nil
-  "When set to a non-nil, suppress warning about loading Elisp Preludes.
-Loading Emacs Lisp (.el) configuration files as a Prelude is potentially
-unsafe, if this setting is nil a warning prompt is shown asking user to allow
-it to be loaded and evaluated.  If non-nil, no warning is shown when loading
-Elisp Prelude external files."
+  "When set to a non-nil, suppress warning about loading Emacs Lisp Preludes.
+Loading Emacs Lisp (.el) configuration files as a prelude is
+potentially unsafe, so if this setting is nil a warning prompt is
+shown asking user to allow it to be loaded and evaluated.  If non-nil,
+no warning will be shown when loading Emacs Lisp external files."
   :type 'boolean)
 
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
@@ -1174,33 +1174,35 @@ This affects only the current buffer."
     (setq verb--vars nil)))
 
 (defun verb-load-prelude-file (filename)
-  "Load a elisp or json configuration file, FILENAME, into verb variables."
+  "Load Emacs Lisp or JSON configuration file FILENAME into Verb variables."
   (interactive)
   (save-excursion
     (let ((file-extension (file-name-extension filename)))
       (when (member file-extension '("gpg" "gz" "z" "7z"))
         (setq file-extension (file-name-extension (file-name-base filename))))
       (cond
-       ((string= "el" (downcase file-extension)) ;; file is elisp
-        (if (or (bound-and-true-p verb-suppress-load-unsecure-prelude-warning)
+       ((string= "el" file-extension) ; file is Emacs Lisp
+        (if (or verb-suppress-load-unsecure-prelude-warning
                 (yes-or-no-p
-                 (concat (format "The file: %s may contain values " filename)
-                         "that may not be safe.\n\nDo you wish to load?")))
+                 (concat (format "File %s may contain code " filename)
+                         "that may not be safe\nLoad it anyways?")))
             (load-file filename)))
-       ((string-match-p "^json.*" (downcase file-extension)) ;; file is json(c)
+       ((string-match-p "^json.*" file-extension) ; file is JSON(C)
         (let* ((file-contents
                 (with-temp-buffer
                   (insert-file-contents filename)
                   (set-auto-mode)
                   (goto-char (point-min))
-                  ;; If a modern json / js package not installed, then comments
-                  ;; cannot be removed or supported. Also, not likely to have
-                  ;; json comments if this is the case.
+                  ;; If a modern JSON / JavaScript package not
+                  ;; installed, then comments cannot be removed or
+                  ;; supported. Also, not likely to have JSON comments
+                  ;; if this is the case.
                   (when comment-start
                     (comment-kill (count-lines (point-min) (point-max))))
                   (verb--buffer-string-no-properties)))
                (json-object-type 'plist)
                (data (json-read-from-string file-contents)))
+          ;; Search for values on the topmost container, and one level down.
           (cl-loop for (k v) on data by #'cddr
                    do (verb-set-var (substring (symbol-name k) 1) v)
                    if (and (listp v) (cl-evenp (length v)))
