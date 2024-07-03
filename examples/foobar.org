@@ -1,0 +1,33 @@
+* Foobar Blog API                    :verb:
+# Note: this API does not actually exist!
+# This is just for documentation purposes.
+# See README.md for more details.
+template https://foobar-blog-api.org/api/v1
+Accept: application/json
+
+** Users
+template /users
+
+*** Create a user
+post
+Content-Type: application/json; charset=utf-8
+
+{
+    "name": "John",
+    "posts": []
+}
+
+*** Search users
+get ?name=John
+
+*** Delete all users
+delete
+
+** Posts
+template /posts?lang=en
+
+*** Search posts
+get ?text=example
+
+*** Delete all posts
+delete

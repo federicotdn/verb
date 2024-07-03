@@ -125,7 +125,7 @@ This defines a minimal HTTP request specification under the "Get users list" hea
 
 Note that the heading has a `:verb:` tag. **Verb functions only process headings that contain this tag, and ignore the rest.** This allows you to create documents that may have a combination of HTTP request specifications and other information types. To tag a heading, simply move the point to it and press <kbd>C-c C-c</kbd>, and then type in `verb` <kbd>RET</kbd>. Note that in Org mode, by default, headings inherit their parents' tags (see the `org-use-tag-inheritance` variable). This implies that once you've tagged one of the parent headings, all its child headings will have that tag as well.
 
-To easily add the `:verb:` tag to all headings in an Org document, add the following at the top of your file:
+To easily add the `:verb:` tag to all headings in an Org document, add the following [in-buffer setting](https://orgmode.org/manual/In_002dbuffer-Settings.html) at the top of your file:
 ```
 #+FILETAGS: :verb:
 ```
@@ -278,6 +278,8 @@ Content-Type: application/json; charset=utf-8
 
 ### Extend and Override Requests
 
+This section explains the **most interesting aspect of Verb: extending and overriding properties of requests**.
+
 Our example file should now look like the following:
 
 ```
@@ -322,51 +324,17 @@ Now, when we send the request under "Get users list", Verb will collect all the 
 
 - **Method:** The last heading's (i.e. the one with no children) method will be used. The value `template` does not count as a method and will be ignored.
 - **URL:**
-  - **Scheme**: The last defined heading's URL scheme will be used (`http` or `https`).
-  - **Host**: The last defined heading's URL host will be used.
-  - **Port**: The last defined heading's URL port will be used.
   - **Path**: All paths will be concatenated, starting with the first heading (i.e. the topmost parent).
   - **Query**: Query string arguments will be merged. Values from child headings have higher priority.
   - **Fragment**: The last defined heading's URL fragment will be used.
 - **Headers**: All headers will be merged. Values from child headings have higher priority.
 - **Body**: The last request body present in a heading will be used (if no heading defines a body, none will be used).
 
+For the **URL Scheme**, **Host** and **Port** (i.e. the URL origin), the values of the last heading to define them will be used. **Important**: defining a new URL origin will make Verb ignore all properties defined in all parent headings, thus effectively starting a new headings tree of request definitions. In most cases URL origins should be defined in the topmost parent headings.
+
 If you try to send a request from the level 1 header, you'll get an error, as at that level there's no specified HTTP method.
 
-You can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.org` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL scheme, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources (e.g. `users`, `products`, etc.), and the level 3 headings will specify actions to run on those resources (e.g. `post`, `put`, etc.). For example (unrelated to `guide.org`):
-
-```
-* Foobar Blog API                    :verb:
-template https://foobar-blog-api.org/api/v1
-Accept: application/json
-
-** Users
-template /users
-
-*** Create a user
-post
-Content-Type: application/json; charset=utf-8
-
-{
-    "name": "John",
-    "posts": []
-}
-
-*** Search users
-get ?name=John
-
-*** Delete all users
-delete
-
-** Posts
-template /posts?lang=en
-
-*** Search posts
-get ?text=example
-
-*** Delete all posts
-delete
-```
+Finally, you can create hierarchies with any number of headings, with many levels of nesting. A good idea is to create a single `.org` file to describe, for example, a single HTTP API. This file will contain a level 1 heading defining some common attributes, such as the URL scheme, host and root path, along with an `Authentication` header. The level 2 headings will specify different resources (e.g. `users`, `products`, etc.), and the level 3 headings will specify actions to run on those resources (e.g. `post`, `put`, etc.). An example of this can be seen in [examples/foobar.org](examples/foobar.org).
 
 ### Modifying Requests before Sending
 
@@ -446,79 +414,89 @@ To quickly copy the value of a variable into the clipboard, use the keyboard pre
 
 **Note**: Values set with `verb-var` and `verb-set-var` will be lost if the buffer is killed.
 
+### Verb Heading properties
+
+When writing a request specification, you may add [properties](https://orgmode.org/manual/Property-Syntax.html) via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
+
+Some aspects of Verb can be controlled via these properties, such as:
+
+- `Verb-Prelude`
+- `Verb-Store`
+- `Verb-Map-Request`
+- `Verb-Proxy`
+
+All of these are explained in later sections of this guide.
+
+**Note**: When reading Org heading properties, properties defined in parent headings are ignored by default (i.e. they are not inherited or passed down). This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
+
 ### Verb Variables from External Files
 
-To further keep sensitive information safe and separate from Verb `.org` files, Verb variables can also be loaded from either JSON or Emacs Lisp external configuration files. Use the `Verb-Prelude` Org mode property followed by the name of the external configuration file to load. Any file is loaded and applied as a prelude before the request being generated and sent.
+To further keep sensitive information safe and separate from Verb `.org` files, Verb variables can also be defined from either JSON or Emacs Lisp external files. Use the `Verb-Prelude` property followed by the path (relative to the current Org file, or absolute) of the external file to load. The file will loaded and applied as a prelude before requests are sent.
 
-**Note**: Files that are GPG or EasyPG encrypted can opened and decrypted automatically by Emacs if configured appropriately. See: [Emacs Auth-source manual](https://www.gnu.org/software/emacs/manual/auth.html) for more information.
+**Note**: Files that are GPG or EasyPG encrypted can opened and decrypted automatically by Emacs if configured appropriately. See [Emacs Auth-source manual](https://www.gnu.org/software/emacs/manual/auth.html) for more information. It is strongly recommended to use GPG or EasyPG when storing credentials in files.
 
-The `Verb-Prelude` property may be set at the buffer level (very top of the Org document) as an Org mode file `keyword` or various heading levels, and every heading level in the hierarchy with the `Verb-Prelude` property will also be loaded. If the same setting within an environment configuration file is specified at a parent and a child level, then the child will override the parent. This allows more specific or different settings to be done for a lower-level request than at a higher-level. All other file unique variables would be additive to the collection of Verb variables. Because of the specific application usage of `Verb-Prelude`, the Org mode variable `org-use-property-inheritance` is not used for `Verb-Prelude` properties. They are always inherited.
+The value for `Verb-Prelude` may be set globally as an [in-buffer setting](https://orgmode.org/manual/In_002dbuffer-Settings.html), or on each heading level as a property. When a request is sent, Verb will first load the global `Verb-Prelude` external file, and then will load all `Verb-Prelude`s starting from the topmost parent heading, down to the one being sent. This implies that lower-level headings can re-define variables set in upper headings, if needed.
 
-Below is an example of configuring external configuration files at top buffer level, and then a different file for *Foobar Development* at lower level 2.
+Below is an example of `Verb-Prelude` as an in-buffer setting, plus an additional definition in the `Blog API` heading.
 
 ``` org
-#+Verb-Prelude: /path/to/prod-foobar-env.el.gpg
+#+Verb-Prelude: prod-foobar-env.el
 
-* Foobar Blog API                    :verb:
+* Blog API                    :verb:
+:properties:
+:Verb-Prelude: dev-foobar-env.el
+:end:
 template https://foobar-blog-api.org/api/v1
 Accept: application/json
 
-** Foobar Production
-get /status
+** Users
+get /users
 
-** Foobar Development
-:properties:
-:Verb-Prelude: /path/to/dev-foobar-env.el.gpg
-:end:
-
-get /status
+** Posts
+get /posts
 ```
 
-In the scenario, when sending the `get /status` request for Foobar Development, `prod-foobar-env.el.gpg` is loaded first from the `#+Verb-Prelude:` buffer property. And then `dev-foobar-env.el.gpg` is loaded from properties under *`** Foobar Development`* header. The dev file would override any variables having the same key name between the two environment files. Again, all other variables would be additive. A common example would be that an *api_token* variable would likely be different between the two environments, but *user_name* would be the same for both environments. It would be logical to then have *api_token* variable specified in both, depending on environments of requests. And *user_name* specified in highest level of the Org structure to be shared among Production and Development environments.
+In the scenario, when sending the `get /users` request under `Users`, `prod-foobar-env.el` is loaded first from the `#+Verb-Prelude:` in-buffer setting. Then, `dev-foobar-env.el` is loaded from the property defined under the `Blog API` header. The `dev-` file would override any variables having the same key name between the two environment files. A common example would be an `api_token` Verb variable that would likely be different between the two environments, but on the other hand `user_name` could be the same for both environments. It would be logical to then have an `api_token` variable specified in both, depending on environments of requests. One could switch between one environment and the other by removing the `:properties:` block, or via some custom code in the Emacs Lisp file.
 
-For an Emacs Lisp Prelude file, it can run any code found in the `.el` file, (even to dynamically call and get a temporary `Bearer` token!). For this reason, a yes-no warning prompt is presented when loading those files unless `verb-suppress-load-unsecure-prelude-warning` is set to non-nil value. This, of course, is another reason to GPG encrypt the configuration files to help prevent configuration poisoning. Here's an example of loading `verb-var`'s using an Emacs Lisp file:
+Here's an example of what an Emacs Lisp file loaded via `Verb-Prelude` could look like:
 
 ``` elisp
-; prod-foobar-env
-(message "Setting up verb variables!")
-; "email" variable is set from emacs user-mail-address
+;; Shared
+(verb-set-var "user" "max_mustermann")
 (verb-set-var "email" user-mail-address)
-(verb-set-var "global_api_key" "hc33Vzco7TAkMKLNzIVgps7KiKLnUYIWJ7y9T")
-(verb-set-var "account_id" "Kb9SVZXtTVFYzt7rvgYv5WXJS31lh7OT")
-(verb-set-var "zone-ids" '(:example.com "IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL"
-                           :myotherdomain.com "jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3"))
-(verb-set-var "example.com" "IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL")
-(verb-set-var "myotherdomain.com" "jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3")
+
+;; Production
+(verb-set-var "token" "abcdef123456")
+
+(message "Variables loaded")
 ```
 
-In above, a couple of advantages to using Emacs Lisp Prelude files is shown, such as having comments; dynamically getting email address from Emacs `user-mail-address` variable; and outputting a message, which can be useful for logging and debugging.
+In above, a couple of advantages to using Emacs Lisp prelude files is shown, such as having comments; dynamically getting email address from the Emacs `user-mail-address` variable; and outputting messages, which can be useful for logging and debugging.
 
-For JSON environment file, the values (and even sub-values) are simply set using `verb-set-var` for each key value pair.  Example of JSON configuration:
+For JSON prelude files, values (and first level sub-values) are set using `verb-set-var` for each key-value pair. For example:
 
-``` json
+```json
 {
   "email": "email@example.com",
-  "global_api_key": "hc33Vzco7TAkMKLNzIVgps7KiKLnUYIWJ7y9T",
-  "account_id": "Kb9SVZXtTVFYzt7rvgYv5WXJS31lh7OT",
-  "zone-ids": {
-    "example.com": "IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL",
-    "myotherdomain.com": "jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3"
+  "user": "max_mustermann",
+  "token": "abcdef123456",
+  "env_ids": {
+    "prod": "aaa111",
+    "dev": "zzz999"
   }
 }
 ```
 
-Results in this for `verb-show-vars` command:
+Would result in the following Verb variables being set:
 
-``` env
+```text
 email: email@example.com
-global_api_key: hc33Vzco7TAkMKLNzIVgps7KiKLnUYIWJ7y9T
-account_id: Kb9SVZXtTVFYzt7rvgYv5WXJS31lh7OT
-zone-ids: (:example.com IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL :myotherdomain.com jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3)
-example.com: IRMTk8T0RKgFxL3bL8KWv5FDDVtoe1VL
-myotherdomain.com: jL0OeCs9XOSsLUfCUKCRRSHKsQpM5WB3
+user: max_musterman
+token: abcdef123456
+env_ids: (:prod aaa111 :dev zzz999) ; this is a plist
+prod: aaa111
+dev: zzz999
 ```
-
-This will result in the same `verb-show-vars` just above for the Emacs Lisp example (assuming `user-mail-address` is *"email@example.com"*). Notice, in the example, that `zone-ids` plist key value pairs are also flattened into their own key-value pairs for easy referencing.
 
 ### Last Response
 
@@ -541,9 +519,7 @@ If you wish to use the last response's headers instead, you can use the `verb-he
 
 ### Storing Responses by Key
 
-When writing a request specification, you may add [properties](https://orgmode.org/manual/Property-Syntax.html) via the Org special `:properties:`/`:end:` drawer to its heading. Any properties starting with `Verb-` (case insensitive) will be added to the request as metadata. Other properties will be ignored.
-
-The `Verb-Store` property has a special meaning. When this property is set, Verb will automatically store the request's response under the specified value. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
+The `Verb-Store` Org property is used by Verb. When this property is set, Verb will automatically store the request's response under the specified value. To retrieve the response later, use the `verb-stored-response` function. It takes as an argument the same string key used previously.
 
 So, for example, we could modify our create/retrieve user endpoints like so:
 
@@ -570,11 +546,9 @@ Accept: application/json
 
 After the "Create a user" request has been sent at least once, the result will be stored internally under "new-user". It can then be used later at any time. Sending the request again will overwrite the previous value, and killing the response buffer will not erase the stored response. The `Verb-Store` mechanism is a bit more robust than using just `verb-last`, as sending any (unrelated) request will always re-set `verb-last` globally.
 
-**Note**: When reading heading properties such as `Verb-Store`, properties for parent headings are ignored by default. This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
-
 ### Request Mapping Functions
 
-The `Verb-Map-Request` heading property also has a special meaning in Verb. When present, it can be used to specify a mapping function than will be called right before the corresponding request is sent or exported, with the request itself as its sole argument. The function must return the same request specification object (type `verb-request-spec`), or a new one. With this, it is possible to apply custom transformations to requests before they are sent or exported.
+The `Verb-Map-Request` Org property is used by Verb as well. When present, it can be used to specify a mapping function than will be called right before the corresponding request is sent or exported, with the request itself as its sole argument. The function must return the same request specification object (type `verb-request-spec`), or a new one. With this, it is possible to apply custom transformations to requests before they are sent or exported.
 
 So, for example, having the following function:
 ```elisp
@@ -634,8 +608,6 @@ This has the same effect as the previous example. Note also how we've used the f
 ```
 
 **Note**: The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overridden values from parent headings.
-
-**Note**: When reading heading properties such as `Verb-Map-Request`, properties for parent headings are ignored by default. This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
 
 ### Body Lines starting with `*`
 
