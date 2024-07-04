@@ -1,6 +1,11 @@
 ;; checkdoc-batch.el --- Batch mode for checkdoc  -*- lexical-binding: t; -*-
 
 (defun checkdoc-batch-and-exit ()
+  ;; Skip in Emacs 26 and older
+  (when (< 26 emacs-major-version)
+    (checkdoc-batch-and-exit-1)))
+
+(defun checkdoc-batch-and-exit-1 ()
   "Run checkdoc in batch mode for a set of files.
 Exit with 1 if one or more warnings were emitted, otherwise with 0."
   (unless noninteractive
