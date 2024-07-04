@@ -12,7 +12,7 @@
 *.~undo-tree
 
 # Python env for test server
-/env
+/.venv
 
 # Test server pidfile
 test/server.pid
