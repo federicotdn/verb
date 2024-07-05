@@ -233,7 +233,7 @@ A certain set of headers will **always** be included in sent requests, even if t
 If you include one of these headers in one of your requests (except `Accept`), Verb will add a warning to the [log](#verb-log).
 
 > [!IMPORTANT]
-> "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements Org mode uses to separate sections of text. Sometimes, "headline" or "outline" is used to refer to headings as well.
+> **"header" != "heading"**: "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements Org mode uses to separate sections of text. Sometimes, "headlines" or "outlines" are used to refer to headings as well.
 
 ### Adding a Body
 
