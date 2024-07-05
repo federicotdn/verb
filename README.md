@@ -232,7 +232,8 @@ A certain set of headers will **always** be included in sent requests, even if t
 
 If you include one of these headers in one of your requests (except `Accept`), Verb will add a warning to the [log](#verb-log).
 
-**Note:** "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements Org mode uses to separate sections of text. Sometimes, "headline" or "outline" is used to refer to headings as well.
+> [!IMPORTANT]
+> "header" != "heading", "header" is used to refer to HTTP headers, and "heading" is used to refer to the elements Org mode uses to separate sections of text. Sometimes, "headline" or "outline" is used to refer to headings as well.
 
 ### Adding a Body
 
@@ -252,7 +253,8 @@ Content-Type: application/json; charset=utf-8
 
 The body will include everything starting from the line next to the blank line after the headers, up to the buffer's ending or the next heading (i.e. the next line starting with `*`).
 
-**Note**: By default, all whitespace present will be included in the request body. You can control this behaviour with the `verb-trim-body-end` variable, for example, set it to `"[ \t\n\r]+"` to trim all trailing whitespace. This is useful if you wish to leave some blank lines between request specifications for increased readability.
+> [!TIP]
+> By default, all whitespace present will be included in the request body. You can control this behaviour with the `verb-trim-body-end` variable, for example, set it to `"[ \t\n\r]+"` to trim all trailing whitespace. This is useful if you wish to leave some blank lines between request specifications for increased readability.
 
 To encode the request body, Verb will use the `charset` value defined in the `Content-Type` header of the request. If the header is present but `charset` is not defined, or if the header is not present, the charset `verb-default-request-charset` will be used (default: `utf-8`). Note that the current buffer's file encoding has no effect on how the request body is encoded.
 
@@ -274,7 +276,8 @@ Content-Type: application/json; charset=utf-8
 #+end_src
 ```
 
-**Note**: This feature is **not** related with Verb's [Babel Integration](#babel-integration), which only applies to Babel source blocks with `verb` specified as language, and takes into consideration the whole request specification (not just the body).
+> [!IMPORTANT]
+> This feature is **not** related with Verb's [Babel Integration](#babel-integration), which only applies to Babel source blocks with `verb` specified as language, and takes into consideration the whole request specification (not just the body).
 
 ### Extend and Override Requests
 
@@ -342,7 +345,8 @@ As you add more and more headings with different properties, it can get hard to 
 
 Once you have finished reviewing/modifying the request, press <kbd>C-c C-c</kbd> to send it. If you don't want to send the request, press <kbd>C-c C-k</kbd> to kill the buffer.
 
-**Note**: Any changes done in the temporary buffer will not be saved.
+> [!WARNING]
+> Any changes done in the temporary buffer will not be saved.
 
 ### Emacs Lisp Code Tags
 
@@ -412,7 +416,8 @@ To quickly copy the value of a variable into the clipboard, use the keyboard pre
 
 `verb-var` and `verb-set-var` are useful for writing requests that include sensitive information (such as passwords or tokens), or for writing requests that can be parameterized with different values (such as IDs or search terms).
 
-**Note**: Values set with `verb-var` and `verb-set-var` will be lost if the buffer is killed.
+> [!WARNING]
+> Values set with `verb-var` and `verb-set-var` will be lost if the buffer is killed.
 
 ### Verb Heading properties
 
@@ -427,13 +432,15 @@ Some aspects of Verb can be controlled via these properties, such as:
 
 All of these are explained in later sections of this guide.
 
-**Note**: When reading Org heading properties, properties defined in parent headings are ignored by default (i.e. they are not inherited or passed down). This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
+> [!NOTE]
+> When reading Org heading properties, properties defined in parent headings are ignored by default (i.e. they are not inherited or passed down). This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
 
 ### Verb Variables from External Files
 
 To further keep sensitive information safe and separate from Verb `.org` files, Verb variables can also be defined from either JSON or Emacs Lisp external files. Use the `Verb-Prelude` property followed by the path (relative to the current Org file, or absolute) of the external file to load. The file will loaded and applied as a prelude before requests are sent.
 
-**Note**: Files that are GPG or EasyPG encrypted can opened and decrypted automatically by Emacs if configured appropriately. See [Emacs Auth-source manual](https://www.gnu.org/software/emacs/manual/auth.html) for more information. It is strongly recommended to use GPG or EasyPG when storing credentials in files.
+> [!NOTE]
+> Files that are GPG or EasyPG encrypted can opened and decrypted automatically by Emacs if configured appropriately. See [Emacs Auth-source manual](https://www.gnu.org/software/emacs/manual/auth.html) for more information. It is strongly recommended to use GPG or EasyPG when storing credentials in files.
 
 The value for `Verb-Prelude` may be set globally as an [in-buffer setting](https://orgmode.org/manual/In_002dbuffer-Settings.html), or on each heading level as a property. When a request is sent, Verb will first load the global `Verb-Prelude` external file, and then will load all `Verb-Prelude`s starting from the topmost parent heading, down to the one being sent. This implies that lower-level headings can re-define variables set in upper headings, if needed.
 
@@ -607,7 +614,8 @@ This has the same effect as the previous example. Note also how we've used the f
 (lambda (rs) (thread-last (oref rs body) (replace-regexp-in-string "\n" " ") (oset rs body)) rs)
 ```
 
-**Note**: The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overridden values from parent headings.
+> [!NOTE]
+> The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overridden values from parent headings.
 
 ### Body Lines starting with `*`
 
@@ -642,7 +650,8 @@ Content-Type: text/markdown; charset=utf-8
 
 Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this for you. This will let the server know how to interpret the contents of the request.
 
-**Note**: If uploading binary files (e.g. a PNG image), it's a good idea to set `verb-read-file`'s second argument (`coding-system`) to `'binary`. This will instruct Emacs to insert the file contents into the request buffer as raw bytes.
+> [!TIP]
+> If uploading binary files (e.g. a PNG image), it's a good idea to set `verb-read-file`'s second argument (`coding-system`) to `'binary`. This will instruct Emacs to insert the file contents into the request buffer as raw bytes.
 
 ### Multipart Data
 
@@ -694,7 +703,8 @@ You can export request specifications to other formats or tools by using the `ve
 - `eww`: Perform the request described by the specification using EWW (Emacs Web Wowser). This will only work on `GET` requests.
 - `websocat`: Convert the request specification into a [websocat](https://github.com/vi/websocat) command and add it to the kill ring.
 
-**Note:** Code tags will be evaluated when exporting a request.
+> [!NOTE]
+> Code tags will be evaluated when exporting a request.
 
 ### Babel Integration
 Verb also works on Org [Babel](https://orgmode.org/worg/org-contrib/babel/) source blocks. This feature allows you to send an HTTP request, and view the results in the same `.org` buffer where the request was read from. You can also export requests to different formats (like `curl`) and view the results in the same buffer as well.
@@ -736,7 +746,8 @@ Content-Type: application/json; charset=utf-8
 
 Babel source blocks with `verb` as a language accept a header argument called `:op`. Depending on the value that appears after this argument, Verb will execute different actions when <kbd>C-c C-c</kbd> is pressed.
 
-**Note:** It is possible to specify arguments for a `verb` source block by using the [`:var` keyword](https://orgmode.org/manual/Environment-of-a-Code-Block.html). To read the arguments, use `(verb-var <variable-name>)` inside a code block.
+> [!TIP]
+> It is possible to specify arguments for a `verb` source block by using the [`:var` keyword](https://orgmode.org/manual/Environment-of-a-Code-Block.html). To read the arguments, use `(verb-var <variable-name>)` inside a code block.
 
 #### Sending Requests (`:op send`)
 
@@ -746,11 +757,14 @@ To send the request, move the point to its `verb` source block and press <kbd>C-
 
 As opposed to requests sent with the `verb-send-request-on-point-*` commands, requests sent with Babel will block Emacs until they are complete. There's a configurable timeout for this, see the `verb-babel-timeout` variable for more details.
 
-**Note:** When Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in parent headings will be brought over and potentially overridden by the current source block's. The request specifications in the parent headings may be defined in Babel source blocks as well, Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
+> [!IMPORTANT]
+> When Verb operates on a Babel source block, **it still takes into consideration the whole headings hierarchy**. This means that any attributes defined in parent headings will be brought over and potentially overridden by the current source block's. The request specifications in the parent headings may be defined in Babel source blocks as well, Verb will read them anyways. In other words, you can freely mix between regular request specifications and request specification written inside Babel source blocks within the hierarchy.
 
-**Note:** The heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
+> [!TIP]
+> The heading containing the source block where <kbd>C-c C-c</kbd> is pressed does not need to be tagged with `:verb:`.
 
-**Note:** It is still possible to send requests defined within Babel source blocks using the `verb-send-request-on-point-*` commands, as if they were defined without a source block. If more than one source blocks are found under an Org heading, then the one on point will be used.
+> [!TIP]
+> It is still possible to send requests defined within Babel source blocks using the `verb-send-request-on-point-*` commands, as if they were defined without a source block. If more than one source blocks are found under an Org heading, then the one on point will be used.
 
 #### Send with Partial Retrieval (`:op send ...`)
 
