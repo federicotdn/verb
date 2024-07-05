@@ -494,6 +494,7 @@ more details on how to use it."
           (verb-util--log nil 'I
                           "Verb mode enabled in buffer: %s"
                           (buffer-name))
+          (verb-util--log nil 'I "Verb version: %s" verb-version)
           (verb-util--log nil 'I "Org version: %s, GNU Emacs version: %s"
                           (org-version)
                           emacs-version)))
