@@ -608,7 +608,7 @@ bar,
 baz
 ```
 
-This has the same effect as the previous example. Note also how we've used the feature of adding to a propertie's value. The final `lambda` expression will be equivalent to
+This has the same effect as the previous example. Note also how we've used the feature of adding to a propertie's value. The final `lambda` expression will be equivalent to:
 
 ```elisp
 (lambda (rs) (thread-last (oref rs body) (replace-regexp-in-string "\n" " ") (oset rs body)) rs)
