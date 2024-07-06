@@ -6,6 +6,7 @@ on:
       - 'examples/*'
       - 'extra/*'
       - 'docs/*'
+      - 'docs-src/*'
       - 'mkdocs.yml'
   pull_request:
   schedule:
