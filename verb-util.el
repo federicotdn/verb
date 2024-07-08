@@ -149,5 +149,16 @@ If `verb-enable-log' is nil, do not log anything."
   "Return non-nil if strings S1 and S2 are equal, ignoring case."
   (string= (downcase s1) (downcase s2)))
 
+(defun verb-util--object-intervals (object)
+  "Call function `object-intervals' on OBJECT if possible.
+Otherwise, or if calling the function returns nil, return a single
+interval covering the whole object, with no properties."
+  ;; TODO: Update once Verb depends on Emacs 28.1+.
+  (let ((default (list (list 0 (length object) nil))))
+    (if (fboundp 'object-intervals)
+        (or (funcall #'object-intervals object)
+            default)
+      default)))
+
 (provide 'verb-util)
 ;;; verb-util.el ends here

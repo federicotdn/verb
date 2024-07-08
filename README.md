@@ -685,7 +685,11 @@ Content-Type: application/xml
 {{(verb-part)}}
 ```
 
-**Important**: In most cases, you will also need to apply the `verb-body-lf-to-crlf` function to your request before it is sent. This is needed to ensure that all line endings in the request body use CRLF instead of just LF. This is also shown in the example above.
+> [!IMPORTANT]
+> In most cases, you will also need to apply the `verb-body-lf-to-crlf` function to your request before it is sent. This is needed to ensure that all line endings in the request body use CRLF instead of just LF. This is also shown in the example above.
+
+> [!NOTE]
+> `verb-body-lf-to-crlf` will automatically ignore content specifically inserted with `verb-read-file`, so it will not break your requests in the file read contained newlines. This feature only works on Emacs 28.1 and newer.
 
 ### Base Headers
 

@@ -991,7 +991,7 @@ all the request specs in SPECS, in the order they were passed in."
   ;; specs already exists which means called from ob-verb block and loaded.
   (unless specs
     (verb-load-prelude-files-from-hierarchy))
-  (let ((point (point))
+  (let ((p (point))
         done final-spec)
     (save-restriction
       (widen)
@@ -1002,7 +1002,7 @@ all the request specs in SPECS, in the order they were passed in."
         ;; If there's at least one heading above us, go up through the
         ;; headings tree taking a request specification from each level.
         (while (not done)
-          (let ((spec (verb--request-spec-from-heading point)))
+          (let ((spec (verb--request-spec-from-heading p)))
             (when spec (push spec specs)))
           (setq done (not (verb--up-heading))))))
     (if specs
@@ -1240,11 +1240,15 @@ buffer used to show the values."
   "Return a buffer with the contents of FILE.
 If CODING-SYSTEM system is a valid coding system, use it when reading
 the file contents (see `coding-system-for-read' for more information).
-Set the buffer's `verb-kill-this-buffer' variable locally to t."
+Set the buffer's `verb-kill-this-buffer' variable locally to t.
+Additionally, add the `verb-lf-keep' property to all of the resulting
+buffer's text, to prevent function `verb-body-lf-to-crlf' from
+potentially modifying it."
   (with-current-buffer (generate-new-buffer " *verb-temp*")
     (buffer-disable-undo)
     (let ((coding-system-for-read coding-system))
       (insert-file-contents file))
+    (add-text-properties (point-min) (point-max) '(verb-lf-keep t))
     (setq verb-kill-this-buffer t)
     (current-buffer)))
 
@@ -2440,9 +2444,23 @@ part, insert the final boundary delimiter."
       (concat "--" boundary "--"))))
 
 (defun verb-body-lf-to-crlf (rs)
-  "Prepend a carriage-return before all line-feeds in RS's body."
-  (oset rs body (replace-regexp-in-string "\n" "\r\n" (oref rs body)))
-  rs)
+  "Prepend a carriage-return before all line-feeds in RS's body.
+Do this only for intervals of the string not having the `verb-lf-keep'
+property."
+  (let* ((body (oref rs body))
+         (intervals (verb-util--object-intervals body))
+         parts)
+    (dolist (elem intervals)
+      (let* ((start (nth 0 elem))
+             (end (nth 1 elem))
+             (props (nth 2 elem))
+             (s (substring body start end)))
+        (push (if (plist-member props 'verb-lf-keep)
+                  s
+                (replace-regexp-in-string "\n" "\r\n" s))
+              parts)))
+    (oset rs body (string-join (nreverse parts)))
+    rs))
 
 (defun verb--eval-string (s &optional context)
   "Eval S as Lisp code and return the result.

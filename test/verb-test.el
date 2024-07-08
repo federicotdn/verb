@@ -2892,6 +2892,11 @@
   (should (equal (verb--get-accept-header '(("Foo" . "Bar") ("accept" . "xyz")))
                  "xyz")))
 
+(ert-deftest test-read-file-lf-prop ()
+  (let ((b (verb-read-file "test/test.txt")))
+    (should (equal (get-text-property 1 'verb-lf-keep b) t))
+    (should (equal (get-text-property 14 'verb-lf-keep b) t))))
+
 (ert-deftest test-generate-multipart-boundary ()
   (let ((boundary (verb--generate-multipart-boundary))
         (boundary2 (verb--generate-multipart-boundary)))
@@ -2931,7 +2936,17 @@
                                                    "two")))
   (should (string= (oref aux body)
                    (join-lines "one\r"
-                               "two"))))
+                               "two")))
+
+  (setq aux (verb-body-lf-to-crlf (text-as-spec "get https://hello.com\n"
+                                                "\n"
+                                                (propertize "one\n" 'verb-lf-keep t)
+                                                "two\n"
+                                                "three")))
+  (should (string= (oref aux body)
+                   (join-lines "one"
+                               "two\r"
+                               "three"))))
 
 (ert-deftest test-multipart-boundary-error-no-boundary ()
   (should-error
