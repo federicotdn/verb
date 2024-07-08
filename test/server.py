@@ -192,7 +192,7 @@ async def not_compressed(request: Request) -> HTTPResponse:
     return response.text("hello, world!", headers={"Content-Encoding": "gzip"})
 
 
-app.static("/image.png", "test/data/image.png")
+app.static("/image.png", "test/data/test.png")
 
 
 @app.route("/set-cookies")

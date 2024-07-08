@@ -103,7 +103,7 @@ get /image.png
 post /body-md5
 Content-Type: image/png
 
-{{(verb-read-file "image.png" 'binary)}}
+{{(verb-read-file "test.png" 'binary)}}
 ** upload-binary
 post /body-md5
 
@@ -152,12 +152,12 @@ bar2
 {{(verb-part)}}
 ** prelude-elisp
 :properties:
-:Verb-Prelude: env.el
+:Verb-Prelude: test.el
 :end:
 get /echo-args?{{(verb-var foo)}}={{(verb-var bar)}}
 ** prelude-json
 :properties:
-:Verb-Prelude: env.json
+:Verb-Prelude: test.json
 :end:
 get /echo-args?{{(verb-var foo)}}={{(verb-var bar)}}
 * connection-fail-port
