@@ -1,9 +1,5 @@
 ;; init.el --- Manual testing setup for Verb  -*- lexical-binding: t; -*-
 
-;; Set up macOS stuff
-(when (eq system-type 'darwin)
-  (setq mac-command-modifier 'meta))
-
 ;; Build Verb autoloads and load them
 (require 'package)
 (package-generate-autoloads "verb" ".")

@@ -1296,7 +1296,7 @@
   		   "{{"))
 
   (setq num-buffers (length (buffer-list)))
-  (should (string= (verb--eval-code-tags-in-string "{{(verb-read-file \"test/test.txt\")}}")
+  (should (string= (verb--eval-code-tags-in-string "{{(verb-read-file \"test/data/test.txt\")}}")
   		   "Example text!\n"))
   (should (= (length (buffer-list)) num-buffers))
 
@@ -1929,7 +1929,7 @@
 
 ;; Tests using the test server (server.py).
 
-(defconst test-file-name (expand-file-name "test/test.org"))
+(defconst test-file-name (expand-file-name "test/data/test.org"))
 (defconst test-buf (find-file test-file-name))
 (with-current-buffer test-buf (verb-mode))
 (defconst req-sleep-time 0.01)
@@ -2893,7 +2893,7 @@
                  "xyz")))
 
 (ert-deftest test-read-file-lf-prop ()
-  (let ((b (verb-read-file "test/test.txt")))
+  (let ((b (verb-read-file "test/data/test.txt")))
     (should (equal (get-text-property 1 'verb-lf-keep b) t))
     (should (equal (get-text-property 14 'verb-lf-keep b) t))))
 
