@@ -2938,15 +2938,16 @@
                    (join-lines "one\r"
                                "two")))
 
-  (setq aux (verb-body-lf-to-crlf (text-as-spec "get https://hello.com\n"
-                                                "\n"
-                                                (propertize "one\n" 'verb-lf-keep t)
-                                                "two\n"
-                                                "three")))
-  (should (string= (oref aux body)
-                   (join-lines "one"
-                               "two\r"
-                               "three"))))
+  (when (<= 28 emacs-major-version)
+    (setq aux (verb-body-lf-to-crlf (text-as-spec "get https://hello.com\n"
+                                                  "\n"
+                                                  (propertize "one\n" 'verb-lf-keep t)
+                                                  "two\n"
+                                                  "three")))
+    (should (string= (oref aux body)
+                     (join-lines "one"
+                                 "two\r"
+                                 "three")))))
 
 (ert-deftest test-multipart-boundary-error-no-boundary ()
   (should-error
