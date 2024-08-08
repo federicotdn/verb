@@ -65,7 +65,7 @@ header value (\"charset=utf-8\")."
     ("text/html" html-mode)
     ("\\(application\\|text\\)/xml" xml-mode)
     ("application/xhtml\\+xml" xml-mode)
-    ("application/json" verb-handler-json)
+    ("application/\\(json\\|vscode-jsonrpc\\)" verb-handler-json)
     ("application/javascript" js-mode)
     ("application/css" css-mode)
     ("text/plain" text-mode)
