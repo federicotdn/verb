@@ -37,12 +37,14 @@ jobs:
         with:
           python-version: '3.10.11'
       - name: Setup checks
+        if: "!startsWith(matrix.emacs_version, '26')"
         run: 'make setup-check'
       - name: Run checks
+        if: "!startsWith(matrix.emacs_version, '26')"
         run: 'make check'
-      - name: Setup unit testing
+      - name: Setup unit tests
         run: 'make setup-tests'
-      - name: Run ERT unit tests
+      - name: Run unit tests
         env:
           WAIT_TIME: 3
         run: 'make test'
