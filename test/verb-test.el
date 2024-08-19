@@ -1858,6 +1858,20 @@
   (should-not (verb--http-method-p verb--template-keyword))
   (should-not (verb--http-method-p "test")))
 
+(ert-deftest test-http-protocol-p ()
+    (let (
+	  (true-test-cases (list "http/0.9" "http/1.0" "http/1.1" "http/2" "http/3"))
+	  (false-test-cases (list "test" "htt 0.9" "http 5" "ttp 1.1"))
+	  )
+
+  (mapcar (lambda (test-case) (should (verb--http-protocol-p test-case)))
+	  true-test-cases)
+  (mapcar (lambda (test-case) (should-not (verb--http-protocol-p test-case)))
+	  false-test-cases)
+
+  )
+    )
+
 (ert-deftest test-disable-verb-mode-font-lock ()
   (with-temp-buffer
     (should-not font-lock-keywords)

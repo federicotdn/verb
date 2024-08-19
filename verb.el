@@ -305,6 +305,10 @@ no warning will be shown when loading Emacs Lisp external files."
                                "TRACE" "CONNECT")
   "List of valid HTTP methods.")
 
+(defconst verb--http-protocols
+    '("http/0.9" "http/1.0" "http/1.1" "http/2" "http/3")    
+    "List of valid HTTP protocols")
+
 (defconst verb--bodyless-http-methods '("GET" "HEAD" "DELETE" "TRACE"
                                         "OPTIONS" "CONNECT")
   "List of HTTP methods which usually don't include bodies.")
@@ -524,6 +528,10 @@ more details on how to use it."
 (defun verb--http-method-p (m)
   "Return non-nil if M is a valid HTTP method."
   (member m verb--http-methods))
+
+(defun verb--http-protocol-p (protocol)
+    (member protocol verb--http-protocols))
+
 
 (defun verb--alist-p (l)
   "Return non-nil if L is an alist."
