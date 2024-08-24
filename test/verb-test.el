@@ -222,6 +222,62 @@
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy))))
 
+
+(ert-deftest test-request-spec-with-protocol-from-hierarchy-babel-blocks-above ()
+    (cl-flet (
+	    (test-1 (outline-test tgt-spec) (with-temp-buffer
+				(org-mode)
+				(verb-mode)
+				(insert outline-test)
+				(should (equal (verb--request-spec-from-hierarchy) tgt-spec))))
+	    (test-2 (outline-test) (with-temp-buffer
+				(org-mode)
+				(verb-mode)
+				(insert outline-test)
+				(should-error (verb--request-spec-from-hierarchy))))
+	    )
+    (let* (
+	   (tgt-spec
+	    (verb-request-spec :method "GET"
+				    :url (verb--clean-url
+					  "http://hello.com")
+				    :protocol "http/1.1"
+				    ))
+	   (passing-test-one
+	    (join-lines "* Test :verb:"
+		    "#+begin_src verb"
+		    "template http://hello.com http/1.1"
+		    "#+end_src"
+		    "** Test2"
+		    "get"))
+	   (passing-test-two
+	    (join-lines "* Test :verb:"
+		    "#+begin_src            verb"
+		    "template http://hello.com http/1.1"
+		    "#+end_src"
+		    "** Test2"
+		    "get"))
+	   (passing-test-cases (list (cons passing-test-one tgt-spec) (cons passing-test-two tgt-spec)))
+	   (failing-test-one
+	    (join-lines "* Test :verb:"
+		    "#+begin_src python"
+		    "print('hellooooo')"
+		    "#+end_src"
+		    "** Test2"
+		    "get"))
+
+	   )
+
+      (map-do (lambda (passing-test-case answer) (test-1 passing-test-case answer))
+	      passing-test-cases)
+
+      (test-2 failing-test-one))
+    
+
+    )
+   
+)
+
 (ert-deftest test-request-spec-from-hierarchy-ignore-nontagged ()
   (setq test-rs (verb-request-spec :method "GET"
 				   :url (verb--clean-url "http://hello.com")))
@@ -243,6 +299,35 @@
     (verb-mode)
     (insert outline-test)
     (should (equal (verb--request-spec-from-hierarchy) test-rs))))
+
+(ert-deftest test-request-spec-with-protocol-from-hierarchy-ignore-nontagged ()
+      (cl-flet ((test-1 (outline-test test-rs) (with-temp-buffer
+		  (org-mode)
+		  (verb-mode)
+		  (insert outline-test)
+		  (should (equal (verb--request-spec-from-hierarchy) test-rs)))))
+	(let* (
+	      (test-rs (verb-request-spec :method "GET"
+					  :url (verb--clean-url "http://hello.com")
+					  :protocol "http/1.1"
+					  ))
+	      (outline-test
+		    (join-lines "* Header"
+				"this is not a valid spec"
+				"- [ ] a todo list"
+				""
+				"** Test :verb:"
+				":PROPERTIES:"
+				":Author: me"
+				":END:"
+				"template http://hello.com http/1.1"
+				"*** Test2"
+				"get"))
+	      )
+	  (test-1 outline-test test-rs))
+	)
+
+      )
 
 (ert-deftest test-request-spec-from-hierarchy-no-headings ()
   (setq outline-test
@@ -330,6 +415,68 @@
     (verb-mode)
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy))))
+
+  (ert-deftest test-request-spec-with-protocol-from-hierarchy ()
+    (cl-flet (
+	      (test-1 (outline-test tgt-spec)
+	      ((with-temp-buffer
+		 (org-mode)
+		 (verb-mode)
+		 (insert outline-test)
+		 (should (equal (verb--request-spec-from-hierarchy)
+		   tgt-spec)))
+		)
+	      )
+	      (test-2 (outline-test)
+		(with-temp-buffer
+		  (org-mode)
+		  (verb-mode)
+		  (insert outline-test)
+		  (should-error (verb--request-spec-from-hierarchy)))
+
+		)
+
+	      )
+      (let* (
+	  (passing-test-1
+	    (join-lines "* Test :verb:"
+			"template http://hello.com"
+			"** Test2"
+			"get"))
+	  (tgt-spec-1 (verb-request-spec :method "GET"
+				  :url (verb--clean-url
+					"http://hello.com")
+				  :protocol "http/1.1"
+				  )
+	   )
+	  (passing-test-2
+		(join-lines "foo bar"
+			    "* Test :verb:"
+			    "template http://hello.com"
+			    "** Test2"
+			    "post ?a=b"))
+
+	  (tgt-spec-2 (verb-request-spec :method "POST"
+				    :url (verb--clean-url
+					  "http://hello.com?a=b")
+				    :protocol "http/1.1"
+				    )
+		      )
+	  (passing-test-cases (list (cons passing-test-1 tgt-spec-1) (cons passing-test-2 tgt-spec-2)))
+	  (failing-test-1
+		(join-lines "* Test :verb:"
+			    "template http://hello.com http/1.1"))
+
+	  )
+
+	(map-do (lambda (passing-test-case answer) (test-1 passing-test-case answer))
+	    passing-test-cases)
+
+	(test-2 failing-test-1))
+
+      )
+
+      )
 
 (ert-deftest test-request-spec-from-hierarchy-metadata ()
   (with-temp-buffer
@@ -743,6 +890,95 @@
 		 (list (cons "Foo-Bar" "text")
 		       (cons "Referer" "host.com")))))
 
+(ert-deftest test-request-spec-from-text-with-protocol-headers ()
+      (let* (
+	     (test-one (text-as-spec "GET example.com http/1.1\n"
+			    "Accept: text"))
+	     (answer-one (list (cons "Accept" "text")
+			       ))
+	     (test-two (text-as-spec "GET example.com http/1.1\n"
+			    "A:\n"
+			    "B:"))
+	     (answer-two (list (cons "A" "")
+				(cons "B" ""))
+			       )
+	     (test-three (text-as-spec "GET example.com http/1.1\n"
+			    "Accept: text\n"))
+	     (answer-three (list (cons "Accept" "text"))
+			   )
+	     (test-four (text-as-spec "GET example.com http/1.1\n"
+			    "Foo-Bar: text\n"
+			    "Referer: host.com\n"))
+	     (answer-four (list (cons "Foo-Bar" "text")
+				(cons "Referer" "host.com"))
+			  )
+	     (test-cases (list (cons test-one answer-one)
+			       (cons test-two answer-two)
+			       (cons test-three answer-three)
+			       (cons test-four answer-four)
+			       ))
+
+	     )
+	(map-do (lambda (test-case answer) (should (equal (oref test-case :headers)
+						   answer)
+					    )
+		  )
+		test-cases)
+	)
+  )
+
+(ert-deftest test-request-spec-from-text-protocol ()
+    (let* (
+	   (test-one (text-as-spec "post example.com http/1.1"))	   
+	   (test-two (text-as-spec "post example.com HTTP/1.1"))
+	  (test-three (text-as-spec "post example.com hTTP/1.1"))
+	  (test-four (text-as-spec "POST example.com htTP/1.1"))
+	  (answer  "http/1.1")
+	  (test-cases (list (cons test-one answer)
+			    (cons test-two answer)
+			    (cons test-three answer)
+			    (cons test-four answer)
+			    )
+		      )
+	  )
+
+      (map-do (lambda (test-case answer) (should (string= (oref test-case :protocol) answer)))
+	      test-cases)
+      )
+
+    )
+
+(ert-deftest test-request-spec-from-multiline-text-with-protocol ()
+    (let* (
+	  (test-case-one (text-as-spec "GET https://example.com http/1.1"))
+
+	  (test-case-two (text-as-spec "GET https://example.com http/1.1\n"))
+
+	  (test-case-three (text-as-spec "# Comment\n"
+			  "\n"
+			  "GET https://example.com http/1.1"))
+	  (test-case-four (text-as-spec "\n"
+			  "  # hello\n"
+			  "\n"
+			  "GET https://example.com http/1.1"))
+	  (answer (cons "https://example.com" "http/1.1"))
+	  (test-cases (list (cons test-case-one answer)
+			     (cons test-case-two answer)
+			     (cons test-case-three answer)
+			     (cons test-case-four answer)
+			     )
+		       )
+	  )
+
+      (map-do (lambda (test-case answers)
+		(should (string= (verb-request-spec-url-to-string test-case)
+		   (car answers)))		
+		(should (string= (oref test-case :protocol) (cdr answers)))
+		)
+	      test-cases)
+      )
+    )
+
 (ert-deftest test-request-spec-from-text-url-backslash ()
   (setq aux (text-as-spec-nl "get http://example.com?\\"
                              "a=b"))
@@ -768,6 +1004,31 @@
   (should-error
    (text-as-spec-nl "get http://example.com?\\"
                     "  ")))
+
+(ert-deftest test-request-spec-from-text-url-backslash-with-protocol ()
+	(let* (
+	      (passing-test-one (text-as-spec-nl "get http://example.com?\\"
+				 "a=b http/1.1"))
+	      (answer-one "http://example.com/?a=b")
+	      (passing-test-two (text-as-spec-nl "get http://example.com?\\"
+				 "    a=b http/1.1"))
+	      (answer-two "http://example.com/?a=b")
+	      (passing-test-three (text-as-spec-nl "get http://example.com?\\"
+				 "    a=b&\\"
+				 "\t\t\t\tc=d http/1.1"))
+	      (answer-three "http://example.com/?a=b&c=d")
+	      (passing-test-cases (list (cons passing-test-one answer-one)
+					(cons passing-test-two answer-two)
+					(cons passing-test-three answer-three)		
+					))
+	    
+	    )
+	
+	  (map-do (lambda (passing-test-case answer) (should (string= (verb-request-spec-url-to-string passing-test-case)
+			       answer)))
+		  passing-test-cases)
+	  )
+	)
 
 (ert-deftest test-request-spec-from-text-body-trailing-chars ()
   (setq aux (text-as-spec-nl "GET example.com"
@@ -1069,6 +1330,37 @@
                        (cons "Example" "HeaderValue")
 		       (cons "Referer" "host"))))
   (should (string= (oref aux :body) "Content\n")))
+
+(ert-deftest test-request-spec-from-text-with-protocol-complete ()
+      (let (
+	     (test-one (text-as-spec "# Comment\n"
+			    "  #\n"
+			    "  #   \n"
+			    "  #  test \n"
+			    "\n"
+			    "#\n"
+			    "\n"
+			    " Post   http://example.com/foobar http/1.1\n"
+			    "Accept : text\n"
+			    "Foo:bar\n"
+			    "Quux:    Quuz\n"
+			    "Example:      HeaderValue   \n"
+			    " Referer   :host\n"
+			    "\n"
+			    "Content\n"))
+	     )
+	(should (string= (verb-request-spec-url-to-string test-one)
+		     "http://example.com/foobar"))
+	(should (string= (oref test-one :method) "POST"))
+        (should (string= (oref test-one :protocol) "http/"))
+	(should (equal (oref test-one :headers)
+		   (list (cons "Accept" "text")
+			 (cons "Foo" "bar")
+			 (cons "Quux" "Quuz")
+			 (cons "Example" "HeaderValue")
+			 (cons "Referer" "host"))))
+	(should (string= (oref test-one :body) "Content\n")))
+      )
 
 (ert-deftest test-request-spec-headers-underscore ()
   (setq aux (text-as-spec "get http://example.com/foobar\n"
@@ -1864,9 +2156,9 @@
 	  (false-test-cases (list "test" "htt 0.9" "http 5" "ttp 1.1"))
 	  )
 
-  (mapcar (lambda (test-case) (should (verb--http-protocol-p test-case)))
+  (mapc (lambda (test-case) (should (verb--http-protocol-p test-case)))
 	  true-test-cases)
-  (mapcar (lambda (test-case) (should-not (verb--http-protocol-p test-case)))
+  (mapc (lambda (test-case) (should-not (verb--http-protocol-p test-case)))
 	  false-test-cases)
 
   )
