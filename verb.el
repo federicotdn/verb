@@ -558,6 +558,9 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 (cl-deftype verb--http-method-type ()
   '(or null (satisfies verb--http-method-p)))
 
+(cl-deftype verb--http-protocol-type ()
+  '(or null (satisfies verb--http-protocol-p)))
+
 (cl-deftype verb--alist-type ()
   '(or null (satisfies verb--alist-p)))
 
@@ -573,6 +576,10 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
         :initform nil
         :type (or null url)
         :documentation "Request URL.")
+   (protocol :initarg :protocol
+		 :initform nil
+		 :type verb--http-protocol-type
+		 :documentation "HTTP protocol.")
    (headers :initarg :headers
             :initform ()
             :type verb--http-headers-type
@@ -2412,6 +2419,14 @@ Additionally, allow matching `verb--template-keyword'."
                        (list verb--template-keyword
                              (downcase verb--template-keyword)))))
     (mapconcat #'identity terms "\\|")))
+
+(defun verb--http-protocols-regexp ()
+    "Return a regexp to match an HTTP protocols.
+  HTTP protocols are defined in `verb--http-protocols."
+    (let ((terms (append verb--http-protocols
+			 (mapcar #'upcase verb--http-protocols)
+			 )))
+      (mapconcat #'identity terms "\\|")))
 
 (defun verb--generate-multipart-boundary ()
   "Generate a new random multipart form boundary."

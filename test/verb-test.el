@@ -419,14 +419,13 @@
   (ert-deftest test-request-spec-with-protocol-from-hierarchy ()
     (cl-flet (
 	      (test-1 (outline-test tgt-spec)
-	      ((with-temp-buffer
+	      (with-temp-buffer
 		 (org-mode)
 		 (verb-mode)
 		 (insert outline-test)
 		 (should (equal (verb--request-spec-from-hierarchy)
 		   tgt-spec)))
-		)
-	      )
+		)	      
 	      (test-2 (outline-test)
 		(with-temp-buffer
 		  (org-mode)
@@ -440,7 +439,7 @@
       (let* (
 	  (passing-test-1
 	    (join-lines "* Test :verb:"
-			"template http://hello.com"
+			"template http://hello.com http/1.1"
 			"** Test2"
 			"get"))
 	  (tgt-spec-1 (verb-request-spec :method "GET"
@@ -452,7 +451,7 @@
 	  (passing-test-2
 		(join-lines "foo bar"
 			    "* Test :verb:"
-			    "template http://hello.com"
+			    "template http://hello.com http/1.1"
 			    "** Test2"
 			    "post ?a=b"))
 
