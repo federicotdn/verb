@@ -2572,6 +2572,52 @@ and fragment component of a URL with no host or scheme defined."
 (define-error 'verb-empty-spec
               "Request specification has no contents.")
 
+
+
+(defun verb--get-line-in-buffer (context)
+  ;; Read HTTP method and URL line.
+  ;; First, expand any code tags on it (if any):
+    (verb--eval-code-tags-in-string
+     (buffer-substring-no-properties
+      (point) (line-end-position))
+     context)
+
+    )
+
+(defun verb--get-multiline-url (url line)
+  ;; If URL ends with '\', append following lines to it
+  ;; until one of them does not end with '\' (ignoring
+  ;; leading whitespace, for alignment).
+      (while (string-suffix-p "\\" line)
+	(end-of-line)
+	(if (eobp)
+	    (user-error
+	     "Backslash in URL not followed by additional line")
+	  (forward-char))
+	(back-to-indentation)
+	(setq line (verb--get-line-in-buffer '(current-context)))
+	(when (string-empty-p line)
+	  (user-error
+	   "Backslash in URL not followed by additional content"))
+
+	(setq url (concat url (string-remove-suffix "\\" line))))
+      url
+      )
+
+
+(defun verb--validate-http-method (method)
+  (pcase method
+    ((pred verb--http-method-p) method)
+    ((pred (string= verb--template-keyword)) (setq method nil))
+    (_ (user-error (concat "Could not read a valid HTTP method (%s)\n"
+			      "Additionally, you can also specify %s "
+			      "(matching is case insensitive)")
+		      (mapconcat #'identity verb--http-methods ", ")
+		      verb--template-keyword))            
+      
+    )
+  method)
+
 (defun verb-request-spec-from-string (text &optional metadata)
   "Create and return a request specification from string TEXT.
 
@@ -2639,16 +2685,9 @@ METADATA."
         (signal 'verb-empty-spec nil))
 
       ;;; METHOD + URL
-
-      ;; Read HTTP method and URL line.
-      ;; First, expand any code tags on it (if any):
-      (let* ((case-fold-search t)
-             (get-line-fn (lambda ()
-                            (verb--eval-code-tags-in-string
-                             (buffer-substring-no-properties
-                              (point) (line-end-position))
-                             context)))
-             (line (funcall get-line-fn)))
+      
+      (let* ((case-fold-search t)             
+             (line (verb--get-line-in-buffer context)))
         ;; Try to match:
         ;; A) METHOD URL
         ;; B) METHOD
@@ -2661,23 +2700,9 @@ METADATA."
               (setq method (upcase (match-string 1 line))
                     url (string-remove-suffix "\\" (match-string 2 line)))
 
-              ;; Subcase:
-              ;; If URL ends with '\', append following lines to it
-              ;; until one of them does not end with '\' (ignoring
-              ;; leading whitespace, for alignment).
-              (while (string-suffix-p "\\" line)
-                (end-of-line)
-                (if (eobp)
-                    (user-error
-                     "Backslash in URL not followed by additional line")
-                  (forward-char))
-                (back-to-indentation)
-                (setq line (funcall get-line-fn))
-                (when (string-empty-p line)
-                  (user-error
-                   "Backslash in URL not followed by additional content"))
-
-                (setq url (concat url (string-remove-suffix "\\" line)))))
+              ;; Subcase: url is on multiple lines              
+	      (setq url (verb--get-multiline-url url line))
+              )
 
           (when (string-match (concat "^\\s-*\\("
                                       (verb--http-methods-regexp)
@@ -2689,14 +2714,8 @@ METADATA."
       ;; We've processed the URL line, move to the end of it.
       (end-of-line)
 
-      (if method
-          (when (string= method verb--template-keyword)
-            (setq method nil))
-        (user-error (concat "Could not read a valid HTTP method (%s)\n"
-                            "Additionally, you can also specify %s "
-                            "(matching is case insensitive)")
-                    (mapconcat #'identity verb--http-methods ", ")
-                    verb--template-keyword))
+      ;; validate the http-method
+      (setq method (verb--validate-http-method method))
 
       ;; Skip newline after URL line.
       (unless (eobp) (forward-char))

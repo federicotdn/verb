@@ -178,6 +178,151 @@
     (goto-char (point-min))
     (should-error (verb--heading-contents))))
 
+
+(defun test-temp-buffer-creator (text-to-insert test-function)
+  (with-temp-buffer
+    (insert text-to-insert)
+    (goto-char (point-min))
+    (funcall test-function)
+    )
+
+  )
+
+(defun assert-string (actual expected)
+  (should (equal actual expected))
+  )
+
+(defun assert-error (test)
+  (should-error (funcall test))
+  )
+
+(ert-deftest test-get-line-in-buffer ()
+  
+
+  (cl-flet (
+	    (test-case-creator (test)
+	      (cons test (lambda ()
+			       (apply #'assert-string (list (apply #'verb--get-line-in-buffer '(current-context)) test))
+			       ))
+	      )
+	    )
+    (let* (
+	   (test-one "#+begin_src verb")
+	   (test-two "template http://localhost:8000/basic")
+	   (test-three "#+end_src")	   	
+	   (tests (list test-one test-two test-three))
+	   (test-cases (mapcar #'test-case-creator tests))
+	   )
+	      
+      (map-do #'test-temp-buffer-creator test-cases)
+	    
+      )
+    
+
+	    
+	   
+      )
+  )
+
+(ert-deftest test-get-valid-multiline-url ()
+  (cl-flet (
+	    (passing-test-case-creator (passing-test-case answer)
+	      (cons (car passing-test-case) (lambda ()
+			   (apply #'assert-string (list (apply #'verb--get-multiline-url (list (cdr passing-test-case) (funcall 'verb--get-line-in-buffer '(current-context)))) answer))
+			   )
+		    )
+	      )	      
+
+    )
+    (let* (
+	   (starting-url "http://example.com/?")
+	   (passing-test-one (cons (join-lines "get http://example.com?\\" "a=b")
+				   starting-url))
+	   (passing-answer-one "http://example.com/?a=b")
+
+	   (passing-test-two (cons (join-lines "get http://example.com?\\" "    a=b" )
+				   starting-url))
+	   
+	   (passing-answer-two "http://example.com/?a=b")
+
+	   (passing-test-three (cons (join-lines "get http://example.com?\\" "    a=b&\\" "\t\t\t\tc=d")
+				     starting-url))
+
+	   (passing-answer-three "http://example.com/?a=b&c=d")
+	   (passing-tests (list
+			   (cons passing-test-one passing-answer-one)
+			   (cons passing-test-two passing-answer-two)
+			   (cons passing-test-three passing-answer-three)
+			     )
+		       )
+	(passing-test-cases (map-apply #'passing-test-case-creator passing-tests))
+
+	
+	)
+      (map-do #'test-temp-buffer-creator passing-test-cases)
+      
+      )
+
+  
+    )
+)
+ 
+    	
+(ert-deftest test-get-invalid-multiline-url ()
+  (cl-flet (
+	  (failing-test-creator (test starting-url)
+	    (cons test (lambda ()
+	      (assert-error (lambda ()
+			      (apply #'verb--get-multiline-url (list starting-url (funcall #'verb--get-line-in-buffer '(current-context))))
+			      )
+			    )
+	      ))
+	    )
+	  )
+  (let* (
+	(starting-url "http://example.com/?")
+      (failing-test-one (cons "get http://example.com?\\" starting-url))
+      (failing-test-two (cons (join-lines "get http://example.com?\\" "foobar\\") starting-url))
+	(failing-test-three (cons (join-lines "get http://example.com?\\" "  ") starting-url))
+	(failing-tests (list failing-test-one failing-test-two failing-test-three))
+	
+	(failing-test-cases (map-apply #'failing-test-creator failing-tests))
+	)
+    (map-do #'test-temp-buffer-creator failing-test-cases))
+
+			      )
+  )
+
+
+(ert-deftest test-validate-http-method ()
+
+  (let* (
+	(passing-test-one "GET")
+	(passing-test-two "POST")	
+	(passing-tests (list (cons (verb--validate-http-method passing-test-one) passing-test-one)
+			     (cons (verb--validate-http-method passing-test-two) passing-test-two)
+			     )
+		       )
+	
+	(error-test-one "TEST")
+	(error-test-two "TEST")
+	(error-test-three "")
+	(error-test-four nil)
+	(error-tests (list error-test-one error-test-two error-test-three error-test-four))
+	
+	(failing-test-one verb--template-keyword)	
+	)
+
+    
+    (map-do #'assert-string passing-tests)    
+    (mapc #'assert-error error-tests)    
+    (should-not (verb--validate-http-method failing-test-one))
+    
+      )
+  
+
+  )
+
 (ert-deftest test-request-spec-from-hierarchy-babel-blocks-above ()
   (setq tgt-spec (verb-request-spec :method "GET"
 				    :url (verb--clean-url
