@@ -306,7 +306,7 @@ no warning will be shown when loading Emacs Lisp external files."
   "List of valid HTTP methods.")
 
 (defconst verb--http-protocols
-    '("http/0.9" "http/1.0" "http/1.1" "http/2" "http/3")    
+    '("HTTP/0.9" "HTTP/1.0" "HTTP/1.1" "HTTP/2" "HTTP/3")    
     "List of valid HTTP protocols")
 
 (defconst verb--bodyless-http-methods '("GET" "HEAD" "DELETE" "TRACE"
@@ -578,7 +578,7 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
         :documentation "Request URL.")
    (protocol :initarg :protocol
 		 :initform nil
-		 :type verb--http-protocol-type
+		 :type (or null string)
 		 :documentation "HTTP protocol.")
    (headers :initarg :headers
             :initform ()
@@ -1028,7 +1028,8 @@ all the request specs in SPECS, in the order they were passed in."
               ;; Override spec 1 with spec 2, and the result with spec
               ;; 3, then with 4, etc.
               (setq final-spec (verb-request-spec-override final-spec
-                                                           spec))))
+                                                           spec)))
+	    )
           ;; Process and return.
           (verb--request-spec-post-process final-spec))
       (user-error (concat "No request specifications found\n"
@@ -2405,6 +2406,8 @@ Modify neither request specification, return a new one."
                                    (oref original method))
                        :url (verb--override-url (oref original url)
                                                 (oref other url))
+		       :protocol (or (oref other protocol)
+                                   (oref original protocol))
                        :headers (verb--override-headers (oref original headers)
                                                         (oref other headers))
                        :body (or (oref other body) (oref original body))
@@ -2573,10 +2576,94 @@ and fragment component of a URL with no host or scheme defined."
               "Request specification has no contents.")
 
 
+(defun verb--get-indices-of-inner-brace-pairs (line)
+    (cl-flet* (
+	      (get-pairs (seq)
+		(seq-partition seq 2)
+		)
+	      (get-inner-brace-indices (brace)
+		(let* (
+		       (braces (seq-positions line (string-to-char brace)))
+		       (brace-pairs (get-pairs braces))
+		       (brace-indices (flatten-list (mapcar #'cdr brace-pairs)))
+		       )
+		  brace-indices)
+		)
+	      
+		)
+      (let* (
+	     
+	    (front-indices (get-inner-brace-indices "{"))
+	    (back-indices (get-inner-brace-indices "}"))	    
+	    (brace-pairs (seq-map-indexed (lambda (front index)
+					    (cons front (nth index back-indices))
+					    )
+					  front-indices)
+			 )
+	    )
+	  brace-pairs)
+	)
+    )
 
+(defun verb--is-within-code-tags-p (line index)
+    (let (
+	  (is-within nil)
+	  )
+      (when (seq-contains-p line (string-to-char "{"))
+      (let* (
+	    (brace-indices (verb--get-indices-of-inner-brace-pairs line))
+	    (bools (mapcar (lambda (range)
+			   (range-member-p index range))
+			   brace-indices)
+		   )
+	    )
+	 (setq is-within (seq-contains-p bools 't))
+      )
+      is-within)
+
+    )
+    )
+
+(defun verb--split-line-on-spaces-outside-code-tags (line)
+  (cl-flet* (	     
+	     (get-space-indices (line)
+	       "Get Indices of each space"
+	      (seq-positions line (string-to-char "\s"))
+	      )
+	     (filter-spaces-in-code-tags (line)
+	       "Filter for spaces in code tags"
+	      (seq-remove (lambda (space-index)
+			    (verb--is-within-code-tags-p line space-index)
+			    )  (get-space-indices line))
+	      )
+	     
+	     (get-line-splits (line)
+	       "Since METHOD+URL+PROTOCOL is three parts,
+               only take the first three spaces"
+	      (take 3 (filter-spaces-in-code-tags line))
+	      )
+	     (mark-valid-spaces (line)
+	       "Mark valid spaces with a ^"
+	      (mapc (lambda (index)
+		      (aset line index ?^)
+		      )
+		    (get-line-splits line))
+	      line)
+	     (cleanup-line (line)
+	       "Trim the line and replace any double spaces with a single space"
+	       (replace-regexp-in-string "[[:space:]]\\{2,\\}" "\s" (string-trim line)))
+	     (split-line (line)
+	       "Split the line into a list"
+	      (string-split (mark-valid-spaces (cleanup-line line)) "\\^")
+	      )
+	     )
+	    
+    (split-line line))  
+  
+  )
 (defun verb--get-line-in-buffer (context)
-  ;; Read HTTP method and URL line.
-  ;; First, expand any code tags on it (if any):
+  "Return a line from a buffer.
+   First, all code tags are expanded on it (if any)"
     (verb--eval-code-tags-in-string
      (buffer-substring-no-properties
       (point) (line-end-position))
@@ -2584,28 +2671,11 @@ and fragment component of a URL with no host or scheme defined."
 
     )
 
-(defun verb--get-multiline-url (url line)
-  ;; If URL ends with '\', append following lines to it
-  ;; until one of them does not end with '\' (ignoring
-  ;; leading whitespace, for alignment).
-      (while (string-suffix-p "\\" line)
-	(end-of-line)
-	(if (eobp)
-	    (user-error
-	     "Backslash in URL not followed by additional line")
-	  (forward-char))
-	(back-to-indentation)
-	(setq line (verb--get-line-in-buffer '(current-context)))
-	(when (string-empty-p line)
-	  (user-error
-	   "Backslash in URL not followed by additional content"))
-
-	(setq url (concat url (string-remove-suffix "\\" line))))
-      url
-      )
-
 
 (defun verb--validate-http-method (method)
+  ""
+  (when method (setq method (upcase method)))
+
   (pcase method
     ((pred verb--http-method-p) method)
     ((pred (string= verb--template-keyword)) (setq method nil))
@@ -2617,6 +2687,64 @@ and fragment component of a URL with no host or scheme defined."
       
     )
   method)
+
+(defun verb--validate-http-protocol (protocol)
+  ""
+  (when protocol (setq protocol (upcase protocol)))
+  (pcase protocol
+    ((pred verb--http-protocol-p) protocol)
+    ((pred (lambda (p) (= (length p) 0))) (setq protocol nil))
+    (_ (user-error (concat "Could not read a valid HTTP protocol.
+                               The following are valid protocols: (%s)\n"			
+			      "Matching is case insensitive.")
+		      (mapconcat #'identity verb--http-protocols ", ")
+		      ))            
+      
+    )
+  protocol)
+
+(defun verb--single-line-method-url-protocol (line)
+  ""
+  (let* (
+	 (lines (verb--split-line-on-spaces-outside-code-tags line))
+	 (line-list (seq-remove #'string-empty-p lines))
+	(function-list (list #'verb--validate-http-method #'identity #'verb--validate-http-protocol))
+	(line-alist (seq-map-indexed (lambda (element i)				 
+				       (cons (nth i function-list) (list element)))				     
+				     line-list)
+	 )
+	)
+    
+    (map-apply (lambda (func element)
+		 (apply func element)
+		 )
+	       line-alist)
+    )
+  
+  )
+
+(defun verb--multiline-method-url-protocol (url line)
+  "If URL ends with '\', append following lines to it
+  until one of them does not end with '\' (ignoring
+  leading whitespace, for alignment)."
+      (while (string-suffix-p "\\" line)
+	(end-of-line)
+	(if (eobp)
+	    (user-error
+	     "Backslash in URL not followed by additional line")
+	  (forward-char))
+	(back-to-indentation)
+	(setq line (verb--get-line-in-buffer '(current-context)))
+	(when (string-empty-p line)
+	  (user-error
+	   "Backslash in URL not followed by additional content"))
+	(setq url (concat url (string-remove-suffix "\\" line))))
+      
+  (verb--split-line-on-spaces-outside-code-tags url))
+
+
+
+
 
 (defun verb-request-spec-from-string (text &optional metadata)
   "Create and return a request specification from string TEXT.
@@ -2666,7 +2794,7 @@ signal an error.
 Before returning the request specification, set its metadata to
 METADATA."
   (let ((context (current-buffer))
-        method url headers headers-start body)
+        method url protocol headers headers-start body)
     (with-temp-buffer
       (insert text)
       (goto-char (point-min))
@@ -2684,38 +2812,35 @@ METADATA."
         ;; Signal `verb-empty-spec' if so
         (signal 'verb-empty-spec nil))
 
-      ;;; METHOD + URL
+      ;;; METHOD + URL + PROTOCOL
       
       (let* ((case-fold-search t)             
-             (line (verb--get-line-in-buffer context)))
-        ;; Try to match:
-        ;; A) METHOD URL
-        ;; B) METHOD
-        (if (string-match (concat "^\\s-*\\("
-                                  (verb--http-methods-regexp)
-                                  "\\)\\s-+\\(.+\\)$")
-                          line)
-            ;; A) Matched method + URL, store them.
-            (progn
-              (setq method (upcase (match-string 1 line))
-                    url (string-remove-suffix "\\" (match-string 2 line)))
-
-              ;; Subcase: url is on multiple lines              
-	      (setq url (verb--get-multiline-url url line))
-              )
-
-          (when (string-match (concat "^\\s-*\\("
-                                      (verb--http-methods-regexp)
-                                      "\\)\\s-*$")
-                              line)
-            ;; B) Matched method only, store it.
-            (setq method (upcase (match-string 1 line))))))
+             (line (verb--get-line-in-buffer context))
+	     (single-line-list (verb--single-line-method-url-protocol line))	     
+	     
+	     )
+        
+	(setq method (nth 0 single-line-list)
+	      url (string-remove-suffix "\\" (nth 1 single-line-list))	     
+	      protocol (nth 2 single-line-list)
+	      )
+	(when (string-suffix-p "\\" line)
+	  (let* (		
+		 (multiline-list (verb--multiline-method-url-protocol url line))
+		 (validated-protocol (verb--validate-http-protocol (nth 1 multiline-list)))
+		)
+	    (setq
+	     url (nth 0 multiline-list)
+	     protocol (nth 1 multiline-list)
+	     )
+	    )
+	  )
+	
+        )
 
       ;; We've processed the URL line, move to the end of it.
       (end-of-line)
 
-      ;; validate the http-method
-      (setq method (verb--validate-http-method method))
 
       ;; Skip newline after URL line.
       (unless (eobp) (forward-char))
@@ -2782,6 +2907,7 @@ METADATA."
       (verb-request-spec :method method
                          :url (unless (string-empty-p (or url ""))
                                 (verb--clean-url url))
+			 :protocol protocol
                          :headers headers
                          :body body
                          :metadata metadata))))
