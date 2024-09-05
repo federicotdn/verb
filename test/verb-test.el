@@ -428,7 +428,7 @@
 	   )
 
 
-(ert-deftest test-valid-multiline-url-protocol ()
+(ert-deftest test-valid-multiline-method-url-protocol ()
   (cl-flet (
 	    (passing-test-case-creator (passing-test-case answer)
 	      (cons (car passing-test-case) (lambda ()
@@ -484,7 +484,7 @@
 )
 
 
-(ert-deftest test-get-invalid-multiline-url-protocol ()
+(ert-deftest test-get-invalid-multiline-method-url-protocol ()
   (cl-flet (
 	  (failing-test-creator (test starting-url)
 	    (cons test (lambda ()
@@ -3197,6 +3197,7 @@
 		      (should (equal (verb--protocol-as-curl-option test) (nth index answers)))
 		      )
 		    tests)
+    (should-error (verb--protocol-as-curl-option "HTTP/1.7") :type 'user-error)
     )
     )
 
@@ -3263,6 +3264,10 @@
 
   (should-curl (join-lines "GET http://example.com http/1.1")
 	       "curl 'http://example.com' --http1.1")
+
+  (should-error (verb--export-to-curl
+		 (verb-request-spec-from-string
+		  "GET http://abc.com http/1.9")) :type 'user-error)
 
   (should-error (verb--export-to-curl
 		 (verb-request-spec-from-string
