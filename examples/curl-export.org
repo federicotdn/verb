@@ -1,0 +1,8 @@
+* Curl export example                                                  :verb:
+# Simple example of specifying protocol for curl export
+#+begin_src verb :op export curl
+get http://example.com http/1.1
+#+end_src
+
+#+RESULTS:
+: curl 'http://example.com' --http1.1

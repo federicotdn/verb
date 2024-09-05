@@ -1585,6 +1585,7 @@ be displayed."
     (user-error "%s" "Can only perform GET requests using EWW"))
   (verb--request-spec-send-eww rs))
 
+
 (defun verb--export-to-websocat (rs &optional no-message no-kill)
   "Export a request spec RS to websocat format.
 Add the generated command to the kill ring and return it.  For more
@@ -1608,6 +1609,22 @@ If NO-KILL is non-nil, do not add the command to the kill ring."
         (message "Websocat command copied to the kill ring"))
       ;; Return the generated command.
       result)))
+
+(defun verb--protocol-as-curl-option (protocol)
+    (unless (verb--http-protocol-p protocol)
+      (user-error "Please pass a valid http protocol")
+      )
+    (let (
+      (protocol-maps (list (cons "HTTP/0.9" "--http0.9")
+			     (cons "HTTP/1.0" "--http1.0")
+			     (cons "HTTP/1.1" "--http1.1")
+			     (cons "HTTP/2" "--http2")
+			     (cons "HTTP/3" "--http3")
+			     ))
+      )
+  
+  (alist-get protocol protocol-maps nil nil 'equal))    
+    )
 
 (defun verb--export-to-curl (rs &optional no-message no-kill)
   "Export a request spec RS to curl format.
@@ -1640,6 +1657,12 @@ non-nil, do not add the command to the kill ring."
        (insert "-X TRACE"))
       ("CONNECT"
        (user-error "%s" "CONNECT method not supported in curl format")))
+    (when-let (
+	       (protocol (oref rs protocol))
+	       )
+      (insert "\s" (verb--protocol-as-curl-option protocol)
+	      )
+      )
     (let ((result (verb--buffer-string-no-properties)))
       (unless no-kill
         (kill-new result))
@@ -2072,7 +2095,7 @@ loaded into."
     (verb-kill-all-response-buffers t))
 
   (let* ((url (oref rs url))
-         (url-request-method (verb--to-ascii (oref rs method)))
+         (url-request-method (verb--to-ascii (oref rs method)))	 
          (url-mime-accept-string (verb--get-accept-header (oref rs headers)))
          (url-request-extra-headers (verb--prepare-http-headers
                                      (oref rs headers)))
@@ -2423,13 +2446,6 @@ Additionally, allow matching `verb--template-keyword'."
                              (downcase verb--template-keyword)))))
     (mapconcat #'identity terms "\\|")))
 
-(defun verb--http-protocols-regexp ()
-    "Return a regexp to match an HTTP protocols.
-  HTTP protocols are defined in `verb--http-protocols."
-    (let ((terms (append verb--http-protocols
-			 (mapcar #'upcase verb--http-protocols)
-			 )))
-      (mapconcat #'identity terms "\\|")))
 
 (defun verb--generate-multipart-boundary ()
   "Generate a new random multipart form boundary."
@@ -2638,7 +2654,7 @@ and fragment component of a URL with no host or scheme defined."
 	      )
 	     
 	     (get-line-splits (line)
-	       "Since METHOD+URL+PROTOCOL is three parts,
+	       "Since METHOD+URL+PROTOCOL is three parts
                only take the first three spaces"
 	      (take 3 (filter-spaces-in-code-tags line))
 	      )

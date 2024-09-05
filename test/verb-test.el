@@ -3188,6 +3188,18 @@
 		 (verb-request-spec-from-string
 		  "POST http://abc.com"))))
 
+(ert-deftest test-protocol-as-curl-option ()
+  (let (
+	(tests (list "HTTP/0.9" "HTTP/1.0" "HTTP/1.1" "HTTP/2" "HTTP/3"))
+	(answers (list "--http0.9" "--http1.0" "--http1.1" "--http2" "--http3"))
+	)
+    (seq-do-indexed (lambda (test index)
+		      (should (equal (verb--protocol-as-curl-option test) (nth index answers)))
+		      )
+		    tests)
+    )
+    )
+
 (defun should-curl (rs-text &rest lines)
   (should (string= (verb--export-to-curl
 		    (verb-request-spec-from-string rs-text) t)
@@ -3248,6 +3260,9 @@
 
   (should-curl (join-lines "HEAD http://example.com")
 	       "curl 'http://example.com' -I")
+
+  (should-curl (join-lines "GET http://example.com http/1.1")
+	       "curl 'http://example.com' --http1.1")
 
   (should-error (verb--export-to-curl
 		 (verb-request-spec-from-string
