@@ -689,7 +689,7 @@ Content-Type: application/xml
 > In most cases, you will also need to apply the `verb-body-lf-to-crlf` function to your request before it is sent. This is needed to ensure that all line endings in the request body use CRLF instead of just LF. This is also shown in the example above.
 
 > [!NOTE]
-> `verb-body-lf-to-crlf` will automatically ignore content specifically inserted with `verb-read-file`, so it will not break your requests in the file read contained newlines. This feature only works on Emacs 28.1 and newer.
+> `verb-body-lf-to-crlf` will automatically ignore content specifically inserted with `verb-read-file`, so it will not break your requests if the file read contained newlines. This feature only works on Emacs 28.1 and newer.
 
 ### Base Headers
 
@@ -709,6 +709,10 @@ You can export request specifications to other formats or tools by using the `ve
 
 > [!NOTE]
 > Code tags will be evaluated when exporting a request.
+
+### Cookies
+
+The Emacs `url` library (which Verb uses) has [support for cookies](https://www.gnu.org/software/emacs/manual/html_node/url/Cookies.html). This means that responses with the `Set-Cookie` header present will create cookies locally, that will later be sent back via the `Cookie` header.
 
 ### Babel Integration
 Verb also works on Org [Babel](https://orgmode.org/worg/org-contrib/babel/) source blocks. This feature allows you to send an HTTP request, and view the results in the same `.org` buffer where the request was read from. You can also export requests to different formats (like `curl`) and view the results in the same buffer as well.
@@ -904,6 +908,7 @@ Verb's functionality can be extended via some related packages, such as:
 - [restclient](https://github.com/pashky/restclient.el): Verb is an attempt to improve upon the core idea of the `restclient` package: writing request specifications on a buffer, and receiving the responses on another. As of April 17, 2024 `restclient` has been archived and is no longer maintained.
 - [walkman](https://github.com/abrochard/walkman): Write HTTP requests in Org mode and send them using `curl`.
 - [plz-see.el](https://github.com/astoff/plz-see.el): An interactive HTTP client for Emacs based on the [plz.el](https://github.com/alphapapa/plz.el) library.
+- [hurl-mode](https://github.com/JasZhe/hurl-mode): Emacs mode for `hurl`, a CLI HTTP tool.
 
 ## Contributors
 These are the users that have contributed to developing Verb, via code and/or documentation (in order of date of first contribution):
