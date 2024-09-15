@@ -5,9 +5,6 @@ on:
       - '**.md'
       - 'examples/*'
       - 'extra/*'
-      - 'docs/*'
-      - 'docs-src/*'
-      - 'mkdocs.yml'
   pull_request:
   schedule:
     - cron: '0 12 1 * *'
