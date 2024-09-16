@@ -7,7 +7,7 @@
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: tools
 ;; Package-Version: 2.16.0
-;; Package-Requires: ((emacs "26.3"))
+;; Package-Requires: ((emacs "26.3") (compat "30.0.0.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -306,8 +306,8 @@ no warning will be shown when loading Emacs Lisp external files."
   "List of valid HTTP methods.")
 
 (defconst verb--http-protocols
-    '("HTTP/0.9" "HTTP/1.0" "HTTP/1.1" "HTTP/2" "HTTP/3")    
-    "List of valid HTTP protocols")
+  '("HTTP/0.9" "HTTP/1.0" "HTTP/1.1" "HTTP/2" "HTTP/3")
+  "List of valid HTTP protocols.")
 
 (defconst verb--bodyless-http-methods '("GET" "HEAD" "DELETE" "TRACE"
                                         "OPTIONS" "CONNECT")
@@ -518,6 +518,7 @@ more details on how to use it."
     map)
   "Keymap for `verb-response-headers-mode'.")
 
+
 (define-derived-mode verb-response-headers-mode special-mode "Verb[Headers]"
   "Major mode for displaying an HTTP response's headers."
   (font-lock-add-keywords
@@ -530,7 +531,8 @@ more details on how to use it."
   (member m verb--http-methods))
 
 (defun verb--http-protocol-p (protocol)
-    (member protocol verb--http-protocols))
+  "Return non-nil if PROTOCOL is a valid HTTP protocol."
+  (member protocol verb--http-protocols))
 
 
 (defun verb--alist-p (l)
@@ -577,9 +579,9 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
         :type (or null url)
         :documentation "Request URL.")
    (protocol :initarg :protocol
-		 :initform nil
-		 :type (or null string)
-		 :documentation "HTTP protocol.")
+	     :initform nil
+	     :type (or null string)
+	     :documentation "HTTP protocol.")
    (headers :initarg :headers
             :initform ()
             :type verb--http-headers-type
@@ -1028,8 +1030,7 @@ all the request specs in SPECS, in the order they were passed in."
               ;; Override spec 1 with spec 2, and the result with spec
               ;; 3, then with 4, etc.
               (setq final-spec (verb-request-spec-override final-spec
-                                                           spec)))
-	    )
+                                                           spec))))
           ;; Process and return.
           (verb--request-spec-post-process final-spec))
       (user-error (concat "No request specifications found\n"
@@ -1611,22 +1612,15 @@ If NO-KILL is non-nil, do not add the command to the kill ring."
       result)))
 
 (defun verb--protocol-as-curl-option (protocol)
-  "Return the corresponding curl option for
-   a given http protocol."
-    (unless (verb--http-protocol-p protocol)
-      (user-error "Please pass a valid http protocol")
-      )
-    (let (
-      (protocol-maps (list (cons "HTTP/0.9" "--http0.9")
+  "Return the corresponding curl option for a given http PROTOCOL."
+  (unless (verb--http-protocol-p protocol)
+    (user-error "Please pass a valid http protocol"))
+  (let ((protocol-maps (list (cons "HTTP/0.9" "--http0.9")
 			     (cons "HTTP/1.0" "--http1.0")
 			     (cons "HTTP/1.1" "--http1.1")
 			     (cons "HTTP/2" "--http2")
-			     (cons "HTTP/3" "--http3")
-			     ))
-      )
-  
-  (alist-get protocol protocol-maps nil nil 'equal))    
-    )
+			     (cons "HTTP/3" "--http3"))))
+    (alist-get protocol protocol-maps nil nil 'equal)))
 
 (defun verb--export-to-curl (rs &optional no-message no-kill)
   "Export a request spec RS to curl format.
@@ -1659,12 +1653,8 @@ non-nil, do not add the command to the kill ring."
        (insert "-X TRACE"))
       ("CONNECT"
        (user-error "%s" "CONNECT method not supported in curl format")))
-    (when-let (
-	       (protocol (oref rs protocol))
-	       )
-      (insert "\s" (verb--protocol-as-curl-option protocol)
-	      )
-      )
+    (when-let ((protocol (oref rs protocol)))
+      (insert "\s" (verb--protocol-as-curl-option protocol)))
     (let ((result (verb--buffer-string-no-properties)))
       (unless no-kill
         (kill-new result))
@@ -2097,7 +2087,7 @@ loaded into."
     (verb-kill-all-response-buffers t))
 
   (let* ((url (oref rs url))
-         (url-request-method (verb--to-ascii (oref rs method)))	 
+         (url-request-method (verb--to-ascii (oref rs method)))
          (url-mime-accept-string (verb--get-accept-header (oref rs headers)))
          (url-request-extra-headers (verb--prepare-http-headers
                                      (oref rs headers)))
@@ -2593,192 +2583,167 @@ and fragment component of a URL with no host or scheme defined."
 (define-error 'verb-empty-spec
               "Request specification has no contents.")
 
+(cl-defgeneric verb--seq-positions (sequence elt &optional testfn)
+  "Return list of indices of SEQUENCE elements.
+TESTFN is a two-argument function.
+SEQUENCE is the first argument and ELT is the second.
+TESTFN defaults to `equal'."
+  (let ((result '()))
+    (seq-do-indexed
+     (lambda (e index)
+       (when (funcall (or testfn #'equal) e elt)
+         (push index result)))
+     sequence)
+    (nreverse result)))
+
+(defun verb--range-member-p (number ranges)
+  "Say whether NUMBER is in RANGES."
+  (if (not (listp (cdr ranges)))
+      (and (>= number (car ranges))
+	   (<= number (cdr ranges)))
+    (let ((not-stop t))
+      (while (and ranges
+		  (if (numberp (car ranges))
+		      (>= number (car ranges))
+		    (>= number (caar ranges)))
+		  not-stop)
+	(when (if (numberp (car ranges))
+		  (= number (car ranges))
+		(and (>= number (caar ranges))
+		     (<= number (cdar ranges))))
+	  (setq not-stop nil))
+	(setq ranges (cdr ranges)))
+      (not not-stop))))
 
 (defun verb--get-indices-of-inner-brace-pairs (line)
-  "Find each set of braces and then get
-   the indices of the inner brace pair.
-   A list of lists with the indices of each
-   inner brace pair is returned."  
-    (cl-flet* (
-	      (get-pairs (seq)
-		(seq-partition seq 2)
-		)
+  "Get the indices of each inner brace pair in a LINE.
+A list of lists with the indices of each inner brace pair is returned."
+    (cl-flet* ((get-pairs (seq)
+		(seq-partition seq 2))
 	      (get-inner-brace-indices (brace)
-		(let* (
-		       (braces (seq-positions line (string-to-char brace)))
+		(let* ((braces (verb--seq-positions line (string-to-char brace)))
 		       (brace-pairs (get-pairs braces))
-		       (brace-indices (flatten-list (mapcar #'cdr brace-pairs)))
-		       )
-		  brace-indices)
-		)
-	      
-		)
-      (let* (
-	     
-	    (front-indices (get-inner-brace-indices "{"))
-	    (back-indices (get-inner-brace-indices "}"))	    
+		       (brace-indices (flatten-tree (mapcar #'cdr brace-pairs))))
+		  brace-indices)))
+      (let* ((front-indices (get-inner-brace-indices "{"))
+	    (back-indices (get-inner-brace-indices "}"))
 	    (brace-pairs (seq-map-indexed (lambda (front index)
-					    (cons front (nth index back-indices))
-					    )
-					  front-indices)
-			 )
-	    )
-	  brace-pairs)
-	)
-    )
+					    (cons front (nth index back-indices)))
+					  front-indices)))
+	  brace-pairs)))
 
 (defun verb--is-within-code-tags-p (line index)
-  "Returns t if the index of a given line is
-  within a code tag and nil otherwise."
-    (let (
-	  (is-within nil)
-	  )
+  "Return t if the INDEX of a given LINE is within a code tag.
+Return nil otherwise."
+    (let ((is-within nil))
       (when (seq-contains-p line (string-to-char "{"))
-      (let* (
-	    (brace-indices (verb--get-indices-of-inner-brace-pairs line))
+      (let* ((brace-indices (verb--get-indices-of-inner-brace-pairs line))
 	    (bools (mapcar (lambda (range)
-			   (range-member-p index range))
-			   brace-indices)
-		   )
-	    )
-	 (setq is-within (seq-contains-p bools 't))
-      )
-      is-within)
-
-    )
-    )
+			   (verb--range-member-p index range))
+			   brace-indices)))
+	 (setq is-within (seq-contains-p bools 't)))
+      is-within)))
 
 (defun verb--split-line-on-spaces-outside-code-tags (line)
-  "Split a line on each space
-   that is not apart of a code tag and return a
-   the result as a list."
-  (cl-flet* (	     
-	     (get-space-indices (line)
-	       "Get Indices of each space"
-	      (seq-positions line (string-to-char "\s"))
-	      )
+  "Split LINE on each space outside of a code tag.
+Return the result as a list."
+  (cl-flet* ((get-space-indices (line)
+	       "Get indices of each space"
+	       (verb--seq-positions line (string-to-char "\s")))
 	     (filter-spaces-in-code-tags (line)
 	       "Filter for spaces in code tags"
-	      (seq-remove (lambda (space-index)
-			    (verb--is-within-code-tags-p line space-index)
-			    )  (get-space-indices line))
-	      )
-	     
+	       (seq-remove (lambda (space-index)
+			     (verb--is-within-code-tags-p line space-index))
+			   (get-space-indices line)))
 	     (get-line-splits (line &optional splits)
 	       "Since METHOD+URL+PROTOCOL is three parts
                only take the first three spaces"
-	       (let ((take-count (or splits 3))
-		      )
-		 (take take-count (filter-spaces-in-code-tags line))
-		 )	      
-	      )
+	       (let ((take-count (or splits 3)))
+		 (take take-count (filter-spaces-in-code-tags line))))
 	     (mark-valid-spaces (line)
 	       "Mark valid spaces with a ^"
-	      (mapc (lambda (index)
-		      (aset line index ?^)
-		      )
-		    (get-line-splits line))
-	      line)
+	       (mapc (lambda (index)
+		       (aset line index ?^))
+		     (get-line-splits line))
+	       line)
 	     (cleanup-line (line)
 	       "Trim the line and replace any double spaces with a single space"
-	       (replace-regexp-in-string "[[:space:]]\\{2,\\}" "\s" (string-trim line)))
+	       (replace-regexp-in-string
+		"[[:space:]]\\{2,\\}" "\s" (string-trim line)))
 	     (split-line (line)
 	       "Split the line into a list"
-	      (string-split (mark-valid-spaces (cleanup-line line)) "\\^")
-	      )
-	     )
-	    
-    (split-line line))  
-  
-  )
+	       (string-split (mark-valid-spaces (cleanup-line line)) "\\^")))
+    (split-line line)))
+ 
 (defun verb--get-line-in-buffer (buffer)
-  "Return a line from a given buffer.
-   First, all code tags are expanded on it (if any)"
-    (verb--eval-code-tags-in-string
-     (buffer-substring-no-properties
-      (point) (line-end-position))
-     buffer)
-
-    )
-
+  "Return a line from a given BUFFER.
+First, all code tags are expanded on it (if any)"
+  (verb--eval-code-tags-in-string
+   (buffer-substring-no-properties
+    (point) (line-end-position))
+   buffer))
 
 (defun verb--validate-http-method (method)
-  "Check if a given method is a valid method or
-   or a template. If the method is valid, it is
-   simply returned. If the method is a template,
-   method is set to nil then returned. Otherwise,
-   an error is thrown."
+  "Check if a given METHOD is a valid method or a template.
+If the METHOD is valid, it is simply returned.
+If the method is a template, method is set to nil then returned.
+Otherwise,an error is thrown."
   (when method (setq method (upcase method)))
   (pcase method
     ((pred verb--http-method-p) method)
     ((pred (string= verb--template-keyword)) (setq method nil))
     (_ (user-error (concat "Could not read a valid HTTP method (%s)\n"
-			      "Additionally, you can also specify %s "
-			      "(matching is case insensitive)")
-		      (mapconcat #'identity verb--http-methods ", ")
-		      verb--template-keyword))            
-      
-    )
+			   "Additionally, you can also specify %s "
+			   "(matching is case insensitive)")
+		   (mapconcat #'identity verb--http-methods ", ")
+		   verb--template-keyword)))
   method)
 
 (defun verb--validate-http-protocol (protocol)
-  "Check if a given protocol is a valid protocol.
-  If the protocol is valid, it is simply returned.
-  If nothing is passed at all, protocol is set to nil and returned.
-  If an invalid protocol is passed, an error is thrown."
+  "Check if a given PROTOCOL is a valid protocol.
+If the PROTOCOL is valid, it is simply returned.
+If nothing is passed at all, protocol is set to nil and returned.
+If an invalid protocol is passed, an error is thrown."
   (when protocol (setq protocol (upcase protocol)))
   (pcase protocol
     ((pred verb--http-protocol-p) protocol)
     ((pred (lambda (p) (= (length p) 0))) (setq protocol nil))
     (_ (user-error (concat "Could not read a valid HTTP protocol.
-                               The following are valid protocols: (%s)\n"			
-			      "Matching is case insensitive.")
-		      (mapconcat #'identity verb--http-protocols ", ")
-		      ))            
-      
-    )
+                               The following are valid protocols: (%s)\n"
+			   "Matching is case insensitive.")
+		   (mapconcat #'identity verb--http-protocols ", "))))
+		   
   protocol)
 
 (defun verb--single-line-method-url-protocol (line)
-  "Returns a list created by splitting the method+url+protocol
-   line into three parts. Method and protocol are validated
-   before the return statement while the url is returned as is."
-  (let* (
-	 (lines (verb--split-line-on-spaces-outside-code-tags line))
-	(function-list (list #'verb--validate-http-method #'identity #'verb--validate-http-protocol))
-	)
-
+  "Return a list created by splitting the LINE into three parts.
+Method and protocol are validated before the return statement.
+The url is always returned as is."
+  (let* ((lines (verb--split-line-on-spaces-outside-code-tags line))
+	 (function-list (list #'verb--validate-http-method
+			      #'identity #'verb--validate-http-protocol)))
     (seq-map-indexed (lambda (element index)
-		      (funcall (nth index function-list) element)
-		      )
-		    lines)    
-    )
-  
-  )
+		       (funcall (nth index function-list) element))
+		     lines)))
 
-(defun verb--multiline-method-url-protocol (url line)
-  "If URL ends with '\', append following lines to it
-  until one of them does not end with '\' (ignoring
-  leading whitespace, for alignment). Finally a list
-  with the url and the protocol, if specified, is returned."
-      (while (string-suffix-p "\\" line)
-	(end-of-line)
-	(if (eobp)
-	    (user-error
-	     "Backslash in URL not followed by additional line")
-	  (forward-char))
-	(back-to-indentation)
-	(setq line (verb--get-line-in-buffer '(current-context)))
-	(when (string-empty-p line)
-	  (user-error
-	   "Backslash in URL not followed by additional content"))
-	(setq url (concat url (string-remove-suffix "\\" line))))
-      
+(defun verb--multiline-method-url-protocol (url current-line)
+  "If URL ends with '\', append the following lines.
+Keep appending until the CURRENT-LINE does not end with '\'.
+Ignore all leading whitespace for alignment.
+A list with the url and the protocol, if specified, is returned."
+  (while (string-suffix-p "\\" current-line)
+    (end-of-line)
+    (if (eobp)
+	(user-error
+	 "Backslash in URL not followed by additional line")
+      (forward-char))
+    (back-to-indentation)
+    (setq current-line (verb--get-line-in-buffer '(current-context)))
+    (when (string-empty-p current-line)
+      (user-error
+       "Backslash in URL not followed by additional content"))
+    (setq url (concat url (string-remove-suffix "\\" current-line))))
   (verb--split-line-on-spaces-outside-code-tags url))
-
-
-
-
 
 (defun verb-request-spec-from-string (text &optional metadata)
   "Create and return a request specification from string TEXT.
@@ -2810,7 +2775,7 @@ will be appended to it (ignoring its leading whitespace).  The process
 is repeated as long as the current line ends with a backslash.
 
 PROTOCOL must be a protocol that is a member of the `verb--http-protocols'
-set (that is, an HTTP protocol). Matching is case-insensitive.
+set (that is, an HTTP protocol).  Matching is case-insensitive.
 
 Each HEADER must be in the form of KEY: VALUE.  KEY must be a nonempty
 string, VALUE can be the empty string.  HEADER may also start with
@@ -2850,40 +2815,23 @@ METADATA."
         (signal 'verb-empty-spec nil))
 
       ;;; METHOD + URL + PROTOCOL
-
       ;; Get the first line and split it into parts
-      (let* (
-             (line (verb--get-line-in-buffer context))
-	     (single-line-list (verb--single-line-method-url-protocol line))	     
-	     
-	     )
-	
+      (let* ((line (verb--get-line-in-buffer context))
+	     (single-line-list (verb--single-line-method-url-protocol line)))
         ;; Store each part of the line
 	(setq method (nth 0 single-line-list)
-	      url (string-remove-suffix "\\" (nth 1 single-line-list))	     
-	      protocol (nth 2 single-line-list)
-	      )
-
+	      url (string-remove-suffix "\\" (nth 1 single-line-list))
+	      protocol (nth 2 single-line-list))
 	;; If the url is on multiple lines
 	;; Continue until we have the full
 	;; url and the protocol, if specified.
 	(when (string-suffix-p "\\" line)
-	  (let* (		
-		 (multiline-list (verb--multiline-method-url-protocol url line))
-		)
+	  (let* ((multiline-list (verb--multiline-method-url-protocol url line)))
 	    (setq
 	     url (nth 0 multiline-list)
-	     protocol (verb--validate-http-protocol (nth 1 multiline-list))
-	     )
-	    )
-	  )
-	
-        )
-
+	     protocol (verb--validate-http-protocol (nth 1 multiline-list))))))
       ;; We've processed the URL line, move to the end of it.
       (end-of-line)
-
-
       ;; Skip newline after URL line.
       (unless (eobp) (forward-char))
       (setq headers-start (point))

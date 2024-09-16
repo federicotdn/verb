@@ -183,22 +183,30 @@
   (with-temp-buffer
     (insert text-to-insert)
     (goto-char (point-min))
-    (funcall test-function)
-    )
-
-  )
+    (funcall test-function)))
 
 (defun assert-equal (actual expected)
-  (should (equal actual expected))
-  )
+  (should (equal actual expected)))
 
 (defun assert-user-error (test)
-  (should-error (funcall test) :type 'user-error)
-  )
+  (should-error (funcall test) :type 'user-error))
+
+(ert-deftest test-range-member-p ()
+  (let* ((passing-test-one (cons 9 '((2 . 5) 9 (11 . 13))))	 
+	 (passing-test-two (cons 12 '((2 . 5) 9 (11 . 13))))
+	 (passing-tests (list passing-test-one passing-test-two))
+	 (failing-test-one (cons 1 '((2 . 5) 9 (11 . 13))))	 
+	 (failing-test-two (cons 15 '((2 . 5) 9 (11 . 13))))
+	 (failing-tests (list failing-test-one failing-test-two)))
+        (map-do (lambda (test-number test-range)
+		  (should (range-member-p test-number test-range)))
+		passing-tests)
+        (map-do (lambda (test-number test-range)
+		  (should-not (range-member-p test-number test-range)))
+		failing-tests)))
 
 (ert-deftest test-get-indices-of-inner-brace-pairs ()
-    (let* (
-	 (test-line-one "get http://example.org/{{(+ 40 2)}}/")
+  (let* ((test-line-one "get http://example.org/{{(+ 40 2)}}/")
 	 (answer-one (list (cons 24 34)))
 	 (test-line-two "GET http://example.com/users/{{(+ 1 1)}}\n")
 	 (answer-two (list (cons 30 39)))
@@ -212,104 +220,55 @@
 			   (cons test-line-two answer-two)
 			   (cons test-line-three answer-three)
 			   (cons test-line-four answer-four)
-			   (cons test-line-five answer-five)
-		      )
-		     )
-
-	 )
+			   (cons test-line-five answer-five))))
     (map-do (lambda (test answer)
-	      (assert-equal (verb--get-indices-of-inner-brace-pairs test) answer)
-	      )
-	    test-cases)
-    )  
-    )
+	      (assert-equal (verb--get-indices-of-inner-brace-pairs test) answer))
+	    test-cases)))
 
 (ert-deftest test-is-within-code-tags-p ()
   (cl-flet (
 	    (test-runner (test-line test-indices test-answers)
 	      (seq-do-indexed (lambda (actual-index index-in-test-indices)
-				(assert-equal (verb--is-within-code-tags-p test-line actual-index) (nth index-in-test-indices test-answers))
-				)
-			      test-indices)
-	      )
-	    )
-    (let* (
-	 (test-line-one "get http://example.org/{{(+ 40 2)}}/")
-	 (test-indices-one (seq-positions test-line-one (string-to-char "\s")))	 
-	 (test-answers-one (list nil 't 't))
-	 (test-line-two "POST http://hello.com/{{(funcall inc-counter)}}/{{(+ 1 1)}}")
-	 (test-indices-two (seq-positions test-line-two (string-to-char "1")))
-	 (test-answers-two (list 't 't))
-	 )
-
+				(assert-equal (verb--is-within-code-tags-p test-line actual-index) (nth index-in-test-indices test-answers)))
+			      test-indices)))
+    (let* ((test-line-one "get http://example.org/{{(+ 40 2)}}/")
+	   (test-indices-one (seq-positions test-line-one (string-to-char "\s")))
+	   (test-answers-one (list nil 't 't))
+	   (test-line-two "POST http://hello.com/{{(funcall inc-counter)}}/{{(+ 1 1)}}")
+	   (test-indices-two (seq-positions test-line-two (string-to-char "1")))
+	   (test-answers-two (list 't 't)))
       (test-runner test-line-one test-indices-one test-answers-one)
-      (test-runner test-line-two test-indices-two test-answers-two)
-
-      )
-
-    )
-    
-  )
+      (test-runner test-line-two test-indices-two test-answers-two))))
 
 (ert-deftest test-split-line-on-spaces-outside-code-tags ()
-  (let* (
-	      (test-one "get http://www.gnu.org http/1.1")
-	      (answer-one (list "get" "http://www.gnu.org" "http/1.1"))	  
-	      (test-two "get http://example.com")
-	      (answer-two (list "get" "http://example.com"))
-	      (test-three "get http://example.org/{{(+ 40 2)}}/")
-	      (answer-three (list "get" "http://example.org/{{(+ 40 2)}}/"))
-	      (test-four "POST http://hello.com/{{(funcall inc-counter)}}/{{(+ 1 1)}} http/1.0")
-	      (answer-four (list "POST" "http://hello.com/{{(funcall inc-counter)}}/{{(+ 1 1)}}" "http/1.0"))
-	      (tests (list
-			      (cons (verb--split-line-on-spaces-outside-code-tags test-one) answer-one)
-			      (cons (verb--split-line-on-spaces-outside-code-tags test-two) answer-two)
-			      (cons (verb--split-line-on-spaces-outside-code-tags test-three) answer-three)
-			      (cons (verb--split-line-on-spaces-outside-code-tags test-four) answer-four)			      
-			     )
-		       )
-
-	      )
-
-	      (map-do #'assert-equal tests)
-	      )
-  )
+	 (let* ((test-one "get http://www.gnu.org http/1.1")
+	 (answer-one (list "get" "http://www.gnu.org" "http/1.1"))
+	 (test-two "get http://example.com")
+	 (answer-two (list "get" "http://example.com"))
+	 (test-three "get http://example.org/{{(+ 40 2)}}/")
+	 (answer-three (list "get" "http://example.org/{{(+ 40 2)}}/"))
+	 (test-four "POST http://hello.com/{{(funcall inc-counter)}}/{{(+ 1 1)}} http/1.0")
+	 (answer-four (list "POST" "http://hello.com/{{(funcall inc-counter)}}/{{(+ 1 1)}}" "http/1.0"))
+	 (tests (list
+		 (cons (verb--split-line-on-spaces-outside-code-tags test-one) answer-one)
+		 (cons (verb--split-line-on-spaces-outside-code-tags test-two) answer-two)
+		 (cons (verb--split-line-on-spaces-outside-code-tags test-three) answer-three)
+		 (cons (verb--split-line-on-spaces-outside-code-tags test-four) answer-four))))
+    (map-do #'assert-equal tests)))
 
 (ert-deftest test-get-line-in-buffer ()
-  
-
-  (cl-flet (
-	    (test-case-creator (test)
+  (cl-flet ((test-case-creator (test)
 	      (cons test (lambda ()
-			       (apply #'assert-equal (list (apply #'verb--get-line-in-buffer '(current-context)) test))
-			       ))
-	      )
-	    )
-    (let* (
-	   (test-one "#+begin_src verb")
+			   (apply #'assert-equal (list (apply #'verb--get-line-in-buffer '(current-context)) test))))))			       
+	   (let* ((test-one "#+begin_src verb")
 	   (test-two "template http://localhost:8000/basic")
-	   (test-three "#+end_src")	   	
+	   (test-three "#+end_src")
 	   (tests (list test-one test-two test-three))
-	   (test-cases (mapcar #'test-case-creator tests))
-	   )
-	      
-      (map-do #'test-temp-buffer-creator test-cases)
-	    
-      )
-    
+	   (test-cases (mapcar #'test-case-creator tests)))
+      (map-do #'test-temp-buffer-creator test-cases))))
 
-	    
-	   
-      )
-  )
-
-
-
-
-(ert-deftest test-validate-http-method ()
-
-  (let* (
-	 (passing-test-one "GET")
+(ert-deftest test-validate-http-method ()  
+	 (let* ((passing-test-one "GET")
 	 (passing-answer-one "GET")
 	 (passing-test-two "POST")
 	 (passing-answer-two "POST")
@@ -320,37 +279,24 @@
 	 (passing-tests (list (cons (verb--validate-http-method passing-test-one) passing-answer-one)
 			      (cons (verb--validate-http-method passing-test-two) passing-answer-two)
 			      (cons (verb--validate-http-method passing-test-three) passing-answer-three)
-			      (cons (verb--validate-http-method passing-test-four) passing-answer-four)
-			     )
-		       )
-	
-	(error-test-one "TEST")
-	(error-test-two "TEST")
-	(error-test-three "")
-	(error-test-four nil)
-	(errors (list error-test-three error-test-four))
-	(error-tests (mapcar (lambda (err)
-			       (lambda ()
-				 (verb--validate-http-method err)
-			       ))
-			     errors))
-	(failing-test-one verb--template-keyword)	
-	)
-
-    
-    (map-do #'assert-equal passing-tests)    
+			      (cons (verb--validate-http-method passing-test-four) passing-answer-four)))
+	 (error-test-one "TEST")
+	 (error-test-two "TEST")
+	 (error-test-three "")
+	 (error-test-four nil)
+	 (errors (list error-test-three error-test-four))
+	 (error-tests (mapcar (lambda (err)
+				(lambda ()
+				  (verb--validate-http-method err)
+				  ))
+			      errors))
+	 (failing-test-one verb--template-keyword))
+    (map-do #'assert-equal passing-tests)
     (mapc #'assert-user-error error-tests)
-    (should-not (verb--validate-http-method failing-test-one))
-    
-      )
-  
-
-  )
-
+    (should-not (verb--validate-http-method failing-test-one))))
 
 (ert-deftest test-validate-http-protocol ()
-  (let* (
-	 (passing-test-one "HTTP/0.9")
+  (let* ((passing-test-one "HTTP/0.9")
 	 (passing-answer-one "HTTP/0.9")
 	 (passing-test-two "HTTP/1.0")
 	 (passing-answer-two "HTTP/1.0")
@@ -361,85 +307,58 @@
 	 (passing-tests (list (cons (verb--validate-http-protocol passing-test-one) passing-answer-one)
 			      (cons (verb--validate-http-protocol passing-test-two) passing-answer-two)
 			      (cons (verb--validate-http-protocol passing-test-three) passing-answer-three)
-			      (cons (verb--validate-http-protocol passing-test-four) passing-answer-four)
-			     )
-			)
+			      (cons (verb--validate-http-protocol passing-test-four) passing-answer-four)))
 	 (error-test-one "http/1.7")
 	 (error-test-two "HTTP/1.")
 	 (error-test-three "ht")
-	 (errors (list error-test-one error-test-two error-test-three))	 
+	 (errors (list error-test-one error-test-two error-test-three))
 	 (error-tests (mapcar (lambda (err)
 				(lambda ()
-				  (verb--validate-http-protocol err)
-				  )
-				)
-			      errors)
-		      )
+				  (verb--validate-http-protocol err)))
+			      errors))
 	 (empty-test-one nil)
 	 (empty-test-two nil)
 	 (empties (list empty-test-one empty-test-two))
 	 (empty-tests (mapcar (lambda (empty)
-				(verb--validate-http-protocol empty)
-				)
-			      empties)
-		      )
-	 )    
+				(verb--validate-http-protocol empty))
+			      empties)))
     (map-do #'assert-equal passing-tests)
     (mapc #'assert-user-error error-tests)
     (should-not empty-test-one)
-    (should-not empty-test-two)
-    )
-
-  )
+    (should-not empty-test-two)))
 
 (ert-deftest test-single-line-method-url-protocol ()
-    (let* (
-	      (passing-test-one "get http://www.gnu.org http/1.1")
-	      (passing-answer-one (list "GET" "http://www.gnu.org" "HTTP/1.1"))	  
-	      (passing-test-two "get http://example.com")
-	      (passing-answer-two (list "GET" "http://example.com"))
-	      (passing-test-three "post")
-	      (passing-answer-three (list "POST"))
-	      (passing-test-four "put")
-	      (passing-answer-four (list "PUT"))
-	      (passing-tests (list
-			      (cons (verb--single-line-method-url-protocol passing-test-one) passing-answer-one)
-			      (cons (verb--single-line-method-url-protocol passing-test-two) passing-answer-two)
-			      (cons (verb--single-line-method-url-protocol passing-test-three) passing-answer-three)
-			      (cons (verb--single-line-method-url-protocol passing-test-four) passing-answer-four)
-			     )
-		       )
-	      
-	      (error-test-one "ge http://www.gnu.org http/1.1")
-	      (error-test-two "get http://www.gnu.org http/99")
-	      (errors (list error-test-one))
-	      (error-tests (mapcar (lambda (err)
-			       (lambda ()
-				 (verb--single-line-method-url-protocol err)
-			       ))
-			     errors))
-	      )
-      
-	      (map-do #'assert-equal passing-tests)
-              (mapc #'assert-user-error error-tests)
-	      )
-      
-      
-	   )
-
+  (let* ((passing-test-one "get http://www.gnu.org http/1.1")
+	 (passing-answer-one (list "GET" "http://www.gnu.org" "HTTP/1.1"))
+	 (passing-test-two "get http://example.com")
+	 (passing-answer-two (list "GET" "http://example.com"))
+	 (passing-test-three "post")
+	 (passing-answer-three (list "POST"))
+	 (passing-test-four "put")
+	 (passing-answer-four (list "PUT"))
+	 (passing-tests (list
+			 (cons (verb--single-line-method-url-protocol passing-test-one) passing-answer-one)
+			 (cons (verb--single-line-method-url-protocol passing-test-two) passing-answer-two)
+			 (cons (verb--single-line-method-url-protocol passing-test-three) passing-answer-three)
+			 (cons (verb--single-line-method-url-protocol passing-test-four) passing-answer-four)))
+	 (error-test-one "ge http://www.gnu.org http/1.1")
+	 (error-test-two "get http://www.gnu.org http/99")
+	 (errors (list error-test-one))
+	 (error-tests (mapcar (lambda (err)
+				(lambda ()
+				  (verb--single-line-method-url-protocol err)))
+			      errors)))
+    (map-do #'assert-equal passing-tests)
+    (mapc #'assert-user-error error-tests)))
 
 (ert-deftest test-valid-multiline-method-url-protocol ()
   (cl-flet (
 	    (passing-test-case-creator (passing-test-case answer)
 	      (cons (car passing-test-case) (lambda ()
-			   (apply #'assert-equal (list (apply #'verb--multiline-method-url-protocol (list (cdr passing-test-case) (funcall 'verb--get-line-in-buffer '(current-context)))) answer))
-			   )
-		    )
-	      )	      
-
-    )
-    (let* (
-	   (starting-url "http://example.com/?")
+					      (apply #'assert-equal (list (apply #'verb--multiline-method-url-protocol
+										 (list (cdr passing-test-case) (funcall 'verb--get-line-in-buffer '(current-context))))
+									  answer)))))) 
+	   (let* ((starting-url "http://example.com/?")
 	   (passing-test-one (cons (join-lines "get http://example.com?\\" "a=b http/0.9")
 				   starting-url))
 	   (passing-answer-one (list "http://example.com/?a=b" "HTTP/0.9"))
@@ -455,59 +374,37 @@
 	   (passing-answer-three (list "http://example.com/?a=b&c=d" "HTTP/2"))
 	   
 	   (passing-test-four (cons (join-lines "POST http://example.com?\\" "a=b")
-				   starting-url))
+				    starting-url))
 	   (passing-answer-four (list "http://example.com/?a=b"))
 	   
 	   (passing-test-five (cons (join-lines "get http://example.com?\\" "    a=b http/1.0" )
-				   starting-url))
+				    starting-url))
 	   
 	   (passing-answer-five (list "http://example.com/?a=b"))
 
 	   (passing-test-six (cons (join-lines "get http://example.com?\\" "    a=b&\\" "\t\t\t\tc=d")
-				     starting-url))
+				   starting-url))
 
 	   (passing-answer-six (list "http://example.com/?a=b&c=d"))
 	   (passing-tests (list
-			   (cons passing-test-three passing-answer-three)			   
-			     )
-		       )
-	(passing-test-cases (map-apply #'passing-test-case-creator passing-tests))
-
-	
-	)
-      (map-do #'test-temp-buffer-creator passing-test-cases)
-      
-      )
-
-  
-    )
-)
-
+			   (cons passing-test-three passing-answer-three)))		   
+	   (passing-test-cases (map-apply #'passing-test-case-creator passing-tests)))
+      (map-do #'test-temp-buffer-creator passing-test-cases))))
 
 (ert-deftest test-get-invalid-multiline-method-url-protocol ()
   (cl-flet (
-	  (failing-test-creator (test starting-url)
-	    (cons test (lambda ()
-	      (assert-user-error (lambda ()
-			      (apply #'verb--multiline-method-url-protocol (list starting-url (funcall #'verb--get-line-in-buffer '(current-context))))
-			      )
-			    )
-	      ))
-	    )
-	  )
-    (let* (
-	   (starting-url "http://example.com/?")
+	    (failing-test-creator (test starting-url)
+	      (cons test (lambda ()
+			   (assert-user-error (lambda ()
+						(apply #'verb--multiline-method-url-protocol
+						       (list starting-url (funcall #'verb--get-line-in-buffer '(current-context))))))))))    
+	   (let* ((starting-url "http://example.com/?")
 	   (failing-test-one (cons "get http://example.com?\\" starting-url))
 	   (failing-test-two (cons (join-lines "get http://example.com?\\" "foobar\\") starting-url))
 	   (failing-test-three (cons (join-lines "get http://example.com?\\" "  ") starting-url))
 	   (failing-tests (list failing-test-one failing-test-two failing-test-three))
-
-	   (failing-test-cases (map-apply #'failing-test-creator failing-tests))
-	)
-    (map-do #'test-temp-buffer-creator failing-test-cases))
-
-			      )
-  )
+	   (failing-test-cases (map-apply #'failing-test-creator failing-tests)))
+      (map-do #'test-temp-buffer-creator failing-test-cases))))
 
 (ert-deftest test-request-spec-from-hierarchy-babel-blocks-above ()
   (setq tgt-spec (verb-request-spec :method "GET"
@@ -565,15 +462,12 @@
 				(org-mode)
 				(verb-mode)
 				(insert outline-test)
-				(should-error (verb--request-spec-from-hierarchy))))
-	    )
-    (let* (
-	   (tgt-spec
+				(should-error (verb--request-spec-from-hierarchy)))))
+    (let* ((tgt-spec
 	    (verb-request-spec :method "GET"
 				    :url (verb--clean-url
 					  "http://hello.com")
-				    :protocol "HTTP/1.1"
-				    ))
+				    :protocol "HTTP/1.1"))
 	   (passing-test-one
 	    (join-lines "* Test :verb:"
 		    "#+begin_src verb"
@@ -595,19 +489,10 @@
 		    "print('hellooooo')"
 		    "#+end_src"
 		    "** Test2"
-		    "get"))
-
-	   )
-
+		    "get")))
       (map-do (lambda (passing-test-case answer) (test-1 passing-test-case answer))
 	      passing-test-cases)
-
-      (test-2 failing-test-one))
-    
-
-    )
-   
-)
+      (test-2 failing-test-one))))
 
 (ert-deftest test-request-spec-from-hierarchy-ignore-nontagged ()
   (setq test-rs (verb-request-spec :method "GET"
@@ -637,8 +522,7 @@
 		  (verb-mode)
 		  (insert outline-test)
 		  (should (equal (verb--request-spec-from-hierarchy) test-rs)))))
-	(let* (
-	      (test-rs (verb-request-spec :method "GET"
+	(let* ((test-rs (verb-request-spec :method "GET"
 					  :url (verb--clean-url "http://hello.com")
 					  :protocol "HTTP/1.1"
 					  ))
@@ -653,12 +537,8 @@
 				":END:"
 				"template http://hello.com http/1.1"
 				"*** Test2"
-				"get"))
-	      )
-	  (test-1 outline-test test-rs))
-	)
-
-      )
+				"get")))
+	  (test-1 outline-test test-rs))))
 
 (ert-deftest test-request-spec-from-hierarchy-no-headings ()
   (setq outline-test
@@ -747,66 +627,48 @@
     (insert outline-test)
     (should-error (verb--request-spec-from-hierarchy))))
 
-  (ert-deftest test-request-spec-with-protocol-from-hierarchy ()
-    (cl-flet (
-	      (test-1 (outline-test tgt-spec)
+(ert-deftest test-request-spec-with-protocol-from-hierarchy ()
+  (cl-flet (
+	    (test-1 (outline-test tgt-spec)
 	      (with-temp-buffer
-		 (org-mode)
-		 (verb-mode)
-		 (insert outline-test)
-		 (should (equal (verb--request-spec-from-hierarchy)
-		   tgt-spec)))
-		)	      
-	      (test-2 (outline-test)
-		(with-temp-buffer
-		  (org-mode)
-		  (verb-mode)
-		  (insert outline-test)
-		  (should-error (verb--request-spec-from-hierarchy)))
-
-		)
-
-	      )
-      (let* (
-	  (passing-test-1
+		(org-mode)
+		(verb-mode)
+		(insert outline-test)
+		(should (equal (verb--request-spec-from-hierarchy)
+			       tgt-spec)))
+	      )	      
+	    (test-2 (outline-test)
+	      (with-temp-buffer
+		(org-mode)
+		(verb-mode)
+		(insert outline-test)
+		(should-error (verb--request-spec-from-hierarchy)))))
+    (let* ((passing-test-1
 	    (join-lines "* Test :verb:"
 			"template http://hello.com http/1.1"
 			"** Test2"
 			"get"))
-	  (tgt-spec-1 (verb-request-spec :method "GET"
-				  :url (verb--clean-url
-					"http://hello.com")
-				  :protocol "HTTP/1.1"
-				  )
-	   )
-	  (passing-test-2
-		(join-lines "foo bar"
-			    "* Test :verb:"
-			    "template http://hello.com http/1.1"
-			    "** Test2"
-			    "post ?a=b"))
-
-	  (tgt-spec-2 (verb-request-spec :method "POST"
-				    :url (verb--clean-url
-					  "http://hello.com?a=b")
-				    :protocol "HTTP/1.1"
-				    )
-		      )
-	  (passing-test-cases (list (cons passing-test-1 tgt-spec-1) (cons passing-test-2 tgt-spec-2)))
-	  (failing-test-1
-		(join-lines "* Test :verb:"
-			    "template http://hello.com http/1.1"))
-
-	  )
-
-	(map-do (lambda (passing-test-case answer) (test-1 passing-test-case answer))
-	    passing-test-cases)
-
-	(test-2 failing-test-1))
-
-      )
-
-      )
+	   (tgt-spec-1 (verb-request-spec :method "GET"
+					  :url (verb--clean-url
+						"http://hello.com")
+					  :protocol "HTTP/1.1"))
+	   (passing-test-2
+	    (join-lines "foo bar"
+			"* Test :verb:"
+			"template http://hello.com http/1.1"
+			"** Test2"
+			"post ?a=b"))
+	   (tgt-spec-2 (verb-request-spec :method "POST"
+					  :url (verb--clean-url
+						"http://hello.com?a=b")
+					  :protocol "HTTP/1.1"))
+	   (passing-test-cases (list (cons passing-test-1 tgt-spec-1) (cons passing-test-2 tgt-spec-2)))
+	   (failing-test-1
+	    (join-lines "* Test :verb:"
+			"template http://hello.com http/1.1")))
+      (map-do (lambda (passing-test-case answer) (test-1 passing-test-case answer))
+	      passing-test-cases)
+      (test-2 failing-test-1))))
 
 (ert-deftest test-request-spec-from-hierarchy-metadata ()
   (with-temp-buffer
@@ -1221,93 +1083,63 @@
 		       (cons "Referer" "host.com")))))
 
 (ert-deftest test-request-spec-from-text-with-protocol-headers ()
-      (let* (
-	     (test-one (text-as-spec "GET example.com http/1.1\n"
-			    "Accept: text"))
-	     (answer-one (list (cons "Accept" "text")
-			       ))
-	     (test-two (text-as-spec "GET example.com http/1.1\n"
-			    "A:\n"
-			    "B:"))
-	     (answer-two (list (cons "A" "")
-				(cons "B" ""))
-			       )
-	     (test-three (text-as-spec "GET example.com http/1.1\n"
-			    "Accept: text\n"))
-	     (answer-three (list (cons "Accept" "text"))
-			   )
-	     (test-four (text-as-spec "GET example.com http/1.1\n"
-			    "Foo-Bar: text\n"
-			    "Referer: host.com\n"))
-	     (answer-four (list (cons "Foo-Bar" "text")
-				(cons "Referer" "host.com"))
-			  )
-	     (test-cases (list (cons test-one answer-one)
-			       (cons test-two answer-two)
-			       (cons test-three answer-three)
-			       (cons test-four answer-four)
-			       ))
-
-	     )
-	(map-do (lambda (test-case answer) (should (equal (oref test-case :headers)
-						   answer)
-					    )
-		  )
-		test-cases)
-	)
-  )
+  (let* ((test-one (text-as-spec "GET example.com http/1.1\n"
+				 "Accept: text"))
+	 (answer-one (list (cons "Accept" "text")))
+	 (test-two (text-as-spec "GET example.com http/1.1\n"
+				 "A:\n"
+				 "B:"))
+	 (answer-two (list (cons "A" "")
+			   (cons "B" "")))
+	 (test-three (text-as-spec "GET example.com http/1.1\n"
+				   "Accept: text\n"))
+	 (answer-three (list (cons "Accept" "text")))
+	 (test-four (text-as-spec "GET example.com http/1.1\n"
+				  "Foo-Bar: text\n"
+				  "Referer: host.com\n"))
+	 (answer-four (list (cons "Foo-Bar" "text")
+			    (cons "Referer" "host.com")))
+	 (test-cases (list (cons test-one answer-one)
+			   (cons test-two answer-two)
+			   (cons test-three answer-three)
+			   (cons test-four answer-four))))
+    (map-do (lambda (test-case answer) (should (equal (oref test-case :headers)
+						      answer)))
+	    test-cases)))
 
 (ert-deftest test-request-spec-from-text-protocol ()
-    (let* (
-	   (test-one (text-as-spec "post example.com http/1.1"))	   
-	   (test-two (text-as-spec "post example.com HTTP/1.1"))
-	  (test-three (text-as-spec "post example.com hTTP/1.1"))
-	  (test-four (text-as-spec "POST example.com htTP/1.1"))
-	  (answer  "HTTP/1.1")
-	  (test-cases (list (cons test-one answer)
-			    (cons test-two answer)
-			    (cons test-three answer)
-			    (cons test-four answer)
-			    )
-		      )
-	  )
-
-      (map-do (lambda (test-case answer) (should (string= (oref test-case :protocol) answer)))
-	      test-cases)
-      )
-
-    )
+  (let* ((test-one (text-as-spec "post example.com http/1.1"))	   
+	 (test-two (text-as-spec "post example.com HTTP/1.1"))
+	 (test-three (text-as-spec "post example.com hTTP/1.1"))
+	 (test-four (text-as-spec "POST example.com htTP/1.1"))
+	 (answer  "HTTP/1.1")
+	 (test-cases (list (cons test-one answer)
+			   (cons test-two answer)
+			   (cons test-three answer)
+			   (cons test-four answer))))
+    (map-do (lambda (test-case answer) (should (string= (oref test-case :protocol) answer)))
+	    test-cases)))
 
 (ert-deftest test-request-spec-from-multiline-text-with-protocol ()
-    (let* (
-	  (test-case-one (text-as-spec "GET https://example.com http/1.1"))
-
-	  (test-case-two (text-as-spec "GET https://example.com http/1.1\n"))
-
-	  (test-case-three (text-as-spec "# Comment\n"
-			  "\n"
-			  "GET https://example.com http/1.1"))
-	  (test-case-four (text-as-spec "\n"
-			  "  # hello\n"
-			  "\n"
-			  "GET https://example.com http/1.1"))
-	  (answer (cons "https://example.com" "HTTP/1.1"))
-	  (test-cases (list (cons test-case-one answer)
-			     (cons test-case-two answer)
-			     (cons test-case-three answer)
-			     (cons test-case-four answer)
-			     )
-		       )
-	  )
-
-      (map-do (lambda (test-case answers)
-		(should (string= (verb-request-spec-url-to-string test-case)
-		   (car answers)))		
-		(should (string= (oref test-case :protocol) (cdr answers)))
-		)
-	      test-cases)
-      )
-    )
+  (let* ((test-case-one (text-as-spec "GET https://example.com http/1.1"))
+	 (test-case-two (text-as-spec "GET https://example.com http/1.1\n"))
+	 (test-case-three (text-as-spec "# Comment\n"
+					"\n"
+					"GET https://example.com http/1.1"))
+	 (test-case-four (text-as-spec "\n"
+				       "  # hello\n"
+				       "\n"
+				       "GET https://example.com http/1.1"))
+	 (answer (cons "https://example.com" "HTTP/1.1"))
+	 (test-cases (list (cons test-case-one answer)
+			   (cons test-case-two answer)
+			   (cons test-case-three answer)
+			   (cons test-case-four answer))))
+    (map-do (lambda (test-case answers)
+	      (should (string= (verb-request-spec-url-to-string test-case)
+			       (car answers)))		
+	      (should (string= (oref test-case :protocol) (cdr answers))))
+	    test-cases)))
 
 (ert-deftest test-request-spec-from-text-url-backslash ()
   (setq aux (text-as-spec-nl "get http://example.com?\\"
@@ -1336,29 +1168,24 @@
                     "  ")))
 
 (ert-deftest test-request-spec-from-text-url-backslash-with-protocol ()
-	(let* (
-	      (passing-test-one (text-as-spec-nl "get http://example.com?\\"
-				 "a=b http/1.1"))
-	      (answer-one "http://example.com/?a=b")
-	      (passing-test-two (text-as-spec-nl "get http://example.com?\\"
-				 "    a=b http/1.1"))
-	      (answer-two "http://example.com/?a=b")
-	      (passing-test-three (text-as-spec-nl "get http://example.com?\\"
-				 "    a=b&\\"
-				 "\t\t\t\tc=d http/1.1"))
-	      (answer-three "http://example.com/?a=b&c=d")
-	      (passing-test-cases (list (cons passing-test-one answer-one)
-					(cons passing-test-two answer-two)
-					(cons passing-test-three answer-three)		
-					))
-	    
-	    )
-	
-	  (map-do (lambda (passing-test-case answer) (should (string= (verb-request-spec-url-to-string passing-test-case)
-			       answer)))
-		  passing-test-cases)
-	  )
-	)
+  (let* (
+	 (passing-test-one (text-as-spec-nl "get http://example.com?\\"
+					    "a=b http/1.1"))
+	 (answer-one "http://example.com/?a=b")
+	 (passing-test-two (text-as-spec-nl "get http://example.com?\\"
+					    "    a=b http/1.1"))
+	 (answer-two "http://example.com/?a=b")
+	 (passing-test-three (text-as-spec-nl "get http://example.com?\\"
+					      "    a=b&\\"
+					      "\t\t\t\tc=d http/1.1"))
+	 (answer-three "http://example.com/?a=b&c=d")
+	 (passing-test-cases (list (cons passing-test-one answer-one)
+				   (cons passing-test-two answer-two)
+				   (cons passing-test-three answer-three)		
+				   )))    
+    (map-do (lambda (passing-test-case answer) (should (string= (verb-request-spec-url-to-string passing-test-case)
+								answer)))
+	    passing-test-cases)))
 
 (ert-deftest test-request-spec-from-text-body-trailing-chars ()
   (setq aux (text-as-spec-nl "GET example.com"
@@ -1662,8 +1489,7 @@
   (should (string= (oref aux :body) "Content\n")))
 
 (ert-deftest test-request-spec-from-text-with-protocol-complete ()
-      (let (
-	     (test-one (text-as-spec "# Comment\n"
+  (let ((test-one (text-as-spec "# Comment\n"
 			    "  #\n"
 			    "  #   \n"
 			    "  #  test \n"
@@ -1677,8 +1503,7 @@
 			    "Example:      HeaderValue   \n"
 			    " Referer   :host\n"
 			    "\n"
-			    "Content\n"))
-	     )
+			    "Content\n")))
 	(should (string= (verb-request-spec-url-to-string test-one)
 		     "http://example.com/foobar"))
 	(should (string= (oref test-one :method) "POST"))
@@ -1689,8 +1514,7 @@
 			 (cons "Quux" "Quuz")
 			 (cons "Example" "HeaderValue")
 			 (cons "Referer" "host"))))
-	(should (string= (oref test-one :body) "Content\n")))
-      )
+	(should (string= (oref test-one :body) "Content\n"))))
 
 (ert-deftest test-request-spec-headers-underscore ()
   (setq aux (text-as-spec "get http://example.com/foobar\n"
@@ -2481,18 +2305,12 @@
   (should-not (verb--http-method-p "test")))
 
 (ert-deftest test-http-protocol-p ()
-    (let (
-	  (true-test-cases (list "HTTP/0.9" "HTTP/1.0" "HTTP/1.1" "HTTP/2" "HTTP/3"))
-	  (false-test-cases (list "test" "HTT 0.9" "HTTP 5" "ttp 1.1"))
-	  )
-
+  (let ((true-test-cases (list "HTTP/0.9" "HTTP/1.0" "HTTP/1.1" "HTTP/2" "HTTP/3"))
+	(false-test-cases (list "test" "HTT 0.9" "HTTP 5" "ttp 1.1")))
   (mapc (lambda (test-case) (should (verb--http-protocol-p test-case)))
 	  true-test-cases)
   (mapc (lambda (test-case) (should-not (verb--http-protocol-p test-case)))
-	  false-test-cases)
-
-  )
-    )
+	  false-test-cases)))
 
 (ert-deftest test-disable-verb-mode-font-lock ()
   (with-temp-buffer
@@ -3189,17 +3007,12 @@
 		  "POST http://abc.com"))))
 
 (ert-deftest test-protocol-as-curl-option ()
-  (let (
-	(tests (list "HTTP/0.9" "HTTP/1.0" "HTTP/1.1" "HTTP/2" "HTTP/3"))
-	(answers (list "--http0.9" "--http1.0" "--http1.1" "--http2" "--http3"))
-	)
+  (let ((tests (list "HTTP/0.9" "HTTP/1.0" "HTTP/1.1" "HTTP/2" "HTTP/3"))
+	(answers (list "--http0.9" "--http1.0" "--http1.1" "--http2" "--http3")))
     (seq-do-indexed (lambda (test index)
-		      (should (equal (verb--protocol-as-curl-option test) (nth index answers)))
-		      )
+		      (should (equal (verb--protocol-as-curl-option test) (nth index answers))))
 		    tests)
-    (should-error (verb--protocol-as-curl-option "HTTP/1.7") :type 'user-error)
-    )
-    )
+    (should-error (verb--protocol-as-curl-option "HTTP/1.7") :type 'user-error)))
 
 (defun should-curl (rs-text &rest lines)
   (should (string= (verb--export-to-curl
@@ -3267,7 +3080,8 @@
 
   (should-error (verb--export-to-curl
 		 (verb-request-spec-from-string
-		  "GET http://abc.com http/1.9")) :type 'user-error)
+		  "GET http://abc.com http/1.9"))
+		:type 'user-error)
 
   (should-error (verb--export-to-curl
 		 (verb-request-spec-from-string
