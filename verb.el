@@ -717,6 +717,14 @@ an error."
       (cdr val)
     (user-error "HTTP header has no value for \"%s\"" name)))
 
+
+(defalias 'verb-shell #'shell-command-to-string
+  "Alias to `shell-command-to-string'.")
+
+(defun verb-unix-epoch ()
+  "Return the current time as an integer number of seconds since the epoch."
+  (floor (time-to-seconds)))
+
 (defun verb-json-get (text &rest path)
   "Interpret TEXT as a JSON object and return value under PATH.
 The outermost JSON element in TEXT must be an object.
@@ -2056,6 +2064,7 @@ loaded into."
     (verb-kill-all-response-buffers t))
 
   (let* ((url (oref rs url))
+         (url-string (verb-request-spec-url-to-string rs))
          (url-request-method (verb--to-ascii (oref rs method)))
          (url-mime-accept-string (verb--get-accept-header (oref rs headers)))
          (url-request-extra-headers (verb--prepare-http-headers
@@ -2127,12 +2136,10 @@ loaded into."
     ;; Show user some quick information.
     (message "%s request sent to %s"
              (oref rs method)
-             (verb-request-spec-url-to-string rs))
+             url-string)
 
     ;; Log the request.
-    (verb-util--log num 'I "%s %s"
-                    (oref rs method)
-                    (verb-request-spec-url-to-string rs))
+    (verb-util--log num 'I "%s %s" (oref rs method) url-string)
 
     (pcase where
       ('other-window (switch-to-buffer-other-window response-buf))

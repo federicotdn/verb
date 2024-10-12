@@ -385,6 +385,14 @@ You can enable completion for Emacs Lisp inside code tags. To do this, set the `
 
 Note that the point must be surrounded by the code tag delimiters (e.g. `{{` and `}}`) in the same line for completion to work. If you're using `electric-pair-mode`, matching tag delimiters will be inserted automatically, so this won't be a problem. `verb-mode` should also be enabled, as enabling it will load the completion function itself.
 
+### Utility Functions
+
+Verb offers some utility functions to be used within code tags, such as:
+- `verb-shell`: Currently, just an alias to `shell-command-to-string`.
+- `verb-unix-epoch`: Returns the current UNIX epoch (seconds) as an integer.
+- `verb-json-get`: Retrieves a value from within a JSON value.
+- `verb-read-file`: Reads the contents of a file (following some additional Verb-specific behaviour).
+
 ### Verb Variables
 
 Let's suppose that the two endpoints from the previous example now require authentication to be used. We could then modify the example to look like this:
@@ -520,7 +528,7 @@ get /{{(verb-json-get (oref verb-last body) "id")}}
 Accept: application/json
 ```
 
-The `verb-json-get` function takes a JSON-formatted text as its first argument and a list of keys as the rest, and returns the value under those keys in the JSON text (similar to how [JSONPath](https://goessner.net/articles/JsonPath/) works). This function is useful for using previous responses' contents, check its documentation for more details.
+The `verb-json-get` (mentioned earlier in this guide) function takes a JSON-formatted text as its first argument and a list of keys as the rest, and returns the value under those keys in the JSON text (similar to how [JSONPath](https://goessner.net/articles/JsonPath/) works). This function is useful for using previous responses' contents, check its documentation for more details.
 
 If you wish to use the last response's headers instead, you can use the `verb-headers-get` function. An example call may look like: `(verb-headers-get (oref verb-last headers) "Content-Type")`, which will return the string contents of the `Content-Type` response header.
 
@@ -709,6 +717,21 @@ You can export request specifications to other formats or tools by using the `ve
 
 > [!NOTE]
 > Code tags will be evaluated when exporting a request.
+
+### Long Lines
+
+Sometimes, lines containing URLs of your request specifications may become so long, that they may become difficult to read. You can break up these lines by using `\` followed by a newline character, like so:
+
+```
+* Make a request to an API         :verb:
+
+get https://example.com/api/users?fields=id,name,age\
+                                 &orderby=name,descending\
+                                 &filter=id>1000\
+                                 &count=false
+```
+
+The `\` character, the newline, and all the leading whitespace in the next line will be ignored. This behaviour only applies to the URL lines, not for the headers, nor the body.
 
 ### Cookies
 
