@@ -60,6 +60,10 @@ E = Error.")
   "^\\s-*\\([[:alnum:]_-]+\\)\\s-*:\\(.*\\)$"
   "Regexp for parsing HTTP headers.")
 
+(defconst verb-util--org-hyperlink-regexp
+  "\\[\\[\\(.+?\\)\\]\\(\\[.*?\\]\\)?\\]"
+  "Regexp for parsing Org mode hyperlinks.")
+
 (define-derived-mode verb-util-log-mode special-mode "Verb[Log]"
   "Major mode for displaying Verb logs.
 
@@ -159,6 +163,12 @@ interval covering the whole object, with no properties."
         (or (funcall #'object-intervals object)
             default)
       default)))
+
+(defun verb-util--remove-org-hyperlinks (s)
+  "Remove Org hyperlinks from string S and return the result.
+All hyperlinks are replaced with the link they contain."
+  (replace-regexp-in-string verb-util--org-hyperlink-regexp
+                            "\\1" s t))
 
 (provide 'verb-util)
 ;;; verb-util.el ends here

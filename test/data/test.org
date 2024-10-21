@@ -8,6 +8,9 @@
 
 template http://localhost:8000
 
+** org-hyperlink
+get [[http://localhost:8000/basic][some hyperlink description]]
+
 ** basic
 get /basic
 

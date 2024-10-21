@@ -2523,11 +2523,15 @@ Additionally, given a URL like \"http://foo.com?a=b\", return
 \"http://foo.com/?a=b\". This is what curl does when the path is empty
 and there are query string arguments present.
 
+Also, replace any present Org hyperlinks with their literal link
+contents, using `verb-util--remove-org-hyperlinks'.
+
 If a scheme is not present, interpret the URL as a path, query string
 and fragment component of a URL with no host or scheme defined."
-  ;; If we're not expanding code tags, do not attempt to encode '{',
-  ;; '}', etc., so that we keep the original URL text.
-  (let* ((encoded-url (if verb--inhibit-code-tags-evaluation
+  (let* ((url (verb-util--remove-org-hyperlinks url))
+         ;; If we're not expanding code tags, do not attempt to encode
+         ;; '{', '}', etc., so that we keep the original URL text.
+         (encoded-url (if verb--inhibit-code-tags-evaluation
                           url
                         (url-encode-url url)))
          (url-obj (url-generic-parse-url encoded-url))

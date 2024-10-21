@@ -27,9 +27,10 @@
 ;;; Code:
 
 (require 'ert-x)
+(require 'cl-lib)
+
 (require 'verb)
 (require 'ob-verb)
-(require 'cl-lib)
 
 (org-babel-do-load-languages
  'org-babel-load-languages
@@ -2988,6 +2989,24 @@
       (verb--undo-setup-proxy rs)))
 
   (should-not url-proxy-services))
+
+(ert-deftest test-verb-util-remove-org-hyperlinks ()
+  (dolist (elem '(("" . "")
+                  ("foo" . "foo")
+                  ("[[]]" . "[[]]")
+                  ("[[foo]]" . "foo")
+                  ("[foo]" . "[foo]")
+                  ("[[foo]" . "[[foo]")
+                  ("[[foo] ]" . "[[foo] ]")
+                  ("[[https://example.com?a=b]]" . "https://example.com?a=b")
+                  ("[[https://example.com?a=b][test]]" . "https://example.com?a=b")
+                  ("[[https://example.com?a=b][test with space]]" . "https://example.com?a=b")
+                  ("[[https://example.com?a=b][]]" . "https://example.com?a=b")))
+    (should (string= (cdr elem) (verb-util--remove-org-hyperlinks (car elem))))))
+
+(ert-deftest test-server-remove-org-hyperlinks ()
+  (server-test "org-hyperlink"
+               (should (string= (buffer-string) "Hello, World!"))))
 
 (provide 'verb-test)
 ;;; verb-test.el ends here
