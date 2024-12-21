@@ -1,0 +1,8 @@
+* Prelude File Test                                                    :verb:
+:properties:
+:Verb-Prelude: prelude.el
+:end:
+post https://postman-echo.com/post
+Content-Type: text/plain
+
+{{my-variable}}

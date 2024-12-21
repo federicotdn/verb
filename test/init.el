@@ -21,7 +21,6 @@
 
 ;; Set up Verb
 (setq verb-auto-kill-response-buffers 3)
-(setq verb-suppress-load-unsecure-prelude-warning t)
 
 ;; Keybindings
 (with-eval-after-load 'org (define-key org-mode-map (kbd "C-c C-r") verb-command-map))

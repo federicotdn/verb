@@ -1194,11 +1194,14 @@ This affects only the current buffer."
         (setq file-extension (file-name-extension (file-name-base filename))))
       (cond
        ((string= "el" file-extension) ; file is Emacs Lisp
-        (when (or verb-suppress-load-unsecure-prelude-warning
-                  (yes-or-no-p
-                   (concat (format "File %s may contain code " filename)
-                           "that may not be safe\nLoad it anyways? ")))
-          (load-file filename)))
+        (if (or verb-suppress-load-unsecure-prelude-warning
+                (yes-or-no-p
+                 (concat (format "File %s may contain code " filename)
+                         "that may not be safe (see: "
+                         "`verb-suppress-load-unsecure-prelude-warning')"
+                         "\nLoad it anyways? ")))
+            (load-file filename)
+          (user-error "Operation cancelled")))
        ((string-match-p "^json.*" file-extension) ; file is JSON(C)
         (let* ((file-contents
                 (with-temp-buffer
