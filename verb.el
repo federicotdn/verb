@@ -1200,7 +1200,7 @@ First, try to read VALUE as JSON.  If that fails, evaluate the code as
 Emacs Lisp."
   (condition-case nil
       (verb--process-json-prelude value)
-    (t (verb--eval-string value))))
+    (json-readtable-error (verb--eval-string value))))
 
 (defun verb--load-prelude-from-file (filename)
   "Load Emacs Lisp or JSON prelude file FILENAME into Verb variables."
