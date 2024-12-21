@@ -721,6 +721,9 @@ an error."
 (defalias 'verb-shell #'shell-command-to-string
   "Alias to `shell-command-to-string'.")
 
+(defalias 'verb-url #'url-encode-url
+  "Alias to `url-encode-url'.")
+
 (defun verb-unix-epoch ()
   "Return the current time as an integer number of seconds since the epoch."
   (floor (time-to-seconds)))

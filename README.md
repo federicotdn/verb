@@ -389,6 +389,7 @@ Note that the point must be surrounded by the code tag delimiters (e.g. `{{` and
 
 Verb offers some utility functions to be used within code tags, such as:
 - `verb-shell`: Currently, just an alias to `shell-command-to-string`.
+- `verb-url`: Currently, just an alias to `url-encode-url`.
 - `verb-unix-epoch`: Returns the current UNIX epoch (seconds) as an integer.
 - `verb-json-get`: Retrieves a value from within a JSON value.
 - `verb-read-file`: Reads the contents of a file (following some additional Verb-specific behaviour).
