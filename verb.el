@@ -922,7 +922,7 @@ Note that the entire buffer is considered when generating the request
 spec, not only the section contained by the source block.
 
 This function is called from ob-verb.el (`org-babel-execute:verb')."
-  (verb-load-prelude-files-from-hierarchy)
+  (verb--load-preludes-from-hierarchy)
   (save-excursion
     (goto-char pos)
     (let* ((verb--vars (append vars verb--vars))
@@ -1001,7 +1001,7 @@ all the request specs in SPECS, in the order they were passed in."
   ;; Load all prelude verb-var's before rest of the spec to be complete, unless
   ;; specs already exists which means called from ob-verb block and loaded.
   (unless specs
-    (verb-load-prelude-files-from-hierarchy))
+    (verb--load-preludes-from-hierarchy))
   (let ((p (point))
         done final-spec)
     (save-restriction
@@ -1031,9 +1031,9 @@ all the request specs in SPECS, in the order they were passed in."
                           "Remember to tag your headlines with :%s:")
                   verb-tag))))
 
-(defun verb-load-prelude-files-from-hierarchy ()
+(defun verb--load-preludes-from-hierarchy ()
   "Load all Verb-Prelude's of current heading and up, including buffer level.
-Children with same named verb-vars as parents, will override the parent
+Children setting same named Verb variables as parents will override the parent
 settings."
   (save-restriction
     (widen)
@@ -1060,9 +1060,9 @@ settings."
                                    (org-element-property :value keyword)))))))
           (when prelude
             (push prelude preludes)))
-        ;; Lower-level prelude files override same settings in hierarchy
-        (dolist (file preludes)
-          (verb-load-prelude-file file))))))
+        ;; Lower-level preludes override same settings in hierarchy
+        (dolist (prelude preludes)
+          (verb--load-prelude prelude))))))
 
 (defun verb-kill-response-buffer-and-window (&optional keep-window)
   "Delete response window and kill its buffer.
@@ -1185,7 +1185,7 @@ This affects only the current buffer."
             (yes-or-no-p "Unset all Verb variables for current buffer? "))
     (setq verb--vars nil)))
 
-(defun verb-load-prelude-file (filename)
+(defun verb--load-prelude (filename)
   "Load Emacs Lisp or JSON configuration file FILENAME into Verb variables."
   (interactive)
   (save-excursion
