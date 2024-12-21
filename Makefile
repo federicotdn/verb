@@ -96,7 +96,7 @@ update: ## Update the package version number (version=X.Y.Z).
 update:
 	@test -n "$(version)" || (echo "version not set!" && exit 1)
 	@grep -q "$(version)" CHANGELOG.md || (echo "Update changelog first!" && exit 1)
-	sed -i -e "s/^;; Package-Version: .*/;; Package-Version: $(version)/g" verb.el ob-verb.el
+	sed -i -e "s/^;; Package-Version: .*/;; Package-Version: $(version)/g" verb.el ob-verb.el verb-util.el
 	sed -i -e "s/defconst verb-version .*/defconst verb-version \"$(version)\"/g" verb.el
 
 run: ## Run emacs -Q with the working version of verb.el loaded.
