@@ -16,7 +16,7 @@ New features / improvements:
 - Headers can now contain code tags that expand to multiple lines.
 - URLs can now span multiple lines, place '\\' at the end of the URL line to continue it in the next one. Leading whitespace in the additional lines will be skipped.
 - Added new function `verb-body-lf-to-crlf` designed for use with requests sending multipart data.
-- Added new `Verb-Prelude` heading property, which can be used to specify an Emacs Lisp or JSON file to load variables from, before performing requests.
+- Added new `Verb-Prelude` heading property, which can be used to specify Emacs Lisp or JSON contents to load variables from, before performing requests. Contents can come optionally from files, e.g. `.el` or `.json`.
 - Added `verb-shell`, `verb-url` and `verb-unix-epoch` utility functions.
 - Allow using Org [hyperlinks](https://orgmode.org/guide/Hyperlinks.html) in URLs, for example: `get [[http://example.com][my example]]`.
 

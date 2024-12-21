@@ -2244,11 +2244,19 @@
 (ert-deftest test-server-request-prelude-elisp ()
   (let ((verb-suppress-load-unsecure-prelude-warning t))
     (server-test "prelude-elisp"
-               (should (string= (buffer-string) "hello=world")))))
+                 (should (string= (buffer-string) "hello=world")))))
+
+(ert-deftest test-server-request-prelude-elisp-inline ()
+  (server-test "prelude-elisp-inline"
+               (should (string= (buffer-string) "abc=321"))))
 
 (ert-deftest test-server-request-prelude-json ()
   (server-test "prelude-json"
-               (should (string= (buffer-string) "hello=world"))))
+               (should (string= (buffer-string) "hello=world-json"))))
+
+(ert-deftest test-server-request-prelude-json-inline ()
+  (server-test "prelude-json-inline"
+               (should (string= (buffer-string) "value=jsoninline"))))
 
 (ert-deftest test-server-response-big5 ()
   (server-test "response-big5"

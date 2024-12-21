@@ -1185,8 +1185,25 @@ This affects only the current buffer."
             (yes-or-no-p "Unset all Verb variables for current buffer? "))
     (setq verb--vars nil)))
 
-(defun verb--load-prelude (filename)
-  "Load Emacs Lisp or JSON configuration file FILENAME into Verb variables."
+(defun verb--load-prelude (prelude)
+  "Load prelude PRELUDE from a file, or from string contents.
+PRELUDE is interpreted as a filename if and only if it is a single-line
+string containing no parenthesis nor curly brackets."
+  (if (and (= 1 (length (split-string prelude "\n")))
+           (not (string-match-p "[(){}]" prelude)))
+      (verb--load-prelude-from-file prelude)
+    (verb--load-prelude-from-string prelude)))
+
+(defun verb--load-prelude-from-string (value)
+  "Load Emacs Lisp or JSON prelude data from VALUE.
+First, try to read VALUE as JSON.  If that fails, evaluate the code as
+Emacs Lisp."
+  (condition-case nil
+      (verb--process-json-prelude value)
+    (t (verb--eval-string value))))
+
+(defun verb--load-prelude-from-file (filename)
+  "Load Emacs Lisp or JSON prelude file FILENAME into Verb variables."
   (interactive)
   (save-excursion
     (let ((file-extension (file-name-extension filename)))
@@ -1202,29 +1219,33 @@ This affects only the current buffer."
                          "\nLoad it anyways? ")))
             (load-file filename)
           (user-error "Operation cancelled")))
-       ((string-match-p "^json.*" file-extension) ; file is JSON(C)
-        (let* ((file-contents
-                (with-temp-buffer
-                  (insert-file-contents filename)
-                  (set-auto-mode)
-                  (goto-char (point-min))
-                  ;; If a modern JSON / JavaScript package not
-                  ;; installed, then comments cannot be removed or
-                  ;; supported. Also, not likely to have JSON comments
-                  ;; if this is the case.
-                  (when comment-start
-                    (comment-kill (count-lines (point-min) (point-max))))
-                  (verb--buffer-string-no-properties)))
-               (json-object-type 'plist)
-               (data (json-read-from-string file-contents)))
-          ;; Search for values on the topmost container, and one level down.
-          (cl-loop for (k v) on data by #'cddr
-                   do (verb-set-var (substring (symbol-name k) 1) v)
-                   if (and (listp v) (cl-evenp (length v)))
-                   do (cl-loop for (subk subv) on v by #'cddr
-                               do (verb-set-var
-                                   (substring (symbol-name subk) 1) subv)))))
+       ((string-match-p "^json.?" file-extension) ; file is JSON(C)
+        (let ((file-contents
+               (with-temp-buffer
+                 (insert-file-contents filename)
+                 (set-auto-mode)
+                 (goto-char (point-min))
+                 ;; If a modern JSON / JavaScript package not
+                 ;; installed, then comments cannot be removed or
+                 ;; supported. Also, not likely to have JSON comments
+                 ;; if this is the case.
+                 (when comment-start
+                   (comment-kill (count-lines (point-min) (point-max))))
+                 (verb--buffer-string-no-properties))))
+          (verb--process-json-prelude file-contents)))
        (t (user-error "Unable to determine file type for %s" filename))))))
+
+(defun verb--process-json-prelude (json-string)
+  "Process JSON-STRING and set Verb variables accordingly."
+  (let* ((json-object-type 'plist)
+         (data (json-read-from-string json-string)))
+    ;; Search for values on the topmost container, and one level down.
+    (cl-loop for (k v) on data by #'cddr
+             do (verb-set-var (substring (symbol-name k) 1) v)
+             if (and (listp v) (cl-evenp (length v)))
+             do (cl-loop for (subk subv) on v by #'cddr
+                         do (verb-set-var
+                             (substring (symbol-name subk) 1) subv)))))
 
 (defun verb-show-vars ()
   "Show values of variables set with `verb-var' or `verb-set-var'.

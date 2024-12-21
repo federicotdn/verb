@@ -444,9 +444,9 @@ All of these are explained in later sections of this guide.
 > [!NOTE]
 > When reading Org heading properties, properties defined in parent headings are ignored by default (i.e. they are not inherited or passed down). This can be controlled using the `org-use-property-inheritance` variable (default: `nil`).
 
-### Verb Variables from External Files
+### Verb Variables from Preludes
 
-To further keep sensitive information safe and separate from Verb `.org` files, Verb variables can also be defined from either JSON or Emacs Lisp external files. Use the `Verb-Prelude` property followed by the path (relative to the current Org file, or absolute) of the external file to load. The file will loaded and applied as a prelude before requests are sent.
+To further keep sensitive information safe and separate from Verb `.org` files, Verb variables can also be defined from either JSON or Emacs Lisp external files. Use the `Verb-Prelude` property followed by the path (relative to the current Org file, or absolute) of the external file to load. The file will loaded and applied as a prelude before requests are sent. See the next section to learn how to load preludes directly from the `.org` file as well (inline).
 
 > [!NOTE]
 > Files that are GPG or EasyPG encrypted can opened and decrypted automatically by Emacs if configured appropriately. See [Emacs Auth-source manual](https://www.gnu.org/software/emacs/manual/auth.html) for more information. It is strongly recommended to use GPG or EasyPG when storing credentials in files.
@@ -493,8 +493,8 @@ For JSON prelude files, values (and first level sub-values) are set using `verb-
 
 ```json
 {
-  "email": "email@example.com",
   "user": "max_mustermann",
+  "email": "email@example.com",
   "token": "abcdef123456",
   "env_ids": {
     "prod": "aaa111",
@@ -506,13 +506,38 @@ For JSON prelude files, values (and first level sub-values) are set using `verb-
 Would result in the following Verb variables being set:
 
 ```text
-email: email@example.com
 user: max_musterman
+email: email@example.com
 token: abcdef123456
 env_ids: (:prod aaa111 :dev zzz999) ; this is a plist
 prod: aaa111
 dev: zzz999
 ```
+
+### Inline Preludes
+
+If you do not with to keep your Verb `.org` file separate from your variable declarations, it is also possible to specify either Emacs Lisp or JSON content directly in the `Verb-Prelude` property. For example, for Emacs Lisp:
+
+```text
+:properties:
+:Verb-Prelude+: (verb-set-var "user" "max_mustermann")
+:Verb-Prelude+: (verb-set-var "email" user-mail-address)
+:end:
+```
+
+And for JSON:
+
+```text
+:properties:
+:Verb-Prelude+: {
+:Verb-Prelude+:   "user": "max_mustermann",
+:Verb-Prelude+:   "email": "email@example.com"
+:Verb-Prelude+: }
+:end:
+```
+
+> [!IMPORTANT]
+> Note the `+` suffix for the `Verb-Prelude` property; this tells Org mode to collect every line of the property into a multiline string, instead of just one.
 
 ### Last Response
 

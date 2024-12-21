@@ -158,11 +158,24 @@ bar2
 :Verb-Prelude: test.el
 :end:
 get /echo-args?{{(verb-var foo)}}={{(verb-var bar)}}
+** prelude-elisp-inline
+:properties:
+:Verb-Prelude+: (setq prelude-inline-1 "abc")
+:Verb-Prelude+: (setq prelude-inline-2 "321")
+:end:
+get /echo-args?{{prelude-inline-1}}={{prelude-inline-2}}
 ** prelude-json
 :properties:
 :Verb-Prelude: test.json
 :end:
 get /echo-args?{{(verb-var foo)}}={{(verb-var bar)}}
+** prelude-json-inline
+:properties:
+:Verb-Prelude+: {
+:Verb-Prelude+:     "json-inline-var": "jsoninline"
+:Verb-Prelude+: }
+:end:
+get /echo-args?value={{(verb-var json-inline-var)}}
 * connection-fail-port
 # Valid host but invalid port
 get http://localhost:1234/test
