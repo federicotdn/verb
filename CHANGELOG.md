@@ -1,5 +1,5 @@
 # Verb Changelog
-## **main** (MELPA)
+## **3.0.0** - 2024-12-23 (MELPA & MELPA Stable)
 Breaking changes:
 - Updated behaviour for `verb-send-request-on-point-*` functions when dealing with one or more Babel source blocks under a heading. Now, the actual source block on point will be used to build the request, instead of simply the first one. See [issue #53](https://github.com/federicotdn/verb/issues/53).
 - Defining a URL origin (scheme + host + port) in a request specification will now make Verb ignore all parent headings when computing what request to send. In other words, defining a new URL origin effectively creates a new tree of request specifications.
