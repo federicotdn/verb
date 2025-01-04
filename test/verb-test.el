@@ -2378,8 +2378,6 @@
                (should (= (count-matches "accept:") 1))))
 
 (ert-deftest test-default-headers ()
-  ;; TODO: Re-enable test
-  (skip-unless nil)
   (server-test "sorted-headers"
                (let ((headers '("mime-version"
 		                "connection"
