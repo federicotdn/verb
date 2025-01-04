@@ -2380,14 +2380,17 @@
 (ert-deftest test-default-headers ()
   (server-test "sorted-headers"
                (let ((headers '("mime-version"
-		                "connection"
-		                "content-length"
-		                "host"
-		                "accept"
-		                "accept-encoding")))
+		                        "connection"
+		                        "content-length"
+		                        "host"
+		                        "accept")))
+                 ;; Only append this header if we can decode gzip
+                 (when url-mime-encoding-string
+                   (push "accept-encoding" headers))
+
                  (dolist (h headers)
-	           (goto-char (point-min))
-	           (should (search-forward (concat h ": "))))
+	               (goto-char (point-min))
+	               (should (search-forward (concat h ": "))))
 
                  (goto-char (point-min))
                  (delete-matching-lines "cookie") ; Ignore cookie header.
@@ -2396,7 +2399,7 @@
                  (delete-matching-lines "extension") ; Ignore extension header.
 
                  (should (= (count-lines (point-min) (point-max))
-		            (length headers))))))
+		                    (length headers))))))
 
 (defconst test-json (join-lines "{"
 			        "  \"foo\": {"
