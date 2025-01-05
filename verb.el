@@ -1067,15 +1067,16 @@ settings."
                 (when prelude
                   (push prelude preludes)))
               (verb--up-heading)))
-        (let ((prelude (car (org-element-map (org-element-parse-buffer)
-                                'keyword
-                              (lambda (keyword)
-                                (when (string= (upcase (concat
-                                                        verb--metadata-prefix
-                                                        "prelude"))
-                                               (org-element-property
-                                                :key keyword))
-                                  (org-element-property :value keyword)))))))
+        (let ((prelude (car (org-element-map
+                             (org-element-parse-buffer)
+                             'keyword
+                             (lambda (keyword)
+                               (when (string= (upcase (concat
+                                                       verb--metadata-prefix
+                                                       "prelude"))
+                                              (org-element-property
+                                               :key keyword))
+                                 (org-element-property :value keyword)))))))
           (when prelude
             (push prelude preludes)))
         ;; Lower-level preludes override same settings in hierarchy
