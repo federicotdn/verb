@@ -654,7 +654,7 @@ This has the same effect as the previous example. Note also how we've used the f
 
 ### Response Mapping Functions
 
-Similar to `Verb-Map-Request`, it is also to apply functions to HTTP responses by using the `Verb-Map-Response` Org property. The value of this property must be either a symbol pointing to a function, or a function itself (using `lambda`). The function must take exactly one parameter (the response as a `verb-response` object) and must return a `verb-response` object as well. The function will be called with `(current-buffer)` taking the value of the buffer where the HTTP response will be displayed in. It is perfectly valid to include code within the function that has side effects, e.g. calling `setq` to set a global variable.
+Similar to `Verb-Map-Request`, it is also possible to apply functions to HTTP responses by using the `Verb-Map-Response` Org property. The value of this property must be either a symbol pointing to a function, or a function itself (using `lambda`). The function must take exactly one parameter (the response as a `verb-response` object) and must return a `verb-response` object as well. The function will be called with `(current-buffer)` taking the value of the buffer where the HTTP response will be displayed in. It is perfectly valid to include code within the function that has side effects, e.g. calling `setq` to set a global variable.
 
 Here's an example of a response mapping function that makes the body contents upper case:
 
