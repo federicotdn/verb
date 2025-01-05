@@ -137,6 +137,11 @@ get /form-urlencoded
 Content-Type: application/x-www-form-urlencoded
 
 hello=world&foo=%7B%22test%22%3A123%7D
+** form-urlencoded-with-helper
+get /form-urlencoded
+Content-Type: application/x-www-form-urlencoded
+
+{{(verb-util-form-url-encode '(("hello" . "world") ("foo" . "{\"test\":123}")))}}
 ** multipart
 :properties:
 :Verb-Map-Request: verb-body-lf-to-crlf

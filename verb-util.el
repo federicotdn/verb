@@ -170,5 +170,16 @@ All hyperlinks are replaced with the link they contain."
   (replace-regexp-in-string verb-util--org-hyperlink-regexp
                             "\\1" s t))
 
+
+(defun verb-util-form-url-encode (values)
+  "URL-encode VALUES for a form submission (x-www-form-urlencoded).
+VALUES must be an alist of (KEY . VALUE) elements, with KEY and VALUE
+being strings."
+  (mapconcat (lambda (elem)
+               (concat (url-hexify-string (car elem))
+                       "="
+                       (url-hexify-string (cdr elem))))
+             values "&"))
+
 (provide 'verb-util)
 ;;; verb-util.el ends here

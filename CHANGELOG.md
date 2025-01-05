@@ -1,6 +1,7 @@
 # Verb Changelog
 ## **master** (MELPA)
 - Added support for `Verb-Map-Response` heading property. This allows for calling functions automatically with the HTTP response data, when it is received.
+- Added the `verb-util-form-url-encode` helper function for use with `application/x-www-form-urlencoded`.
 
 ## **3.0.0** - 2024-12-23 (MELPA Stable)
 Breaking changes:

@@ -734,9 +734,26 @@ Remember to specify `Content-Type` in your HTTP headers, as Verb won't do this f
 > [!TIP]
 > If uploading binary files (e.g. a PNG image), it's a good idea to set `verb-read-file`'s second argument (`coding-system`) to `'binary`. This will instruct Emacs to insert the file contents into the request buffer as raw bytes.
 
-### Multipart Data
+### URL-encoded Form Submission
 
-Verb makes it easy for you to use the `multipart/form-data` content type in your requests. Two helper functions are provided: `verb-boundary` and `verb-part`.
+Verb includes a utility function in order to use the [`application/x-www-form-urlencoded`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST#url-encoded_form_submission) content type in your requests: `verb-util-form-url-encode`. This function takes an alist of `(KEY . VALUE)`, where `KEY` and `VALUE` are strings. Use this in your request specification body, along with the correct `Content-Type` header value, in order to perform a URL-encoded form submission:
+
+```
+(...)
+
+** Fetch the user token (login)
+post /{{(verb-var user-id)}}/token-auth
+Content-Type: application/x-www-form-urlencoded
+
+{{(verb-util-form-url-encode '(("user" . "johnsmith") ("password" . "mypassword")))}}
+```
+
+> [!NOTE]
+> The `verb-util-form-url-encode` function will take each key-value pair, URL-encode them and join them with `=`, and then join all the elements with `&` to produce the final string. This can also be achieved by manually typing out the key-values in the request body in a single line (e.g. `user=johnsmith&password=mypassword`).
+
+### Multipart Form Submission
+
+Verb also includes some utility functions in order to use the [`multipart/form-data`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST#multipart_form_submission) content type in your requests. Two are currently provided: `verb-boundary` and `verb-part`.
 
 When `verb-boundary` is called using code tags within a request specification, it will return a string containing a valid randomly-generated multipart boundary. This function must be called at least once in order to establish the boundary value when a request is being constructed from request specifications.
 

@@ -2264,6 +2264,10 @@
 
 (ert-deftest test-server-request-form-urlencoded ()
   (server-test "form-urlencoded"
+    (should (string= (buffer-string) "OK"))))
+
+(ert-deftest test-server-request-form-urlencoded-with-helper ()
+  (server-test "form-urlencoded-with-helper"
                (should (string= (buffer-string) "OK"))))
 
 (ert-deftest test-server-multipart ()
@@ -3062,6 +3066,13 @@
 
 (ert-deftest test-server-map-response-error ()
   (should-error (server-test "map-response-error")))
+
+(ert-deftest test-verb-util-form-url-encode ()
+  (dolist (testcase '((() . "")
+                      ((("foo" . "bar")) . "foo=bar")
+                      ((("foo" . "bar") ("x" . "y")) . "foo=bar&x=y")
+                      ((("foo" . "bar") ("x" . "&&")) . "foo=bar&x=%26%26")))
+    (should (equal (cdr testcase) (verb-util-form-url-encode (car testcase))))))
 
 (provide 'verb-test)
 ;;; verb-test.el ends here
