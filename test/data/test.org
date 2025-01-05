@@ -4,7 +4,7 @@
 # Make some requests against the test server (server.py) The requests
 # are executed programatically by loading this file, moving to a
 # heading and executing verb-execute-request-on-point. See verb-test.el
-# for more details.
+# for more details (`server-test' macro).
 
 template http://localhost:8000
 
@@ -176,9 +176,26 @@ get /echo-args?{{(verb-var foo)}}={{(verb-var bar)}}
 :Verb-Prelude+: }
 :end:
 get /echo-args?value={{(verb-var json-inline-var)}}
+** map-response
+:properties:
+:Verb-Map-Response: (lambda (r) (oset r body "xyz") (setq some-global-var-mp 101010) r)
+:end:
+get /basic-json
+** map-response-upcase
+:properties:
+:Verb-Map-Response: map-response-upcase-fn
+:end:
+get /basic
+** map-response-error
+:properties:
+:Verb-Map-Response: (lambda (r) 1)
+:end:
+get /basic-json
 * connection-fail-port
+# (Do not add request specs under this heading!)
 # Valid host but invalid port
 get http://localhost:1234/test
 * connection-fail-host
+# (Do not add request specs under this heading!)
 # Invalid host
 get http://foobarfoobarfoobarfoobarabcdefg/test

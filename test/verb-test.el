@@ -370,6 +370,27 @@
     (should (equal (oref (verb--request-spec-from-hierarchy) metadata)
 		   '(("VERB-NAME" . "JOHN DOE Smith"))))))
 
+(ert-deftest test-request-spec-metadata-get-set ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+                        ":properties:"
+                        ":Verb-Foo: xyz"
+                        ":end:"
+                        "** Test"
+                        ":properties:"
+                        ":Verb-Foo: abcabc"
+                        ":end:"
+                        "get http://foobar.com"))
+
+    (let ((rs (verb--request-spec-from-hierarchy)))
+      (should (string= (verb--request-spec-metadata-get rs "foo")
+                       "abcabc"))
+      (verb--request-spec-metadata-set rs "foo" "123123")
+      (should (string= (verb--request-spec-metadata-get rs "foo")
+                       "123123")))))
+
 (ert-deftest test-request-spec-from-hierarchy-map-request ()
   (defun map-req-1 (rs)
     (oset rs body "foobarfoobar")
@@ -1936,6 +1957,8 @@
 (defconst req-sleep-time 0.01)
 
 (defmacro server-test (test-name &rest body)
+  ;; Evaluate this macro when writing new tests in order to get
+  ;; the automatic indentation right.
   (declare (indent 1))
   `(progn
      (set-buffer test-buf)
@@ -2178,6 +2201,12 @@
 		 (should (string= (buffer-string)
 				  "{\n  \"foo\": true,\n  \"hello\": \"world\"\n}"))
 		 (should (eq major-mode 'js-mode)))))
+
+(ert-deftest test-server-basic-json-nonpretty ()
+  (let ((verb-json-max-pretty-print-size 4))
+    (server-test "basic-json"
+		         (should (string= (buffer-string)
+				                  "{\"foo\":true,\"hello\":\"world\"}")))))
 
 (ert-deftest test-server-keywords-json-pretty ()
   (let ((verb-json-max-pretty-print-size 99999))
@@ -3016,6 +3045,23 @@
 (ert-deftest test-server-remove-org-hyperlinks ()
   (server-test "org-hyperlink"
                (should (string= (buffer-string) "Hello, World!"))))
+
+(ert-deftest test-server-map-response ()
+  (server-test "map-response"
+    (should (string= "xyz" (oref verb-http-response body)))
+    (should (= some-global-var-mp 101010))))
+
+(defun map-response-upcase-fn (resp)
+  (oset resp body (upcase (oref resp body)))
+  resp)
+
+(ert-deftest test-server-map-response-upcase ()
+  (server-test "map-response-upcase"
+    (should (string= "HELLO, WORLD!" (oref verb-http-response body)))
+    (should (string= (buffer-string) "HELLO, WORLD!"))))
+
+(ert-deftest test-server-map-response-error ()
+  (should-error (server-test "map-response-error")))
 
 (provide 'verb-test)
 ;;; verb-test.el ends here

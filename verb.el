@@ -202,7 +202,7 @@ info node `(url)Retrieving URLs'."
                         "2024-04-02")
 
 (defcustom verb-json-max-pretty-print-size (* 1 1024 1024)
-  "Max JSON file size (bytes) to automatically prettify when received.
+  "Max JSON file size (# of chars) to automatically prettify when received.
 If nil, never prettify JSON files automatically.  This variable only applies
 if `verb-handler-json' is being used to handle JSON responses."
   :type '(choice (integer :tag "Max bytes")
@@ -566,7 +566,7 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
         :type (or null url)
         :documentation "Request URL.")
    (headers :initarg :headers
-            :initform ()
+            :initform nil
             :type verb--http-headers-type
             :documentation "HTTP headers.")
    (body :initarg :body
@@ -946,7 +946,7 @@ CLASS must be an EIEIO class."
     (object-of-class-p obj class)))
 
 (defun verb--try-read-fn-form (form)
-  "Try `read'ing FORM and throw error if failed."
+  "Try `read'ing FORM, throwing an error if failed."
   (condition-case _err (read form)
     (end-of-file (user-error "`%s' is a malformed expression" form))))
 
@@ -955,11 +955,22 @@ CLASS must be an EIEIO class."
 If no value is found under KEY, or if the value associated is the
 empty string, return nil.  KEY must NOT have the prefix
 `verb--metadata-prefix' included."
-  (thread-first
-    (concat verb--metadata-prefix key)
-    (assoc-string (oref rs metadata) t)
-    cdr
-    verb-util--nonempty-string))
+  (let ((val (thread-first
+               (concat verb--metadata-prefix key)
+               (assoc-string (oref rs metadata) t)
+               cdr)))
+    (if (stringp val)
+        (verb-util--nonempty-string val)
+      val)))
+
+(defun verb--request-spec-metadata-set (rs key value)
+  "Set the metadata value under KEY for request spec RS to VALUE.
+KEY must NOT have the prefix `verb--metadata-prefix' included.  Return
+VALUE."
+  (let ((md (oref rs metadata)))
+    (push (cons (upcase (concat verb--metadata-prefix key)) value) md)
+    (oset rs metadata md)
+    value))
 
 (defun verb--request-spec-post-process (rs)
   "Validate and prepare request spec RS to be used.
@@ -967,7 +978,8 @@ empty string, return nil.  KEY must NOT have the prefix
 The following checks/preparations are run:
 1) Check if `verb-base-headers' needs to be applied.
 2) Apply request mapping function, if one was specified.
-3) Run validations with `verb-request-spec-validate'.
+3) Read any response mapping function, if one was specified.
+4) Run validations with `verb-request-spec-validate'.
 
 After that, return RS."
   ;; Use `verb-base-headers' if necessary.
@@ -981,11 +993,17 @@ After that, return RS."
              (fn (verb--try-read-fn-form form)))
     (if (functionp fn)
         (setq rs (funcall fn rs))
-      (user-error "`%s' is not a valid function" fn))
+      (user-error "`%s' is not a valid request mapping function" fn))
     (unless (verb--object-of-class-p rs 'verb-request-spec)
       (user-error (concat "Request mapping function `%s' must return a "
                           "`verb-request-spec' value")
                   fn)))
+  ;; Read the response mapping function, if present.
+  (when-let ((form (verb--request-spec-metadata-get rs "map-response"))
+             (fn (verb--try-read-fn-form form)))
+    (if (functionp fn)
+        (verb--request-spec-metadata-set rs "map-response" fn)
+      (user-error "`%s' is not a valid response mapping function" fn)))
   ;; Validate and return.
   (verb-request-spec-validate rs))
 
@@ -1049,15 +1067,15 @@ settings."
                 (when prelude
                   (push prelude preludes)))
               (verb--up-heading)))
-        (let* ((prelude (car (org-element-map (org-element-parse-buffer)
-                                 'keyword
-                               (lambda (keyword)
-                                 (when (string= (upcase (concat
-                                                         verb--metadata-prefix
-                                                         "prelude"))
-                                                (org-element-property
-                                                 :key keyword))
-                                   (org-element-property :value keyword)))))))
+        (let ((prelude (car (org-element-map (org-element-parse-buffer)
+                                'keyword
+                              (lambda (keyword)
+                                (when (string= (upcase (concat
+                                                        verb--metadata-prefix
+                                                        "prelude"))
+                                               (org-element-property
+                                                :key keyword))
+                                  (org-element-property :value keyword)))))))
           (when prelude
             (push prelude preludes)))
         ;; Lower-level preludes override same settings in hierarchy
@@ -1702,7 +1720,7 @@ non-nil, do not add the command to the kill ring."
   "Standard handler for the \"application/json\" text content type."
   (when verb-json-use-mode
     (funcall verb-json-use-mode))
-  (when (< (oref verb-http-response body-bytes)
+  (when (< (buffer-size)
            (or verb-json-max-pretty-print-size 0))
     (unwind-protect
         (unless (zerop (buffer-size))
@@ -1800,7 +1818,7 @@ NUM is this request's identification number."
              (error-info (cdr http-error))
              (url (oref rs url)))
     ;; If there's an HTTP error code (404, 405, etc.) in the error
-    ;; information, continue as normal.
+    ;; information, continue as usual.
     (unless (numberp (and (eq (car error-info) 'http)
                           (cadr error-info)))
       (kill-buffer (current-buffer))
@@ -1863,29 +1881,15 @@ NUM is this request's identification number."
     (forward-line)
     (delete-region (point-min) (point))
 
-    ;; Record body size in bytes.
-    (setq body-bytes (buffer-size))
-
     ;; Current buffer should be unibyte.
     (when enable-multibyte-characters
+      ;; If this fails, then something changed in url.el.
       (error "%s" "Expected a unibyte buffer for HTTP response"))
 
-    ;; Store details of request and response
-    ;; `verb-http-response' is a permanent buffer local variable.
-    (with-current-buffer response-buf
-      (setq verb-http-response
-            (verb-response :headers (nreverse headers)
-                           :request rs
-                           :status status-line
-                           :duration elapsed
-                           :body-bytes body-bytes))
-
-      ;; Update global last response variable.
-      (setq verb-last verb-http-response)
-
-      ;; Store the response separately as well depending on user
-      ;; metadata.
-      (verb--maybe-store-response verb-http-response))
+    ;; Record body size in bytes.
+    ;; Since the current buffer is unibyte, this will return the correct value
+    ;; (i.e. not number of characters).
+    (setq body-bytes (buffer-size))
 
     ;; Make RESPONSE-BUF the current buffer, as we'll need to change
     ;; its major mode, coding system, etc.
@@ -1924,12 +1928,44 @@ NUM is this request's identification number."
     ;; Kill original response buffer.
     (kill-buffer original-buffer)
 
-    ;; Now that the response content has been processed, update
-    ;; `verb-http-response's body slot.
-    (oset verb-http-response
-          body
-          (unless (zerop (oref verb-http-response body-bytes))
-            (verb--buffer-string-no-properties)))
+    ;; Store details of request and response
+    ;; `verb-http-response' is a permanent buffer local variable.
+    (setq verb-http-response
+          (verb-response :headers (nreverse headers)
+                         :request rs
+                         :status status-line
+                         :duration elapsed
+                         :body-bytes body-bytes
+                         ;; TODO: Could this potentially be expensive
+                         ;; for large responses?
+                         :body (unless (zerop body-bytes)
+                                 (verb--buffer-string-no-properties))))
+
+    ;; Apply the response mapping function, if one was specified.
+    (when-let ((map-response (verb--request-spec-metadata-get
+                              rs "map-response"))
+               (original-body (oref verb-http-response body)))
+      (setq verb-http-response (funcall map-response verb-http-response))
+      (unless (verb--object-of-class-p verb-http-response 'verb-response)
+        (user-error (concat "Response mapping function `%s' must return a "
+                            "`verb-response' value")
+                    map-response))
+
+      ;; If response mapping function updated the body, then update
+      ;; the buffer contents as well.
+      ;; Note that we compare using `eq' instead of `string='.
+      ;; Technically `string=' should be used since strings are
+      ;; mutable, but this is cheaper and probably good enough.
+      (unless (eq original-body (oref verb-http-response body))
+        (erase-buffer)
+        (insert (oref verb-http-response body))))
+
+    ;; Update global last response variable.
+    (setq verb-last verb-http-response)
+
+    ;; Store the response separately as well depending on user
+    ;; metadata.
+    (verb--maybe-store-response verb-http-response)
 
     (verb-response-body-mode)
 

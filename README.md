@@ -437,6 +437,7 @@ Some aspects of Verb can be controlled via these properties, such as:
 - `Verb-Prelude`
 - `Verb-Store`
 - `Verb-Map-Request`
+- `Verb-Map-Response`
 - `Verb-Proxy`
 
 All of these are explained in later sections of this guide.
@@ -626,7 +627,7 @@ The function to be mapped can also be a `lambda` expression, like so:
 
 ** Upload file to user storage
 :properties:
-:Verb-Map-Request:  (lambda (rs)
+:Verb-Map-Request+: (lambda (rs)
 :Verb-Map-Request+:   (thread-last
 :Verb-Map-Request+:     (oref rs body)
 :Verb-Map-Request+:     (replace-regexp-in-string "\n" " ")
@@ -650,6 +651,52 @@ This has the same effect as the previous example. Note also how we've used the f
 
 > [!NOTE]
 > The mapping function will be called after evaluating code tags, and the request specification passed will already have its inherited/overridden values from parent headings.
+
+### Response Mapping Functions
+
+Similar to `Verb-Map-Request`, it is also to apply functions to HTTP responses by using the `Verb-Map-Response` Org property. The value of this property must be either a symbol pointing to a function, or a function itself (using `lambda`). The function must take exactly one parameter (the response as a `verb-response` object) and must return a `verb-response` object as well. The function will be called with `(current-buffer)` taking the value of the buffer where the HTTP response will be displayed in. It is perfectly valid to include code within the function that has side effects, e.g. calling `setq` to set a global variable.
+
+Here's an example of a response mapping function that makes the body contents upper case:
+
+```elisp
+(defun uppercase-body (resp)
+  ;; RESP is of type `verb-response'.
+  (oset resp body (upcase (resp body)))
+  resp)
+```
+
+And applying it:
+
+```
+(...)
+
+** Fetch from user storage
+:properties:
+:Verb-Map-Response: uppercase-body
+:end:
+get /{{(verb-var user-id)}}/storage/{{(verb-var file-id)}}
+```
+
+Notice how updating the response's body (which is a string) will automatically update the contents of the response buffer.
+
+Here's an example of a response mapping function being applied for side effects only:
+
+```
+(...)
+
+** Fetch the user token
+:properties:
+:Verb-Map-Response+:  (lambda (resp)
+:Verb-Map-Response+:    (setq global-token (verb-json-get (oref resp body) "id"))
+:Verb-Map-Response+:    resp)
+:end:
+post /{{(verb-var user-id)}}/token-auth
+
+{
+    "user": "johnsmith",
+    "password": "mypassword"
+}
+```
 
 ### Body Lines starting with `*`
 
