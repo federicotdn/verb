@@ -55,7 +55,7 @@ If you do not want to use a package manager, you can just add all `.el` files to
 
 ### Spacemacs
 
-Verb is available on the `develop` branch of Spacemacs. To enable it, read the [documentation on enabling Verb support](https://develop.spacemacs.org/layers/+emacs/org/README.html#verb-support). To view the default keybindings, see the [Verb mode bindings](https://develop.spacemacs.org/layers/+emacs/org/README.html#verb) table.
+Verb is available on the `develop` branch of Spacemacs. To enable it, read the [documentation on enabling Verb support](https://github.com/syl20bnr/spacemacs/blob/develop/layers/%2Bemacs/org/README.org#verb-support). To view the default keybindings, see the [Verb mode bindings]([https://develop.spacemacs.org/layers/+emacs/org/README.html#verb](https://github.com/syl20bnr/spacemacs/blob/develop/layers/%2Bemacs/org/README.org#verb)) tables.
 
 ## Quick Start
 
