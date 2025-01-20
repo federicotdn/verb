@@ -393,6 +393,7 @@ Verb offers some utility functions to be used within code tags, such as:
 - `verb-unix-epoch`: Returns the current UNIX epoch (seconds) as an integer.
 - `verb-json-get`: Retrieves a value from within a JSON value.
 - `verb-read-file`: Reads the contents of a file (following some additional Verb-specific behaviour).
+- `verb-headers-get`: Retrieves the value of an HTTP header.
 
 ### Verb Variables
 
@@ -557,7 +558,7 @@ Accept: application/json
 
 The `verb-json-get` (mentioned earlier in this guide) function takes a JSON-formatted text as its first argument and a list of keys as the rest, and returns the value under those keys in the JSON text (similar to how [JSONPath](https://goessner.net/articles/JsonPath/) works). This function is useful for using previous responses' contents, check its documentation for more details.
 
-If you wish to use the last response's headers instead, you can use the `verb-headers-get` function. An example call may look like: `(verb-headers-get (oref verb-last headers) "Content-Type")`, which will return the string contents of the `Content-Type` response header.
+If you wish to use the last response's headers instead, you can use the `verb-headers-get` function. An example call may look like: `(verb-headers-get verb-last "Content-Type")`, which will return the string contents of the `Content-Type` response header.
 
 ### Storing Responses by Key
 
@@ -926,6 +927,16 @@ Content-Type: application/json; charset=utf-8
 ```
 
 And then execute the source block again with <kbd>C-c C-c</kbd>, which will execute the export and insert the results below.
+
+### Redirections
+
+Behaviour for redirections can be configured via the `url` library variable `url-max-redirections`. Its default value is 30. To disable redirections, set this variable to 0.
+
+If the maximum number of redirections has been reached and the last HTTP response received had a `3XX` status, then Verb will return the contents of this last response. It is then usually possible to access the value of the `Location` header for information on the last redirection:
+
+```elisp
+(verb-headers-get verb-http-response "Location")
+```
 
 ### Proxies
 There's two ways of using HTTP proxies in Verb. The first one is to manually configure the `url-proxy-services` variable like explained in [Proxies and Gatewaying](https://www.gnu.org/software/emacs/manual/html_node/url/Proxies.html). The second one is to specify a proxy address by using the `Verb-Proxy` heading property:

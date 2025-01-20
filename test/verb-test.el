@@ -2313,6 +2313,13 @@
   (server-test "redirect-302"
     (should (string= (buffer-string) "Hello, World!"))))
 
+(ert-deftest test-redirect-302-max-redirections-0 ()
+  (let ((url-max-redirections 0))
+    (server-test "redirect-302"
+      (should (string= (buffer-string) ""))
+      (should (string-match-p "302" (oref verb-http-response status)))
+      (should (string= "/basic" (verb-headers-get verb-http-response "Location"))))))
+
 (ert-deftest test-redirect-301 ()
   (server-test "redirect-301"
     (should (string= (buffer-string) "Hello, World!"))))
@@ -2455,7 +2462,12 @@
 		           "application/json"))
   (should (string= (verb-headers-get test-headers "accept")
 		           ""))
-  (should-error (verb-headers-get "foo")))
+  (should-error (verb-headers-get "foo"))
+  (should-error (verb-headers-get test-headers "foo")))
+
+(ert-deftest test-headers-get-noerror ()
+  (let ((test-headers nil))
+    (should-not (verb-headers-get test-headers "Foo" t))))
 
 (ert-deftest test-json-get ()
   (should-error (verb-json-get test-json))
@@ -3073,6 +3085,17 @@
                       ((("foo" . "bar") ("x" . "y")) . "foo=bar&x=y")
                       ((("foo" . "bar") ("x" . "&&")) . "foo=bar&x=%26%26")))
     (should (equal (cdr testcase) (verb-util-form-url-encode (car testcase))))))
+
+(ert-deftest test-emacs-defaults ()
+  ;; Verb makes certain assumptions about default values of some Emacs
+  ;; variables (in the documentation and in the code).  Assert them
+  ;; here so that any changes in future Emacs versions can be
+  ;; detected.
+  (should (= url-max-redirections 30))
+  (should (eq org-use-tag-inheritance t))
+  (should (eq org-use-sub-superscripts t))
+  (should-not url-proxy-services)
+  (should-not url-debug))
 
 (provide 'verb-test)
 ;;; verb-test.el ends here

@@ -708,15 +708,21 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
   (unless verb-mode
     (verb-mode)))
 
-(defun verb-headers-get (headers name)
-  "Return value for HTTP header under NAME in HEADERS.
-HEADERS must be an alist of (KEY . VALUE) elements.  NAME and KEY will
-be compared ignoring case.  If no value is present under NAME, signal
-an error."
-  (if-let ((val (assoc-string name headers t)))
+(defun verb-headers-get (data name &optional noerror)
+  "Return value for HTTP header under NAME in DATA.
+DATA must be one of the following:
+- An instance of `verb-response', which will contain headers as an
+  alist described below.
+- An alist of (KEY . VALUE) elements.
+NAME and KEY will be compared ignoring case.  If no value is present
+under NAME, signal an error (unless NOERROR is non-nil, in which case
+return nil)."
+  (when (verb--object-of-class-p data 'verb-response)
+    (setq data (oref data headers)))
+  (if-let ((val (assoc-string name data t)))
       (cdr val)
-    (user-error "HTTP header has no value for \"%s\"" name)))
-
+    (unless noerror
+      (user-error "No value found for HTTP header \"%s\"" name))))
 
 (defalias 'verb-shell #'shell-command-to-string
   "Alias to `shell-command-to-string'.")
@@ -1809,19 +1815,19 @@ NUM is this request's identification number."
   (when timeout-timer
     (cancel-timer timeout-timer))
 
-  ;; Remove url.el advice.
-  (verb--unadvice-url)
-  ;; Undo proxy setup.
-  (verb--undo-setup-proxy rs)
+  (verb--teardown-request-environment rs)
 
   ;; Handle errors first.
   (when-let ((http-error (plist-get status :error))
              (error-info (cdr http-error))
+             (error-code (car error-info))
              (url (oref rs url)))
     ;; If there's an HTTP error code (404, 405, etc.) in the error
-    ;; information, continue as usual.
-    (unless (numberp (and (eq (car error-info) 'http)
-                          (cadr error-info)))
+    ;; information, or if we hit the max redirections limit, continue
+    ;; as usual.
+    (unless (or (numberp (and (eq error-code 'http)
+                              (cadr error-info)))
+                (eq error-code 'http-redirect-limit))
       (kill-buffer (current-buffer))
       (kill-buffer response-buf)
       (let ((msg (format "Request error: could not connect to %s:%s"
@@ -2041,6 +2047,22 @@ contents, which means it can potentially delete a response body if the
 response body was actually not compressed."
   (list (nth 0 args) (nth 1 args)))
 
+(defun verb--setup-request-environment (rs)
+  "Prepare request environment for request spec RS."
+  ;; Advice url.el functions.
+  (verb--advice-url)
+  ;; Configure proxy if needed.
+  (verb--setup-proxy rs))
+
+(defun verb--teardown-request-environment (rs)
+  "Undo all operations made for sending request described by RS.
+This undoes all changes made by `verb--setup-request-environment' in
+reverse order."
+  ;; Undo proxy setup.
+  (verb--undo-setup-proxy rs)
+  ;; Undo advice.
+  (verb--unadvice-url))
+
 (defun verb--advice-url ()
   "Advice some url.el functions.
 For more information, see `verb-advice-url'."
@@ -2057,14 +2079,14 @@ For more information, see `verb-advice-url'."
 (defun verb--unadvice-url ()
   "Undo advice from `verb--advice-url'."
   (when verb-advice-url
-    (advice-remove 'url-http-user-agent-string
-                   #'verb--http-user-agent-string)
-    (advice-remove 'url-http-handle-authentication
-                   #'verb--http-handle-authentication)
     (when (and (fboundp 'zlib-available-p)
 	           (zlib-available-p))
       (advice-remove 'zlib-decompress-region
-                     #'verb--zlib-decompress-region))))
+                     #'verb--zlib-decompress-region))
+    (advice-remove 'url-http-handle-authentication
+                   #'verb--http-handle-authentication)
+    (advice-remove 'url-http-user-agent-string
+                   #'verb--http-user-agent-string)))
 
 (defun verb--setup-proxy (rs)
   "Set up any HTTP proxy configuration specified by RS."
@@ -2079,7 +2101,7 @@ For more information, see `verb-advice-url'."
 (defun verb--get-accept-header (headers)
   "Retrieve the value of the \"Accept\" header from alist HEADERS.
 If the header is not present, return \"*/*\" as default."
-  (verb--to-ascii (or (cdr (assoc-string "Accept" headers t))
+  (verb--to-ascii (or (verb-headers-get headers "Accept" t)
                       "*/*")))
 
 (cl-defmethod verb-request-spec-validate ((rs verb-request-spec))
@@ -2147,11 +2169,7 @@ loaded into."
                                           #'verb--timeout-warn
                                           response-buf rs num)))
 
-    ;; Advice url.el functions.
-    (verb--advice-url)
-
-    ;; Configure proxy if needed.
-    (verb--setup-proxy rs)
+    (verb--setup-request-environment rs)
 
     ;; Look for headers that might get duplicated by url.el.
     (dolist (h verb--url-pre-defined-headers)
@@ -2186,10 +2204,8 @@ loaded into."
                  (setq timeout-timer nil))
                ;; Kill response buffer.
                (kill-buffer response-buf)
-               ;; Undo advice.
-               (verb--unadvice-url)
-               ;; Undo proxy setup.
-               (verb--undo-setup-proxy rs)
+
+               (verb--teardown-request-environment rs)
 
                (let ((msg (format "Error sending request: %s" (cadr err))))
                  ;; Log the error.
@@ -2224,16 +2240,14 @@ Note: this function is unrelated to `verb--request-spec-send'."
   (let ((eww-accept-content-types (verb--get-accept-header (oref rs headers)))
         (url-request-extra-headers (verb--prepare-http-headers
                                     (oref rs headers))))
-    (verb--advice-url)
-    (verb--setup-proxy rs)
+    (verb--setup-request-environment rs)
     (unwind-protect
         (prog1
             (eww (verb-request-spec-url-to-string rs))
           ;; "Use" the variable to avoid compiler warning.
           ;; This variable is not available in some Emacs versions.
           eww-accept-content-types)
-      (verb--unadvice-url)
-      (verb--undo-setup-proxy rs))))
+      (verb--teardown-request-environment rs))))
 
 (cl-defmethod verb-request-spec-to-string ((rs verb-request-spec))
   "Return request spec RS as a string.
