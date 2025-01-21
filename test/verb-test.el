@@ -3093,6 +3093,7 @@
   ;; detected.
   (should (= url-max-redirections 30))
   (should (eq org-use-tag-inheritance t))
+  (should-not org-use-property-inheritance)
   (should (eq org-use-sub-superscripts t))
   (should-not url-proxy-services)
   (should-not url-debug))
