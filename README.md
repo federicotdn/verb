@@ -61,8 +61,9 @@ Verb is available on the `develop` branch of Spacemacs. To enable it, read the [
 
 Here's a minimal example in case you want to get started without reading the [Usage Guide](#usage-guide). Place the following on an Org mode buffer:
 ```
-* Example request                            :verb:
-get https://api.ipify.org/?format=json
+* Quick Start                            :verb:
+get https://api.ipify.org?format=json
+Accept: application/json
 ```
 
 Then, press <kbd>C-c C-r C-r</kbd> to send the HTTP request.
@@ -70,7 +71,7 @@ Then, press <kbd>C-c C-r C-r</kbd> to send the HTTP request.
 Here's a more complete example that includes defines two requests, both of which share the same base URL and `Accept` header:
 
 ```
-* Quick Start for Verb                       :verb:
+* Extended Quick Start                   :verb:
 # Comments start with '#'. You can only place
 # comments before the URL and in the headers.
 
