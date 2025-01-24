@@ -2410,6 +2410,11 @@
     (should (zerop (buffer-size)))
     (should (string-match "200" header-line-format))))
 
+(ert-deftest test-in-flight-requests-reset ()
+  (should (zerop verb--in-flight-requests))
+  (server-test "basic"
+    (should (zerop verb--in-flight-requests))))
+
 (ert-deftest test-default-headers-accept ()
   (server-test "accept-sorted-headers"
     (goto-char (point-min))
@@ -2559,11 +2564,13 @@
 
 (ert-deftest test-connection-error-port ()
   (clear-log)
+  (should (zerop verb--in-flight-requests))
   (setq num-buffers (length (buffer-list)))
   (should-error (server-test "connection-fail-port"))
   (should (= num-buffers (length (buffer-list))))
   (should-log-contain "Request error")
-  (should-log-contain "Error details"))
+  (should-log-contain "Error details")
+  (should (zerop verb--in-flight-requests)))
 
 (ert-deftest test-connection-error-host ()
   (skip-unless (eq system-type 'darwin))

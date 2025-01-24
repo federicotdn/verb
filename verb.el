@@ -387,6 +387,9 @@ here under its value.")
 (defvar verb--requests-count 0
   "Number of HTTP requests sent in the past.")
 
+(defvar verb--in-flight-requests 0
+  "Number of HTTP requests currently in-flight.")
+
 (defvar-local verb--response-number nil
   "The number of this particular HTTP response buffer.")
 (put 'verb--response-number 'permanent-local t)
@@ -2049,6 +2052,8 @@ response body was actually not compressed."
 
 (defun verb--setup-request-environment (rs)
   "Prepare request environment for request spec RS."
+  ;; Increase number of in-flight requests.
+  (setq verb--in-flight-requests (1+ verb--in-flight-requests))
   ;; Advice url.el functions.
   (verb--advice-url)
   ;; Configure proxy if needed.
@@ -2061,7 +2066,13 @@ reverse order."
   ;; Undo proxy setup.
   (verb--undo-setup-proxy rs)
   ;; Undo advice.
-  (verb--unadvice-url))
+  (verb--unadvice-url)
+  ;; Decrease number of in-flight requests.
+  (setq verb--in-flight-requests (1- verb--in-flight-requests))
+  (when (< verb--in-flight-requests 0)
+    (verb-util--log
+     nil 'W "Environment set up may have been skipped for a request.")
+    (setq verb--in-flight-requests 0)))
 
 (defun verb--advice-url ()
   "Advice some url.el functions.
