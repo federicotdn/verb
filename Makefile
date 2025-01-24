@@ -7,7 +7,8 @@ ENV ?= .venv
 ACTIVATE = source $(ENV)/bin/activate
 MAX_LINE_LEN = 80
 WAIT_TIME ?= 0.5
-SELECTOR ?= t
+S ?= t
+SELECTOR ?= $S
 
 .PHONY: test
 

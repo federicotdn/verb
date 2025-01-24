@@ -992,7 +992,7 @@ The changelog for this project can be found in [CHANGELOG.md](CHANGELOG.md).
 > [!IMPORTANT]
 > Though this package is actively maintained, I am currently not accepting pull requests, as I do not have enough time to review them properly. Please open an issue instead. However, the below instructions may still be useful for other use cases.
 
-Ideally, new features and functions should include tests, see file `test/verb-test.el`. To run the tests locally, you will need to have a Python 3.6+ interpreter installed, and then run the following command (needed only once):
+Ideally, new features and functions should include tests, see file `test/verb-test.el`. To run the tests locally, you will need to have a Python 3.8+ interpreter installed, and then run the following command (needed only once):
 ```bash
 $ make setup-tests
 ```
@@ -1005,6 +1005,11 @@ $ make test
 To run only one test, set the `SELECTOR` environment variable to the tests's name:
 ```bash
 $ SELECTOR=test-nonempty-string make test
+```
+
+`S` works as well:
+```bash
+$ S=test-nonempty-string make test
 ```
 
 You can also check for byte-compilation warnings and documentation/package issues. First, run (needed only once):

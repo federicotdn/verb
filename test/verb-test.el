@@ -3044,6 +3044,68 @@
 
   (should-not url-proxy-services))
 
+(ert-deftest test-proxy-setup-idempotent ()
+  (should-not url-proxy-services)
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Proxy: myproxy:8181"
+      ":end:"
+      "post http://localhost"))
+
+    (let ((rs (verb--request-spec-from-hierarchy)))
+      (verb--setup-proxy rs)
+      (verb--setup-proxy rs)
+      (should (equal url-proxy-services '(("http" . "myproxy:8181"))))
+      (verb--undo-setup-proxy rs))))
+
+(ert-deftest test-proxy-undo-setup-idempotent ()
+  (should-not url-proxy-services)
+
+  (setq url-proxy-services '(("http" . "myproxy:8181") ("https" . "foobar")))
+
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Proxy: myproxy:8181"
+      ":end:"
+      "post http://localhost"))
+
+    (let ((rs (verb--request-spec-from-hierarchy)))
+      (verb--undo-setup-proxy rs)
+      (verb--undo-setup-proxy rs)))
+
+  (should (equal url-proxy-services '(("https" . "foobar")))))
+
+(defun url-auth-advice ()
+  (advice-member-p 'verb--http-handle-authentication 'url-http-handle-authentication))
+
+(ert-deftest test-url-advice-idempotent()
+  (should-not (url-auth-advice))
+  (verb--advice-url)
+  (let ((tmp (url-auth-advice)))
+    (should (equal tmp (url-auth-advice))))
+  (verb--unadvice-url))
+
+(ert-deftest test-url-unadvice-idempotent()
+  (should-not (url-auth-advice))
+  (verb--unadvice-url)
+  (should-not (url-auth-advice))
+
+  (verb--advice-url)
+  (verb--unadvice-url)
+  (verb--unadvice-url)
+  (should-not (url-auth-advice)))
+
 (ert-deftest test-verb-util-remove-org-hyperlinks ()
   (dolist (elem '(("" . "")
                   ("foo" . "foo")

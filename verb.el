@@ -2091,12 +2091,12 @@ For more information, see `verb-advice-url'."
 (defun verb--setup-proxy (rs)
   "Set up any HTTP proxy configuration specified by RS."
   (when-let ((proxy (verb--request-spec-metadata-get rs "proxy")))
-    (push (cons "http" proxy) url-proxy-services)))
+    (add-to-list 'url-proxy-services (cons "http" proxy))))
 
 (defun verb--undo-setup-proxy (rs)
   "Undo any HTTP proxy configuration specified by RS."
   (when-let ((proxy (verb--request-spec-metadata-get rs "proxy")))
-    (setq url-proxy-services (cdr url-proxy-services))))
+    (setq url-proxy-services (delete (cons "http" proxy) url-proxy-services))))
 
 (defun verb--get-accept-header (headers)
   "Retrieve the value of the \"Accept\" header from alist HEADERS.
