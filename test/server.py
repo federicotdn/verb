@@ -10,13 +10,6 @@ app = Sanic(name="verb_test_server")
 logger.setLevel(logging.WARNING)
 
 
-@app.route("/endpoints")
-async def endpoints(request: Request) -> HTTPResponse:
-    rules = sorted(elem[0] for elem in app.router.routes_names.values())
-
-    return response.text("\n".join(rules))
-
-
 @app.route("/basic")
 async def basic(request: Request) -> HTTPResponse:
     return response.text("Hello, World!")
@@ -239,16 +232,6 @@ async def multipart(request: Request) -> HTTPResponse:
         return response.text("FAIL")
 
     return response.text("OK")
-
-
-@app.exception(NotFound)
-async def not_found(request: Request, exception: NotFound) -> HTTPResponse:
-    return response.text("Not found", status=404)
-
-
-@app.exception(MethodNotSupported)
-async def not_supported(request: Request, MethodNotSupported: NotFound) -> HTTPResponse:
-    return response.text("Method not supported", status=405)
 
 
 def main() -> None:
