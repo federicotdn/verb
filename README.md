@@ -992,12 +992,7 @@ The changelog for this project can be found in [CHANGELOG.md](CHANGELOG.md).
 > [!IMPORTANT]
 > Though this package is actively maintained, I am currently not accepting pull requests, as I do not have enough time to review them properly. Please open an issue instead. However, the below instructions may still be useful for other use cases.
 
-Ideally, new features and functions should include tests, see file `test/verb-test.el`. To run the tests locally, you will need to have a Python 3.8+ interpreter installed, and then run the following command (needed only once):
-```bash
-$ make setup-tests
-```
-
-Then, you can run the tests:
+Ideally, new features and functions should include tests, see file `test/verb-test.el`. To run the tests locally, you will need to have Go 1.22+ installed. Once you do, you can run the tests:
 ```bash
 $ make test
 ```

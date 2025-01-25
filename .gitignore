@@ -11,9 +11,6 @@
 # Undo-tree save-files
 *.~undo-tree
 
-# Python env for test server
-/.venv
-
 # Test server pidfile
 test/server.pid
 
