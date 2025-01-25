@@ -31,6 +31,8 @@ jobs:
           version: ${{ matrix.emacs_version }}
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
       - name: Setup checks
         if: "!startsWith(matrix.emacs_version, '26')"
         run: 'make setup-check'
