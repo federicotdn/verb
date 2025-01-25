@@ -442,6 +442,7 @@ Some aspects of Verb can be controlled via these properties, such as:
 - `Verb-Map-Request`
 - `Verb-Map-Response`
 - `Verb-Proxy`
+- `Verb-Max-Redirections`
 
 All of these are explained in later sections of this guide.
 
@@ -932,12 +933,23 @@ And then execute the source block again with <kbd>C-c C-c</kbd>, which will exec
 
 ### Redirections
 
-Behaviour for redirections can be configured via the `url` library variable `url-max-redirections`. Its default value is 30. To disable redirections, set this variable to 0.
+Behaviour for redirections is configured via the `url` library variable `url-max-redirections`. Its default value is 30. To disable redirections, set this variable to 0 using `setq`.
 
 If the maximum number of redirections has been reached and the last HTTP response received had a `3XX` status, then Verb will return the contents of this last response. It is then usually possible to access the value of the `Location` header for information on the last redirection:
 
 ```elisp
 (verb-headers-get verb-http-response "Location")
+```
+
+If wish to set the `url-max-redirections` only for a specific request, setting `url-max-redirections` as a buffer-local will not work due to how the `url` library is designed. Instead, use the `Verb-Max-Redirections` Org property:
+
+```
+** Make a request with 0 redirections         :verb:
+:properties:
+:Verb-Max-Redirections: 0
+:end:
+
+get http://example.com
 ```
 
 ### Proxies
