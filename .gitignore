@@ -22,3 +22,6 @@ verb-autoloads.el
 
 # Emacs binary
 /emacs
+
+# Testing server
+/server

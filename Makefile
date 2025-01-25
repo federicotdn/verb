@@ -31,17 +31,19 @@ test-noserver:
 		 --eval "(ert-run-tests-batch-and-exit '$(SELECTOR))"; \
 
 server: ## Run a testing HTTP server on port 8000 (default).
-	SKIP_PIDFILE=1 PORT=$(PORT) go run test/server.go
+	go build test/server.go
+	SKIP_PIDFILE=1 PORT=$(PORT) ./server
 
 server-bg:
-	PORT=$(PORT) go run test/server.go &
+	go build test/server.go
+	PORT=$(PORT) ./server &
 
 server-kill:
 	kill $$(cat test/server.pid)
 	sleep 1
 
 clean: ## Clean up all temporary files created during testing/runtime.
-	rm -f verb-autoloads.el test/server.pid
+	rm -f verb-autoloads.el test/server.pid server
 	find . -name "*.elc" -type f -delete
 
 setup-check: ## Install packages required for linting.
