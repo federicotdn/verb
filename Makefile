@@ -3,8 +3,6 @@ EMACS ?= emacs
 PORT ?= 8000
 PACKAGES = packages
 FONT_SIZE ?= 180
-ENV ?= .venv
-ACTIVATE = source $(ENV)/bin/activate
 MAX_LINE_LEN = 80
 WAIT_TIME ?= 0.5
 S ?= t
@@ -16,13 +14,6 @@ help: ## Display this help message.
 	@printf 'Summary of available Makefile recipes:\n\n'
 	@grep '##' Makefile | grep -v grep | column -t -s '##'
 	@echo
-
-setup-tests:  ## Install everything required for testing (Python dependencies).
-	python3 --version
-	test -d $(ENV) || python3 -m venv $(ENV)
-	$(ACTIVATE) && \
-	pip install -U pip wheel setuptools && \
-	pip install -r test/requirements-dev.txt
 
 test: ## Run all ERT tests (set SELECTOR to specify only one).
 test: clean server-bg
@@ -40,12 +31,10 @@ test-noserver:
 		 --eval "(ert-run-tests-batch-and-exit '$(SELECTOR))"; \
 
 server: ## Run a testing HTTP server on port 8000 (default).
-	$(ACTIVATE) && \
-	SKIP_PIDFILE=1 PORT=$(PORT) python3 test/server.py
+	SKIP_PIDFILE=1 PORT=$(PORT) go run test/server.go
 
 server-bg:
-	$(ACTIVATE) && \
-	PORT=$(PORT) python3 test/server.py &
+	PORT=$(PORT) go run test/server.go &
 
 server-kill:
 	kill $$(cat test/server.pid)
@@ -60,8 +49,6 @@ setup-check: ## Install packages required for linting.
 	$(EMACS) --batch \
 		 --eval "(setq package-user-dir \"$$PWD/$(PACKAGES)\")" \
 		 -l test/init-check.el
-
-setup: setup-check setup-tests
 
 lint-file:
 	@printf "\n<<<------------ Lint file: $(filename) ------------>>>\n"

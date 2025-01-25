@@ -2188,7 +2188,7 @@
   (let ((verb-content-type-handlers nil))
     (server-test "basic-json"
       (should (equal major-mode 'fundamental-mode))
-      (should (string= (buffer-string) "{\"foo\":true,\"hello\":\"world\"}")))))
+      (should (string= (buffer-string) "{\"hello\": \"world\", \"foo\": true}")))))
 
 (ert-deftest test-repeated-header ()
   (clear-log)

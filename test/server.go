@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"slices"
-
-	// "os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -34,27 +34,28 @@ func keywordsJSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func error400Handler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "", http.StatusBadRequest)
+	w.WriteHeader(http.StatusBadRequest)
 }
 
 func error401Handler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "", http.StatusUnauthorized)
 }
 
-// FIXME
 func responseLatin1Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=latin1")
-	w.Write([]byte("ñáéíóúß"))
+	// "ñáéíóúß" encoded in latin-1:
+	w.Write([]byte("\xf1\xe1\xe9\xed\xf3\xfa\xdf"))
 }
 
-// FIXME
 func requestLatin1Handler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "text/plain; charset=latin1" {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
 	}
 	body, _ := io.ReadAll(r.Body)
-	if string(body) != "áéíóúñü" {
+
+	// "áéíóúñü" encoded in latin-1:
+	if string(body) != "\xe1\xe9\xed\xf3\xfa\xf1\xfc" {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
 	}
@@ -150,17 +151,8 @@ func bodyMD5Handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%v", md5Hash)
 }
 
-// FIXME
 func echoHandler(w http.ResponseWriter, r *http.Request) {
-	charset := "utf-8"
-	if ct := r.Header.Get("Content-Type"); ct != "" {
-		if strings.Contains(ct, "charset=") {
-			charset = strings.Split(ct, "charset=")[1]
-		}
-	}
-	println(charset)
-	body, _ := io.ReadAll(r.Body)
-	fmt.Fprintf(w, "%v", string(body))
+	io.Copy(w, r.Body)
 }
 
 func echoArgsHandler(w http.ResponseWriter, r *http.Request) {
@@ -288,11 +280,18 @@ func main() {
 	http.HandleFunc("POST /multipart", multipartHandler)
 	http.HandleFunc("GET /image.png", imageHandler)
 
-	// if _, found := os.LookupEnv("SKIP_PIDFILE"); !found {
-	// 	pidfile := "/tmp/server.pid"
-	// 	os.WriteFile(pidfile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
-	// }
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		port = 8000
+	}
 
-	fmt.Println("Server starting on http://localhost:8000")
-	http.ListenAndServe(":8000", nil)
+	if _, found := os.LookupEnv("SKIP_PIDFILE"); !found {
+		pidfile := "test/server.pid"
+		pid := os.Getpid()
+		os.WriteFile(pidfile, []byte(strconv.Itoa(pid)), 0644)
+		fmt.Printf("server pid: %v\n", pid)
+	}
+	addr := fmt.Sprintf("localhost:%v", port)
+	fmt.Printf("running server at: %v\n", addr)
+	http.ListenAndServe(addr, nil)
 }
