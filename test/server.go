@@ -52,7 +52,10 @@ func requestLatin1Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
 	}
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
 
 	// "áéíóúñü" encoded in latin-1:
 	if string(body) != "\xe1\xe9\xed\xf3\xfa\xf1\xfc" {
@@ -67,7 +70,11 @@ func requestUTF8DefaultHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
 	}
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
 	if string(body) != "áéíóúñü" {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
@@ -76,7 +83,11 @@ func requestUTF8DefaultHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func requestUTF8Default2Handler(w http.ResponseWriter, r *http.Request) {
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
 	if string(body) != "áéíóúñü" {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
@@ -137,7 +148,11 @@ func contentLengthHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
 	}
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
 	if len(body) != int(r.ContentLength) {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
@@ -146,7 +161,11 @@ func contentLengthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func bodyMD5Handler(w http.ResponseWriter, r *http.Request) {
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
 	md5Hash := fmt.Sprintf("%x", md5.Sum(body))
 	fmt.Fprintf(w, "%v", md5Hash)
 }
@@ -190,7 +209,11 @@ func notCompressedHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func setCookiesHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+
 	for key, val := range r.Form {
 		cookie := http.Cookie{Name: key, Value: val[0], Path: "/"}
 		http.SetCookie(w, &cookie)
@@ -212,7 +235,11 @@ func getCookiesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteCookiesHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+
 	for key := range r.Form {
 		cookie := http.Cookie{Name: key, Value: "", Path: "/", MaxAge: -1}
 		http.SetCookie(w, &cookie)
@@ -221,7 +248,11 @@ func deleteCookiesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func formUrlencodedHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+
 	if r.Form.Get("hello") != "world" || r.Form.Get("foo") != `{"test":123}` {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
@@ -232,9 +263,9 @@ func formUrlencodedHandler(w http.ResponseWriter, r *http.Request) {
 func multipartHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
 	if err != nil {
-		http.Error(w, "FAIL", http.StatusBadRequest)
-		return
+		panic(err)
 	}
+
 	if r.FormValue("foo1") != "bar1" || r.FormValue("foo2") != "bar2" {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
