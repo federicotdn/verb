@@ -37,8 +37,6 @@ jobs:
       - name: Run checks
         if: "!startsWith(matrix.emacs_version, '26')"
         run: 'make check'
-      - name: Setup unit tests
-        run: 'make setup-tests'
       - name: Run unit tests
         env:
           WAIT_TIME: 3
