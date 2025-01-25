@@ -2320,6 +2320,49 @@
       (should (string-match-p "302" (oref verb-http-response status)))
       (should (string= "/basic" (verb-headers-get verb-http-response "Location"))))))
 
+(ert-deftest test-redirect-302-max-redirections-0-via-org-property ()
+  (should (= url-max-redirections 30))
+  (server-test "redirect-302-max-redirections-0"
+    (should (string= (buffer-string) ""))
+    (should (string-match-p "302" (oref verb-http-response status)))
+    (should (string= "/basic" (verb-headers-get verb-http-response "Location"))))
+  (should (= url-max-redirections 30)))
+
+(ert-deftest test-max-redirections-valid-parsing ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Max-Redirections: 123"
+      ":end:"
+      "post http://localhost"))
+
+    (let ((rs (verb--request-spec-from-hierarchy)))
+      (verb--setup-request-environment rs)
+      (should (= url-max-redirections 123))
+      (verb--teardown-request-environment rs))))
+
+(ert-deftest test-max-redirections-invalid-parsing ()
+  (should (= url-max-redirections 30))
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert
+     (join-lines
+      "* Test :verb:"
+      ":properties:"
+      ":Verb-Max-Redirections: foo"
+      ":end:"
+      "post http://localhost"))
+
+    (let ((rs (verb--request-spec-from-hierarchy)))
+      (verb--setup-request-environment rs)
+      (should (zerop url-max-redirections))
+      (verb--teardown-request-environment rs))))
+
 (ert-deftest test-redirect-301 ()
   (server-test "redirect-301"
     (should (string= (buffer-string) "Hello, World!"))))

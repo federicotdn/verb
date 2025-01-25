@@ -69,6 +69,12 @@ get ?foo=bar
 ** redirect-302
 get /redirect-302
 
+** redirect-302-max-redirections-0
+:properties:
+:Verb-Max-Redirections: 0
+:end:
+get /redirect-302
+
 ** redirect-301
 get /redirect-301
 

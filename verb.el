@@ -2052,27 +2052,40 @@ response body was actually not compressed."
 
 (defun verb--setup-request-environment (rs)
   "Prepare request environment for request spec RS."
-  ;; Increase number of in-flight requests.
-  (setq verb--in-flight-requests (1+ verb--in-flight-requests))
   ;; Advice url.el functions.
   (verb--advice-url)
   ;; Configure proxy if needed.
-  (verb--setup-proxy rs))
+  (verb--setup-proxy rs)
+  ;; Set up url-max-redirections
+  (when-let ((max (verb--request-spec-metadata-get rs "max-redirections")))
+    (when (< 0 verb--in-flight-requests)
+      (verb-util--log nil 'W (concat "Setting global url-max-redirections "
+                                     "even though there are still in-flight "
+                                     "requests.")))
+    (verb--request-spec-metadata-set rs "original-max-redirections"
+                                     url-max-redirections)
+    (setq url-max-redirections (string-to-number max)))
+  ;; Increase number of in-flight requests.
+  (setq verb--in-flight-requests (1+ verb--in-flight-requests)))
 
 (defun verb--teardown-request-environment (rs)
   "Undo all operations made for sending request described by RS.
 This undoes all changes made by `verb--setup-request-environment' in
 reverse order."
-  ;; Undo proxy setup.
-  (verb--undo-setup-proxy rs)
-  ;; Undo advice.
-  (verb--unadvice-url)
   ;; Decrease number of in-flight requests.
   (setq verb--in-flight-requests (1- verb--in-flight-requests))
   (when (< verb--in-flight-requests 0)
     (verb-util--log
-     nil 'W "Environment set up may have been skipped for a request.")
-    (setq verb--in-flight-requests 0)))
+     nil 'W "Environment setup may have been skipped for a request")
+    (setq verb--in-flight-requests 0))
+  ;; Undo changes to url-max-redirections
+  (when-let ((max (verb--request-spec-metadata-get rs
+                   "original-max-redirections")))
+    (setq url-max-redirections max))
+  ;; Undo proxy setup.
+  (verb--undo-setup-proxy rs)
+  ;; Undo advice.
+  (verb--unadvice-url))
 
 (defun verb--advice-url ()
   "Advice some url.el functions.
