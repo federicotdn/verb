@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
+
 	// "os"
 	"sort"
 	"strings"
@@ -21,12 +23,13 @@ func headersTestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func basicJSONHandler(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Content-Type", "application/json")
-	w.Header().Del("Date")
+	w.Header()["Date"] = nil
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{"hello": "world", "foo": true}`)
 }
 
 func keywordsJSONHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{"t": true}`)
 }
 
@@ -82,16 +85,20 @@ func requestUTF8Default2Handler(w http.ResponseWriter, r *http.Request) {
 
 func responseUTF8DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("ñáéíóúß"))  // Go source code is UTF-8 encoded
+	w.Write([]byte("ñáéíóúß")) // Go source code is UTF-8 encoded
 }
 
 func responseBig5Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=big5")
-	resp := "\xb1`\xa5\xce\xa6r"  // "常用字" encoded in Big5
+	resp := "\xb1`\xa5\xce\xa6r" // "常用字" encoded in Big5
 	w.Write([]byte(resp))
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
 	if r.URL.Query().Get("foo") == "bar" {
 		fmt.Fprintf(w, "OK")
 		return
@@ -104,6 +111,7 @@ func redirect301Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func redirect302Handler(w http.ResponseWriter, r *http.Request) {
+	w.Header()["Content-Type"] = nil
 	http.Redirect(w, r, "/basic", http.StatusFound)
 }
 
@@ -150,7 +158,7 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 			charset = strings.Split(ct, "charset=")[1]
 		}
 	}
-	print(charset)
+	println(charset)
 	body, _ := io.ReadAll(r.Body)
 	fmt.Fprintf(w, "%v", string(body))
 }
@@ -179,6 +187,7 @@ func sortedHeadersHandler(w http.ResponseWriter, r *http.Request) {
 	for k, v := range r.Header {
 		headers = append(headers, fmt.Sprintf("%s: %s", strings.ToLower(k), v[0]))
 	}
+	headers = append(headers, fmt.Sprintf("Host: %s", r.Host))
 	sort.Strings(headers)
 	fmt.Fprintf(w, "%v", strings.Join(headers, "\n"))
 }
@@ -199,6 +208,12 @@ func setCookiesHandler(w http.ResponseWriter, r *http.Request) {
 
 func getCookiesHandler(w http.ResponseWriter, r *http.Request) {
 	cookies := r.Cookies()
+	slices.SortFunc(cookies, func(a, b *http.Cookie) int {
+		if a.Name < b.Name {
+			return -1
+		}
+		return 1
+	})
 	for _, cookie := range cookies {
 		fmt.Fprintf(w, "%s=%s\n", cookie.Name, cookie.Value)
 	}
@@ -255,8 +270,8 @@ func main() {
 	http.HandleFunc("GET /", rootHandler)
 	http.HandleFunc("GET /redirect-301", redirect301Handler)
 	http.HandleFunc("GET /redirect-302", redirect302Handler)
-	http.HandleFunc("GET /redirect-308", redirect308Handler)
-	http.HandleFunc("GET /redirect-308-2", redirect3082Handler)
+	http.HandleFunc("POST /redirect-308", redirect308Handler)
+	http.HandleFunc("POST /redirect-308-2", redirect3082Handler)
 	http.HandleFunc("GET /no-user-agent", noUserAgentHandler)
 	http.HandleFunc("POST /content-length", contentLengthHandler)
 	http.HandleFunc("POST /body-md5", bodyMD5Handler)
@@ -264,12 +279,13 @@ func main() {
 	http.HandleFunc("GET /echo-args", echoArgsHandler)
 	http.HandleFunc("GET /zero-bytes-json", zeroBytesJSONHandler)
 	http.HandleFunc("POST /sorted-headers", sortedHeadersHandler)
+	http.HandleFunc("GET /sorted-headers", sortedHeadersHandler)
 	http.HandleFunc("GET /not-compressed", notCompressedHandler)
 	http.HandleFunc("GET /set-cookies", setCookiesHandler)
 	http.HandleFunc("GET /get-cookies", getCookiesHandler)
 	http.HandleFunc("GET /delete-cookies", deleteCookiesHandler)
-	http.HandleFunc("GET /form-urlencoded", formUrlencodedHandler)
-	http.HandleFunc("GET /multipart", multipartHandler)
+	http.HandleFunc("POST /form-urlencoded", formUrlencodedHandler)
+	http.HandleFunc("POST /multipart", multipartHandler)
 	http.HandleFunc("GET /image.png", imageHandler)
 
 	// if _, found := os.LookupEnv("SKIP_PIDFILE"); !found {

@@ -2161,7 +2161,7 @@
   (let ((verb-json-max-pretty-print-size nil))
     (server-test "basic-json"
 	  (should (string= (buffer-string)
-				       "{\"foo\":true,\"hello\":\"world\"}"))
+				       "{\"hello\": \"world\", \"foo\": true}"))
 	  (should (eq major-mode 'js-mode)))))
 
 (ert-deftest test-body-bytes ()
@@ -2199,14 +2199,14 @@
   (let ((verb-json-max-pretty-print-size 99999))
     (server-test "basic-json"
 	  (should (string= (buffer-string)
-				       "{\n  \"foo\": true,\n  \"hello\": \"world\"\n}"))
+				       "{\n  \"hello\": \"world\",\n  \"foo\": true\n}"))
 	  (should (eq major-mode 'js-mode)))))
 
 (ert-deftest test-server-basic-json-nonpretty ()
   (let ((verb-json-max-pretty-print-size 4))
     (server-test "basic-json"
 	  (should (string= (buffer-string)
-				       "{\"foo\":true,\"hello\":\"world\"}")))))
+				       "{\"hello\": \"world\", \"foo\": true}")))))
 
 (ert-deftest test-server-keywords-json-pretty ()
   (let ((verb-json-max-pretty-print-size 99999))
@@ -2393,11 +2393,11 @@
 (ert-deftest test-headers ()
   (server-test "headers"
     (should (string= (buffer-string) "HeadersTest"))
-    (should (string= (cdr (assoc "x-test-1"
-				                 (oref verb-http-response headers)))
+    (should (string= (cdr (assoc-string "x-test-1"
+				                        (oref verb-http-response headers) t))
                      "foo"))
-    (should (string= (cdr (assoc "OTHER-TEST"
-				                 (oref verb-http-response headers)))
+    (should (string= (cdr (assoc-string "OTHER-TEST"
+				                        (oref verb-http-response headers) t))
                      "bar"))))
 
 (ert-deftest test-wrong-content-encoding-header ()
@@ -2535,7 +2535,7 @@
     (should (string= (buffer-string) "OK")))
 
   (server-test "get-cookies"
-    (should (string= (buffer-string) "foo=bar\nabc=123\n")))
+    (should (string= (buffer-string) "abc=123\nfoo=bar\n")))
 
   (server-test "delete-cookies"
     (should (string= (buffer-string) "OK")))
@@ -2826,10 +2826,9 @@
                           "#+end_src")
               (join-lines "HTTP/1.1 200 OK"
                           "Content-Type: application/json"
-                          "Date: "
-                          "Content-Length: 28"
+                          "Content-Length: 31"
                           ""
-                          "{\"hello\": \"world\", \"foo\": true}")))
+                          "{\n  \"hello\": \"world\",\n  \"foo\": true\n}")))
 
 (ert-deftest test-babel-send-get-body ()
   (babel-test (join-lines "* Heading 1"
@@ -2850,10 +2849,8 @@
                           "#+begin_src verb :op send get-headers"
                           "get http://localhost:8000/basic-json"
                           "#+end_src")
-              (join-lines "content-length: 28"
-                          "connection: keep-alive"
-                          "alt-svc: "
-                          "content-type: application/json")))
+              (join-lines "Content-Type: application/json"
+                          "Content-Length: 31")))
 
 (ert-deftest test-babel-org-variables ()
   ;; Use :var for each variable.
