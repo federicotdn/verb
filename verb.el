@@ -1077,15 +1077,15 @@ settings."
                   (push prelude preludes)))
               (verb--up-heading)))
         (let ((prelude (car (org-element-map
-                             (org-element-parse-buffer)
-                             'keyword
-                             (lambda (keyword)
-                               (when (string= (upcase (concat
-                                                       verb--metadata-prefix
-                                                       "prelude"))
-                                              (org-element-property
-                                               :key keyword))
-                                 (org-element-property :value keyword)))))))
+                                (org-element-parse-buffer)
+                                'keyword
+                              (lambda (keyword)
+                                (when (string= (upcase (concat
+                                                        verb--metadata-prefix
+                                                        "prelude"))
+                                               (org-element-property
+                                                :key keyword))
+                                  (org-element-property :value keyword)))))))
           (when prelude
             (push prelude preludes)))
         ;; Lower-level preludes override same settings in hierarchy
@@ -2079,8 +2079,8 @@ reverse order."
      nil 'W "Environment setup may have been skipped for a request")
     (setq verb--in-flight-requests 0))
   ;; Undo changes to url-max-redirections
-  (when-let ((max (verb--request-spec-metadata-get rs
-                   "original-max-redirections")))
+  (when-let ((max (verb--request-spec-metadata-get
+                   rs "original-max-redirections")))
     (setq url-max-redirections max))
   ;; Undo proxy setup.
   (verb--undo-setup-proxy rs)
