@@ -1,0 +1,282 @@
+package main
+
+import (
+	"crypto/md5"
+	"fmt"
+	"io"
+	"net/http"
+	// "os"
+	"sort"
+	"strings"
+)
+
+func basicHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, World!")
+}
+
+func headersTestHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("x-test-1", "foo")
+	w.Header().Set("OTHER-TEST", "bar")
+	fmt.Fprintf(w, "HeadersTest")
+}
+
+func basicJSONHandler(w http.ResponseWriter, r *http.Request) {
+	// w.Header().Set("Content-Type", "application/json")
+	w.Header().Del("Date")
+	fmt.Fprintf(w, `{"hello": "world", "foo": true}`)
+}
+
+func keywordsJSONHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `{"t": true}`)
+}
+
+func error400Handler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "", http.StatusBadRequest)
+}
+
+func error401Handler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "", http.StatusUnauthorized)
+}
+
+// FIXME
+func responseLatin1Handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=latin1")
+	w.Write([]byte("ñáéíóúß"))
+}
+
+// FIXME
+func requestLatin1Handler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Content-Type") != "text/plain; charset=latin1" {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	body, _ := io.ReadAll(r.Body)
+	if string(body) != "áéíóúñü" {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func requestUTF8DefaultHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Content-Type") != "text/plain" {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	body, _ := io.ReadAll(r.Body)
+	if string(body) != "áéíóúñü" {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func requestUTF8Default2Handler(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	if string(body) != "áéíóúñü" {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func responseUTF8DefaultHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("ñáéíóúß"))  // Go source code is UTF-8 encoded
+}
+
+func responseBig5Handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=big5")
+	resp := "\xb1`\xa5\xce\xa6r"  // "常用字" encoded in Big5
+	w.Write([]byte(resp))
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("foo") == "bar" {
+		fmt.Fprintf(w, "OK")
+		return
+	}
+	fmt.Fprintf(w, "FAIL")
+}
+
+func redirect301Handler(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/basic", http.StatusMovedPermanently)
+}
+
+func redirect302Handler(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/basic", http.StatusFound)
+}
+
+func redirect308Handler(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/redirect-308-2", http.StatusPermanentRedirect)
+}
+
+func redirect3082Handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Redirect successful")
+}
+
+func noUserAgentHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("User-Agent") != "" {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func contentLengthHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Content-Length") == "" {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	body, _ := io.ReadAll(r.Body)
+	if len(body) != int(r.ContentLength) {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func bodyMD5Handler(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	md5Hash := fmt.Sprintf("%x", md5.Sum(body))
+	fmt.Fprintf(w, "%v", md5Hash)
+}
+
+// FIXME
+func echoHandler(w http.ResponseWriter, r *http.Request) {
+	charset := "utf-8"
+	if ct := r.Header.Get("Content-Type"); ct != "" {
+		if strings.Contains(ct, "charset=") {
+			charset = strings.Split(ct, "charset=")[1]
+		}
+	}
+	print(charset)
+	body, _ := io.ReadAll(r.Body)
+	fmt.Fprintf(w, "%v", string(body))
+}
+
+func echoArgsHandler(w http.ResponseWriter, r *http.Request) {
+	values := []string{}
+	for key, val := range r.URL.Query() {
+		for _, v := range val {
+			values = append(values, fmt.Sprintf("%s=%s", key, v))
+		}
+	}
+	sort.Strings(values)
+	fmt.Fprintf(w, "%v", strings.Join(values, "\n"))
+}
+
+func zeroBytesJSONHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, "")
+}
+
+func sortedHeadersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("dropcookies") != "" {
+		r.Header.Del("Cookie")
+	}
+	headers := []string{}
+	for k, v := range r.Header {
+		headers = append(headers, fmt.Sprintf("%s: %s", strings.ToLower(k), v[0]))
+	}
+	sort.Strings(headers)
+	fmt.Fprintf(w, "%v", strings.Join(headers, "\n"))
+}
+
+func notCompressedHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Encoding", "gzip")
+	fmt.Fprintf(w, "hello, world!")
+}
+
+func setCookiesHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	for key, val := range r.Form {
+		cookie := http.Cookie{Name: key, Value: val[0], Path: "/"}
+		http.SetCookie(w, &cookie)
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func getCookiesHandler(w http.ResponseWriter, r *http.Request) {
+	cookies := r.Cookies()
+	for _, cookie := range cookies {
+		fmt.Fprintf(w, "%s=%s\n", cookie.Name, cookie.Value)
+	}
+}
+
+func deleteCookiesHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	for key := range r.Form {
+		cookie := http.Cookie{Name: key, Value: "", Path: "/", MaxAge: -1}
+		http.SetCookie(w, &cookie)
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func formUrlencodedHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	if r.Form.Get("hello") != "world" || r.Form.Get("foo") != `{"test":123}` {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func multipartHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
+	if err != nil {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	if r.FormValue("foo1") != "bar1" || r.FormValue("foo2") != "bar2" {
+		http.Error(w, "FAIL", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "OK")
+}
+
+func imageHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "test/data/test.png")
+}
+
+func main() {
+	http.HandleFunc("GET /basic", basicHandler)
+	http.HandleFunc("GET /headers-test", headersTestHandler)
+	http.HandleFunc("GET /basic-json", basicJSONHandler)
+	http.HandleFunc("GET /keywords-json", keywordsJSONHandler)
+	http.HandleFunc("GET /error-400", error400Handler)
+	http.HandleFunc("GET /error-401", error401Handler)
+	http.HandleFunc("GET /response-latin-1", responseLatin1Handler)
+	http.HandleFunc("POST /request-latin-1", requestLatin1Handler)
+	http.HandleFunc("POST /request-utf-8-default", requestUTF8DefaultHandler)
+	http.HandleFunc("POST /request-utf-8-default-2", requestUTF8Default2Handler)
+	http.HandleFunc("GET /response-utf-8-default", responseUTF8DefaultHandler)
+	http.HandleFunc("GET /response-big5", responseBig5Handler)
+	http.HandleFunc("GET /", rootHandler)
+	http.HandleFunc("GET /redirect-301", redirect301Handler)
+	http.HandleFunc("GET /redirect-302", redirect302Handler)
+	http.HandleFunc("GET /redirect-308", redirect308Handler)
+	http.HandleFunc("GET /redirect-308-2", redirect3082Handler)
+	http.HandleFunc("GET /no-user-agent", noUserAgentHandler)
+	http.HandleFunc("POST /content-length", contentLengthHandler)
+	http.HandleFunc("POST /body-md5", bodyMD5Handler)
+	http.HandleFunc("POST /echo", echoHandler)
+	http.HandleFunc("GET /echo-args", echoArgsHandler)
+	http.HandleFunc("GET /zero-bytes-json", zeroBytesJSONHandler)
+	http.HandleFunc("POST /sorted-headers", sortedHeadersHandler)
+	http.HandleFunc("GET /not-compressed", notCompressedHandler)
+	http.HandleFunc("GET /set-cookies", setCookiesHandler)
+	http.HandleFunc("GET /get-cookies", getCookiesHandler)
+	http.HandleFunc("GET /delete-cookies", deleteCookiesHandler)
+	http.HandleFunc("GET /form-urlencoded", formUrlencodedHandler)
+	http.HandleFunc("GET /multipart", multipartHandler)
+	http.HandleFunc("GET /image.png", imageHandler)
+
+	// if _, found := os.LookupEnv("SKIP_PIDFILE"); !found {
+	// 	pidfile := "/tmp/server.pid"
+	// 	os.WriteFile(pidfile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+	// }
+
+	fmt.Println("Server starting on http://localhost:8000")
+	http.ListenAndServe(":8000", nil)
+}

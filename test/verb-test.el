@@ -2825,15 +2825,11 @@
                           "get /basic-json"
                           "#+end_src")
               (join-lines "HTTP/1.1 200 OK"
-                          "content-length: 28"
-                          "connection: keep-alive"
-                          "alt-svc: "
-                          "content-type: application/json"
+                          "Content-Type: application/json"
+                          "Date: "
+                          "Content-Length: 28"
                           ""
-                          "{"
-                          "  \"foo\": true,"
-                          "  \"hello\": \"world\""
-                          "}")))
+                          "{\"hello\": \"world\", \"foo\": true}")))
 
 (ert-deftest test-babel-send-get-body ()
   (babel-test (join-lines "* Heading 1"
