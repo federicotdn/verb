@@ -3191,6 +3191,15 @@
                       ((("foo" . "bar") ("x" . "&&")) . "foo=bar&x=%26%26")))
     (should (equal (cdr testcase) (verb-util-form-url-encode (car testcase))))))
 
+(ert-deftest test-utility-functions ()
+  (should (string= (verb-url "{}") "%7B%7D"))
+
+  (let ((now (verb-unix-epoch)))
+    (sleep-for 1)
+    (should (> 2 (- (verb-unix-epoch) now))))
+
+  (should (string= (verb-shell "echo hello" t) "hello")))
+
 (ert-deftest test-emacs-defaults ()
   ;; Verb makes certain assumptions about default values of some Emacs
   ;; variables (in the documentation and in the code).  Assert them

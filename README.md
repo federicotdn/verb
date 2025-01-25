@@ -26,6 +26,7 @@ Verb requires at least Emacs version 26 to work.
 - Integrates with Babel and EWW.
 - Includes mouse support (menu bar and mode line).
 - Supports file uploads.
+- Has 200+ unit tests written for it.
 - Tested against Go's `net/http` server implementation.
 - Has no dependencies!
 - Easy to use! (hopefully).
@@ -390,7 +391,7 @@ Note that the point must be surrounded by the code tag delimiters (e.g. `{{` and
 ### Utility Functions
 
 Verb offers some utility functions to be used within code tags, such as:
-- `verb-shell`: Currently, just an alias to `shell-command-to-string`.
+- `verb-shell`: Returns output of `shell-command-to-string`, optionally trimming it.
 - `verb-url`: Currently, just an alias to `url-encode-url`.
 - `verb-unix-epoch`: Returns the current UNIX epoch (seconds) as an integer.
 - `verb-json-get`: Retrieves a value from within a JSON value.

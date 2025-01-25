@@ -727,8 +727,13 @@ return nil)."
     (unless noerror
       (user-error "No value found for HTTP header \"%s\"" name))))
 
-(defalias 'verb-shell #'shell-command-to-string
-  "Alias to `shell-command-to-string'.")
+(defun verb-shell (command &optional trim)
+  "Return output of running `shell-command-to-string' with COMMAND.
+If TRIM is non-nil, trim leading and trailing whitespace before returning."
+  (let ((s (shell-command-to-string command)))
+    (if trim
+        (string-trim s)
+      s)))
 
 (defalias 'verb-url #'url-encode-url
   "Alias to `url-encode-url'.")
