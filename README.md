@@ -3,9 +3,9 @@
   <br/>
 </p>
 
-**Verb** is a package for Emacs which allows you to organize and send HTTP requests.
+**Verb** is an HTTP client for Emacs.
 
-The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to organize specifications for HTTP requests using Org's tree structure. Properties defined in the child headings extend or sometimes override properties defined in the parent headings - this way, it is easy to define many HTTP request specifications without having to repeat common components as URL hosts, authentication headers, ports, etc. Verb tries to combine the usefulness of Org mode with the common functionality provided by other HTTP clients. However, very little knowledge of Org mode is needed to use Verb.
+The package introduces a new minor mode, **Verb mode**, which works as an extension to [Org mode](https://orgmode.org/). The core idea is to structure specifications for HTTP requests using Org's tree structure. Properties defined in the child headings extend or override properties defined in the parent headings - this way, it is possible to author HTTP requests without having to repeat things such as URL hosts, headers, ports, etc. Knowledge of Org mode is not required in order to use Verb.
 
 Verb requires at least Emacs version 26 to work.
 
