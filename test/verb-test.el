@@ -2480,12 +2480,6 @@
 	    (goto-char (point-min))
 	    (should (search-forward (concat h ": "))))
 
-      (goto-char (point-min))
-      (delete-matching-lines "cookie") ; Ignore cookie header.
-
-      (goto-char (point-min))
-      (delete-matching-lines "extension") ; Ignore extension header.
-
       (should (= (count-lines (point-min) (point-max))
 		         (length headers))))))
 
