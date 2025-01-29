@@ -2137,9 +2137,9 @@ If the header is not present, return \"*/*\" as default."
   "Run validations on request spec RS and return it.
 If a validation does not pass, signal `user-error'."
   (unless (oref rs method)
-    (user-error "%s" (concat "No HTTP method specified\n"
-                             "Make sure you specify a concrete HTTP "
-                             "method (not " verb--template-keyword
+    (user-error "%s" (concat "No HTTP method specified\nMake sure you specify "
+                             "a concrete HTTP method (e.g. GET, not "
+                             verb--template-keyword
                              ") in the heading hierarchy")))
   (let ((url (oref rs url)))
     (unless url
