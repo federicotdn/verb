@@ -2481,6 +2481,10 @@
       (when url-mime-encoding-string
         (push "accept-encoding" headers))
 
+      ;; Only append this header on Emacs 26
+      (when (< emacs-major-version 27)
+        (push "extension" headers))
+
       (dolist (h headers)
 	    (goto-char (point-min))
 	    (should (search-forward (concat h ": "))))
