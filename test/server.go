@@ -136,7 +136,7 @@ func redirect3082Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func noUserAgentHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("User-Agent") != "" {
+	if r.UserAgent() != "" {
 		http.Error(w, "FAIL", http.StatusBadRequest)
 		return
 	}
@@ -194,11 +194,16 @@ func sortedHeadersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("dropcookies") != "" {
 		r.Header.Del("Cookie")
 	}
+
 	headers := []string{}
 	for k, v := range r.Header {
 		headers = append(headers, fmt.Sprintf("%s: %s", strings.ToLower(k), v[0]))
 	}
-	headers = append(headers, fmt.Sprintf("Host: %s", r.Host))
+	headers = append(headers, fmt.Sprintf("host: %s", r.Host))
+	if r.UserAgent() != "" {
+		headers = append(headers, fmt.Sprintf("user-agent: %s", r.UserAgent()))
+	}
+
 	sort.Strings(headers)
 	fmt.Fprintf(w, "%v", strings.Join(headers, "\n"))
 }

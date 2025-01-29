@@ -8,7 +8,7 @@ WAIT_TIME ?= 0.5
 S ?= t
 SELECTOR ?= $S
 
-.PHONY: test
+.PHONY: test server
 
 help: ## Display this help message.
 	@printf 'Summary of available Makefile recipes:\n\n'
