@@ -230,8 +230,7 @@ A certain set of headers will **always** be included in sent requests, even if t
 - `Content-Length`: *number of bytes in request body* (only when body is present)
 - `Host`: *URL host*
 - `Accept`: `*/*` (default value, but may be overwritten by the user)
-- `Accept-Encoding`: `gzip`
-- `Extension`: `Security/Digest Security/SSL`
+- `Accept-Encoding`: `gzip` (sent when `url-mime-encoding-string` is set)
 
 If you include one of these headers in one of your requests (except `Accept`), Verb will add a warning to the [log](#verb-log).
 

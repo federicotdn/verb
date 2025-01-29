@@ -313,7 +313,6 @@ no warning will be shown when loading Emacs Lisp external files."
                                           "Connection"
                                           "Host"
                                           "Accept-Encoding"
-                                          "Extension"
                                           "Content-Length")
   "List of HTTP headers which are automatically added by url.el.
 The values of these headers can't be easily modified by Verb, so a

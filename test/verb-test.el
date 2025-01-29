@@ -2465,6 +2465,11 @@
     (goto-char (point-min))
     (should (= (count-matches "accept:") 1))))
 
+;; A relatively important test. Tests which headers
+;; are sent by url-http.el itself, even when the user
+;; has not explicitly defined any headers.
+;; "Extension" used to be part of this list, but was
+;; removed from Emacs in 2022-05-12.
 (ert-deftest test-default-headers ()
   (server-test "sorted-headers"
     (let ((headers '("mime-version"

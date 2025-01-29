@@ -1,0 +1,7 @@
+* HTTPBin                                                              :verb:
+# A simple HTTP Request & Response Service.
+
+template https://httpbin.org
+
+** Headers
+get /headers
