@@ -287,6 +287,11 @@ shown asking user to allow it to be loaded and evaluated.  If non-nil,
 no warning will be shown when loading Emacs Lisp external files."
   :type 'boolean)
 
+(defcustom verb-enable-ctrl-c-ctrl-c t
+  "When non-nil, add a `verb-mode' context function into into Org mode's `org-ctrl-c-ctrl-c-hook'."
+  :group :verb
+  :type 'boolean)
+
 (defface verb-http-keyword '((t :inherit font-lock-constant-face
                                 :weight bold))
   "Face for highlighting HTTP methods.")
@@ -490,6 +495,10 @@ more details on how to use it."
         (when verb-enable-elisp-completion
           (add-hook 'completion-at-point-functions
                     #'verb-elisp-completion-at-point
+                    nil 'local))
+        (when verb-enable-ctrl-c-ctrl-c
+          (add-hook 'org-ctrl-c-ctrl-c-hook
+                    #'verb-ctrl-c-ctrl-c-context-behavior
                     nil 'local))
         (add-hook 'post-command-hook #'verb--var-preview nil t)
         (when (buffer-file-name)
@@ -699,6 +708,12 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
         (append (list (+ (nth 0 completions) beg -1)
                       (+ (nth 1 completions) beg -1))
                 (cddr completions))))))
+
+(defun verb-ctrl-c-ctrl-c-context-behavior ()
+  "Contextual behavior in `org-mode' buffer for ctrl-c ctrl-c binding."
+  ;; Probably not necessary to check mode, since the hook is in the local hooks anyways.
+  (when verb-mode
+    (call-interactively #'verb-send-request-on-point-other-window-stay)))
 
 (defun verb--ensure-org-mode ()
   "Ensure `org-mode' is enabled in the current buffer."
