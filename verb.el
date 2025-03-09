@@ -288,7 +288,7 @@ no warning will be shown when loading Emacs Lisp external files."
   :type 'boolean)
 
 (defcustom verb-enable-ctrl-c-ctrl-c t
-  "When non-nil, add a `verb-mode' context function into into Org mode's `org-ctrl-c-ctrl-c-hook'."
+  "When non-nil, enable sending requests with \\[org-ctrl-c-ctrl-c]."
   :group :verb
   :type 'boolean)
 
@@ -711,8 +711,13 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 
 (defun verb-ctrl-c-ctrl-c-context-behavior ()
   "Contextual behavior in `org-mode' buffer for ctrl-c ctrl-c binding."
-  ;; Probably not necessary to check mode, since the hook is in the local hooks anyways.
-  (when verb-mode
+  ;; Probably not necessary to check mode, since the hook is in the local
+  ;; hooks anyways.
+  (when (and verb-mode
+             (or (not (eq (car (org-element-at-point)) 'src-block))
+                 (not (string= "verb"
+                               (org-element-property
+                                :language (org-element-at-point))))))
     (call-interactively #'verb-send-request-on-point-other-window-stay)))
 
 (defun verb--ensure-org-mode ()
@@ -1531,6 +1536,7 @@ After the user has finished modifying the buffer, they can press
       (local-unset-key key)))
 
   ;; Rebind C-c C-c to send the request.
+  ;; This will override `org-ctrl-c-ctrl-c-hook'.
   (local-set-key (kbd "C-c C-c")
                  (lambda ()
                    "Send the request specified in the current buffer."
