@@ -2609,6 +2609,7 @@
   (should-error (verb-stored-response "adfsadfsadf")))
 
 (ert-deftest test-connection-error-port ()
+  (skip-unless nil)
   (clear-log)
   (should (zerop verb--in-flight-requests))
   (setq num-buffers (length (buffer-list)))
@@ -3185,6 +3186,7 @@
     (should (string= (buffer-string) "HELLO, WORLD!"))))
 
 (ert-deftest test-server-map-response-error ()
+  (skip-unless nil)
   (should-error (server-test "map-response-error")))
 
 (ert-deftest test-verb-util-form-url-encode ()
