@@ -5,6 +5,7 @@
 - Fixed error occuring when maxium number of redirections set by `url-max-redirections` was reached.
 - Added support for `Verb-Max-Redirections` heading property.
 - The `verb-headers-get` function now accepts an instance of `verb-response` as first argument.
+- Added Verb-specific handler for Org's <kbd>C-c C-c</kbd> contextual key.
 
 ## **3.0.0** - 2024-12-23 (MELPA Stable)
 Breaking changes:
