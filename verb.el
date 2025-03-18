@@ -6,7 +6,7 @@
 ;; Maintainer: Federico Tedin <federicotedin@gmail.com>
 ;; Homepage: https://github.com/federicotdn/verb
 ;; Keywords: tools
-;; Package-Version: 3.0.0
+;; Package-Version: 3.1.0
 ;; Package-Requires: ((emacs "26.3"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -335,7 +335,7 @@ Request templates are defined without HTTP methods, paths or hosts.")
   "Prefix for Verb metadata keys in heading properties.
 Matching is case insensitive.")
 
-(defconst verb-version "3.0.0"
+(defconst verb-version "3.1.0"
   "Verb package version.")
 
 (defconst verb--multipart-boundary-alphabet
