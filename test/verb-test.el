@@ -2609,7 +2609,8 @@
   (should-error (verb-stored-response "adfsadfsadf")))
 
 (ert-deftest test-connection-error-port ()
-  (skip-unless nil)
+  ;; TODO: For some reason, this test started failing in Emacs 30.
+  (skip-unless (< emacs-major-version 30))
   (clear-log)
   (should (zerop verb--in-flight-requests))
   (setq num-buffers (length (buffer-list)))
