@@ -3186,7 +3186,8 @@
     (should (string= (buffer-string) "HELLO, WORLD!"))))
 
 (ert-deftest test-server-map-response-error ()
-  (skip-unless nil)
+  ;; TODO: For some reason, this test started failing in Emacs 30.
+  (skip-unless (< emacs-major-version 30))
   (should-error (server-test "map-response-error")))
 
 (ert-deftest test-verb-util-form-url-encode ()
