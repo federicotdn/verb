@@ -28,7 +28,7 @@ New features / improvements:
 - Added `verb-shell`, `verb-url` and `verb-unix-epoch` utility functions.
 - Allow using Org [hyperlinks](https://orgmode.org/guide/Hyperlinks.html) in URLs, for example: `get [[http://example.com][my example]]`.
 
-## **2.16.0** - 2024-03-02 (MELPA Stable)
+## **2.16.0** - 2024-03-02
 - Fixed LF being used instead of CRLF in multipart boundaries.
 - When sending a request, include the HTTP method and path in the message displayed on the minibuffer.
 - The `verb-json-get` function now accepts negative integer arguments for accessing list elements.
