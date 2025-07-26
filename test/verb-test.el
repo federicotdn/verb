@@ -531,11 +531,13 @@
 (ert-deftest test-back-to-heading-no-headings ()
   ;; Empty buffer.
   (with-temp-buffer
+    (org-mode)
     (setq aux (verb--back-to-heading))
     (should (null aux))
     (should (= (point) 1)))
   ;; With contents.
   (with-temp-buffer
+    (org-mode)
     (insert "foobar\nfoobar")
     (setq aux (verb--back-to-heading))
     (should (null aux))
