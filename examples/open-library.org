@@ -1,4 +1,8 @@
 * Open Library API                                                                   :verb:
+# Open Library is an initiative of the Internet Archive, a 501(c)(3)
+# non-profit, building a digital library of Internet sites and other
+# cultural artifacts in digital form.
+
 # Open Library has developed a suite of APIs to help developers get up
 # and running with our data. We encourage interested developers to
 # join the ol-tech mailing list to stay up-to-date with the latest
@@ -13,7 +17,6 @@
 # From: https://openlibrary.org/developers/api
 
 template https://openlibrary.org
-User-Agent: Verb/Emacs Emacs/{{emacs-version}}
 Accept: application/json
 
 ** Search

@@ -108,7 +108,6 @@ You can send any of the two requests by moving the point to one of the level 2 h
 
 ![n2](https://user-images.githubusercontent.com/6868935/73489132-6bc81f00-43aa-11ea-9815-2d482cb60a40.png)
 ![n3](https://user-images.githubusercontent.com/6868935/73489133-6bc81f00-43aa-11ea-84c3-d9c1695145d0.png)
-![n1](https://user-images.githubusercontent.com/6868935/73489131-6b2f8880-43aa-11ea-82bd-45142b942055.png)
 
 ## Usage Guide
 
