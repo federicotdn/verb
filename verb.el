@@ -410,7 +410,7 @@ other buffers without actually expanding the embedded code tags.")
 (defvar verb-command-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") #'verb-send-request-on-point-other-window)
-    (define-key map (kbd "C-r") #'verb-send-request-on-point-other-window-stay)
+    (define-key map (kbd "C-r") #'verb-send-request-on-point-display)
     (define-key map (kbd "C-<return>") #'verb-send-request-on-point-no-window)
     (define-key map (kbd "C-f") #'verb-send-request-on-point)
     (define-key map (kbd "C-k") #'verb-kill-all-response-buffers)
@@ -458,7 +458,7 @@ If REMOVE is nil, add the necessary keywords to
         ["Send request on other window & switch"
          verb-send-request-on-point-other-window]
         ["Send request on other window"
-         verb-send-request-on-point-other-window-stay]
+         verb-send-request-on-point-display]
         ["Send request without showing response"
          verb-send-request-on-point-no-window]
         "--"
@@ -718,7 +718,7 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
                  (not (string= "verb"
                                (org-element-property
                                 :language (org-element-at-point))))))
-    (call-interactively #'verb-send-request-on-point-other-window-stay)))
+    (call-interactively #'verb-send-request-on-point-display)))
 
 (defun verb--ensure-org-mode ()
   "Ensure `org-mode' is enabled in the current buffer."
@@ -1416,13 +1416,19 @@ description of prefix argument ARG."
   (verb-send-request-on-point 'other-window arg))
 
 ;;;###autoload
-(defun verb-send-request-on-point-other-window-stay (&optional arg)
+(defun verb-send-request-on-point-display (&optional arg)
   "Send the request specified by the selected heading's text contents.
 Show the results on another window but don't switch to it, using
 `verb-send-request-on-point'.  See that function's documentation for a
 description of prefix argument ARG."
   (interactive "P")
   (verb-send-request-on-point 'stay-window arg))
+
+(defalias 'verb-send-request-on-point-other-window-stay
+  #'verb-send-request-on-point-display)
+(make-obsolete 'verb-send-request-on-point-other-window-stay
+               "Use `verb-send-request-on-point-display' instead."
+               "2025-07-26")
 
 ;;;###autoload
 (defun verb-send-request-on-point-no-window (&optional arg)
@@ -1530,7 +1536,7 @@ After the user has finished modifying the buffer, they can press
   ;; Unbind keys for verb-send-request-on-point-* commands.
   (dolist (cmd '(verb-send-request-on-point
                  verb-send-request-on-point-other-window
-                 verb-send-request-on-point-other-window-stay
+                 verb-send-request-on-point-display
                  verb-send-request-on-point-no-window))
     (when-let ((key (where-is-internal cmd nil t)))
       (local-unset-key key)))

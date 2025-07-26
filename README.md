@@ -68,7 +68,7 @@ get https://api.ipify.org?format=json
 Accept: application/json
 ```
 
-Then, press <kbd>C-c C-r C-r</kbd> to send the HTTP request.
+Then, press <kbd>C-c C-r C-r</kbd> (or <kbd>M-x</kbd>`verb-send-request-on-point-display`<kbd>RET</kbd>) to send the HTTP request.
 
 Here's a more complete example that includes defines two requests, both of which share the same base URL and `Accept` header:
 
@@ -136,7 +136,7 @@ You may tweak the text value of the tag used by modifying the `verb-tag` variabl
 
 ### Enabling Verb in Org Buffers
 When you open an `.org` file with HTTP request specifications in it, Verb mode won't be enabled by default. To enable it, you can choose from these different options:
-- Run one of the commands that enable Verb automatically (e.g. `verb-send-request-on-point-other-window-stay`). You may use the keybinding set up in your `init.el` file (i.e. <kbd>C-c C-r C-r</kbd>, see [Installation](#installation)).
+- Run one of the commands that enable Verb automatically (e.g. `verb-send-request-on-point-display`). You may use the keybinding set up in your `init.el` file (i.e. <kbd>C-c C-r C-r</kbd>, see [Installation](#installation)).
 - Run <kbd>M-x</kbd>`verb-mode`<kbd>RET</kbd>.
 - Add a file-local variable at the bottom of your file:
 ```
@@ -150,7 +150,7 @@ In general, the first option should be useful enough for most cases. Once Verb m
 ### Sending Requests
 
 To actually send the HTTP request, use one of the `verb-send-request-on-point` commands. They are the following:
-- <kbd>C-c C-r C-r</kbd>: `verb-send-request-on-point-other-window-stay` sends the request and shows the response on a buffer in another window, but doesn't switch to that window.
+- <kbd>C-c C-r C-r</kbd>: `verb-send-request-on-point-display` sends the request and shows the response on a buffer in another window, but doesn't switch to that window.
 - <kbd>C-c C-r C-s</kbd>: `verb-send-request-on-point-other-window` sends the request, shows the response on a buffer in another window, and switches to it.
 - <kbd>C-c C-r C-f</kbd>: `verb-send-request-on-point` sends the request, and shows the response on a buffer in the currently selected window.
 - <kbd>C-c C-r C-<return></kbd>: `verb-send-request-on-point-no-window` sends the request, but does not show the response buffer anywhere. The response status (e.g. `HTTP/1.1 200 OK | GET http://example.com`) will be shown on the minibuffer. This is useful for cases where one is only interested in the request's side effects.

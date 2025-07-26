@@ -1,5 +1,8 @@
 # Verb Changelog
-## **3.1.0** - 2025-03-18 (MELPA & MELPA Stable)
+## **main** (MELPA)
+- Renamed `verb-send-request-on-point-other-window-stay` to `verb-send-request-on-point-display`. The older name is kept but has been marked as obsolete.
+
+## **3.1.0** - 2025-03-18 (MELPA Stable)
 - Added support for `Verb-Map-Response` heading property. This allows for calling functions automatically with the HTTP response data, when it is received.
 - Added the `verb-util-form-url-encode` helper function for use with `application/x-www-form-urlencoded`.
 - Fixed error occuring when maxium number of redirections set by `url-max-redirections` was reached.
