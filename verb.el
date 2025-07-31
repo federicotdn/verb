@@ -497,7 +497,7 @@ more details on how to use it."
                     #'verb-elisp-completion-at-point
                     nil 'local))
         (when verb-enable-ctrl-c-ctrl-c
-          (add-hook 'org-ctrl-c-ctrl-c-hook
+          (add-hook 'org-ctrl-c-ctrl-c-final-hook
                     #'verb-ctrl-c-ctrl-c-context-behavior
                     nil 'local))
         (add-hook 'post-command-hook #'verb--var-preview nil t)
@@ -711,13 +711,23 @@ KEY and VALUE must be strings.  KEY must not be the empty string."
 
 (defun verb-ctrl-c-ctrl-c-context-behavior ()
   "Contextual behavior in `org-mode' buffer for ctrl-c ctrl-c binding."
-  ;; Probably not necessary to check mode, since the hook is in the local
-  ;; hooks anyways.
+  ;; Since this function is added to `org-ctrl-c-ctrl-c-final-hook', we
+  ;; don't need to worry about accidentally intercepting C-c C-c when
+  ;; used on a Babel source block.
   (when (and verb-mode
-             (or (not (eq (car (org-element-at-point)) 'src-block))
-                 (not (string= "verb"
-                               (org-element-property
-                                :language (org-element-at-point))))))
+             ;; Only try sending a request if it is possible to actually
+             ;; build a request spec. Otherwise, return nil and let other
+             ;; hook functions run.
+             ;; The only downside to this setup is that if users press
+             ;; C-c C-c fully intending to send a request, but something
+             ;; is not properly set up (e.g. :verb: tag is missing), then
+             ;; Emacs will print "C-c C-c can do nothing useful here",
+             ;; which is not very useful. However, this is how the hook
+             ;; is designed to work.
+             (ignore-errors
+               (let ((verb--inhibit-code-tags-evaluation t))
+                 (verb--request-spec-from-hierarchy))
+               t))
     (call-interactively #'verb-send-request-on-point-display)))
 
 (defun verb--ensure-org-mode ()

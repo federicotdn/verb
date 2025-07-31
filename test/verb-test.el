@@ -2061,6 +2061,30 @@
 
     (setq inhibit-message nil)))
 
+(ert-deftest test-send-with-ctrl-c-ctrl-c ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+                        "get http://localhost:8000/basic"))
+    (setq verb-last nil
+          inhibit-message t)
+    (org-ctrl-c-ctrl-c)
+    (while (null verb-last)
+      (sleep-for req-sleep-time))
+    (should (string-match-p "200" (oref verb-last status)))
+    (setq inhibit-message nil)))
+
+(ert-deftest test-no-send-with-ctrl-c-ctrl-c-when-no-spec ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test" ; remove :verb: tag
+                        "get http://localhost:8000/basic"))
+    (setq verb-last nil)
+    (should-error (org-ctrl-c-ctrl-c))
+    (should-not verb-last)))
+
 (ert-deftest test-c-u-temp-buffer-contents ()
   (with-temp-buffer
     (org-mode)
@@ -2762,6 +2786,20 @@
     (re-search-backward "template")
     (let ((inhibit-message t))
       (should-error (org-ctrl-c-ctrl-c)))))
+
+(ert-deftest test-babel-ctrl-c-ctrl-c-goes-first ()
+  (cl-letf (((symbol-function 'verb-ctrl-c-ctrl-c-context-behavior)
+             (lambda () (error "test failed"))))
+    (with-temp-buffer
+      (org-mode)
+      (verb-mode)
+      (insert (join-lines "* test"
+			              "#+begin_src verb"
+			              "get http://localhost:8000/basic"
+			              "#+end_src"))
+      (re-search-backward "get")
+      (let ((inhibit-message t))
+        (org-ctrl-c-ctrl-c)))))
 
 (ert-deftest test-babel-request-name ()
   (with-temp-buffer
