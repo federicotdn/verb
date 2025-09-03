@@ -42,6 +42,7 @@
 (require 'js)
 (require 'seq)
 (require 'verb-util)
+(require 'rx)
 
 (defgroup verb nil
   "An HTTP client for Emacs that extends Org mode."
@@ -2314,6 +2315,18 @@ Note: this function is unrelated to `verb--request-spec-send'."
           eww-accept-content-types)
       (verb--teardown-request-environment rs))))
 
+(defun verb--get-src-block-lang (headers)
+  "Return `org-mode''s source block lang from HEADERS."
+  (let* ((handler (car (verb--get-handler
+                        (verb--headers-content-type headers))))
+         (handler-mode (if (string= handler "verb-handler-json")
+                           verb-json-use-mode
+                         handler))
+         (org-lang-match (string-match (rx (group (0+ nonl)) "-mode")
+                                       (symbol-name handler-mode))))
+    (when org-lang-match
+        (match-string 1 (symbol-name handler-mode)))))
+
 (cl-defmethod verb-request-spec-to-string ((rs verb-request-spec))
   "Return request spec RS as a string.
 This string should be able to be used with
@@ -2324,7 +2337,12 @@ This string should be able to be used with
     (dolist (key-value (oref rs headers))
       (insert (car key-value) ": " (cdr key-value) "\n"))
     (when-let ((body (oref rs body)))
-      (insert "\n" body))
+      (if-let* ((headers (oref rs headers))
+                (lang (verb--get-src-block-lang headers)))
+          (progn (insert "\n#+begin_src " lang "\n" body)
+                 (when (not (looking-at-p "^$")) (insert "\n"))
+                 (insert "#+end_src\n"))
+        (insert "\n" body)))
     (verb--buffer-string-no-properties)))
 
 (cl-defmethod verb-response-to-string ((resp verb-response) buf)
