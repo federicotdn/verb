@@ -1715,9 +1715,13 @@ non-nil, do not add the command to the kill ring."
       ((or "PATCH" "PUT" "POST")
        (insert "-X "
                (oref rs method)
-               " \\\n--data-raw '"
-               (or (oref rs body) "")
-               "'"))
+               " \\\n--data-raw "
+               (if (seq-contains (oref rs body) ?')
+                   ;; use heredoc if body contains single quote
+                   (concat "\"$(cat <<'VERB_DATA_EOF'\n"
+                           (or (oref rs body) "")
+                           "\nVERB_DATA_EOF\n)\"")
+                 (concat "'" (or (oref rs body) "") "'"))))
       ("DELETE"
        (insert "-X DELETE"))
       ("OPTIONS"
