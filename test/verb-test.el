@@ -2737,6 +2737,14 @@
 		        "Multiple lines")
 	           "curl 'http://example.com' \\\n-H 'A: B' \\\n-X PUT \\\n--data-raw 'Some content\nMultiple lines'")
 
+  ;; Body contains single quotes
+  (should-curl (join-lines
+		        "PUT http://example.com"
+		        ""
+		        "'testing'"
+		        "Multiple lines")
+	           "curl 'http://example.com' -X PUT \\\n--data-raw \"$(cat <<'VERB_DATA_EOF'\n'testing'\nMultiple lines\nVERB_DATA_EOF\n)\"")
+
   (should-curl (join-lines
 		        "PATCH http://example.com"
 		        ""

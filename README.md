@@ -1062,6 +1062,7 @@ These are the users that have contributed to developing Verb, via code and/or do
 - [isamert](https://github.com/isamert)
 - [jeff-phil](https://github.com/jeff-phil)
 - [ahungry](https://github.com/ahungry)
+- [blahgeek](https://github.com/blahgeek)
 
 Thank you!
 

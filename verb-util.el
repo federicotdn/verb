@@ -181,5 +181,12 @@ being strings."
                        (url-hexify-string (cdr elem))))
              values "&"))
 
+(defun verb-util--seq-contains-p (sequence elt)
+  "Call the appropriate sequence-related function on SEQUENCE and ELT."
+  ;; TODO: Update once Verb depende on Emacs 27.1+.
+  (if (fboundp 'seq-contains-p)
+      (funcall #'seq-contains-p sequence elt)
+    (funcall (symbol-function (intern "seq-contains")) sequence elt)))
+
 (provide 'verb-util)
 ;;; verb-util.el ends here

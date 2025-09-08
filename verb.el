@@ -1716,7 +1716,7 @@ non-nil, do not add the command to the kill ring."
        (insert "-X "
                (oref rs method)
                " \\\n--data-raw "
-               (if (seq-contains (oref rs body) ?')
+               (if (verb-util--seq-contains-p (oref rs body) ?')
                    ;; use heredoc if body contains single quote
                    (concat "\"$(cat <<'VERB_DATA_EOF'\n"
                            (or (oref rs body) "")
