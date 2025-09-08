@@ -3251,7 +3251,7 @@
 
   (let ((now (verb-unix-epoch)))
     (sleep-for 1)
-    (should (> 2 (- (verb-unix-epoch) now))))
+    (should (< 0 (- (verb-unix-epoch) now))))
 
   (should (string= (verb-shell "echo hello" t) "hello")))
 
