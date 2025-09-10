@@ -2315,18 +2315,6 @@ Note: this function is unrelated to `verb--request-spec-send'."
           eww-accept-content-types)
       (verb--teardown-request-environment rs))))
 
-(defun verb--get-src-block-lang (headers)
-  "Return `org-mode''s source block lang from HEADERS."
-  (let* ((handler (car (verb--get-handler
-                        (verb--headers-content-type headers))))
-         (handler-mode (if (string= handler "verb-handler-json")
-                           verb-json-use-mode
-                         handler))
-         (org-lang-match (string-match (rx (group (0+ nonl)) "-mode")
-                                       (symbol-name handler-mode))))
-    (when org-lang-match
-        (match-string 1 (symbol-name handler-mode)))))
-
 (cl-defmethod verb-request-spec-to-string ((rs verb-request-spec))
   "Return request spec RS as a string.
 This string should be able to be used with
@@ -2338,7 +2326,7 @@ This string should be able to be used with
       (insert (car key-value) ": " (cdr key-value) "\n"))
     (when-let ((body (oref rs body)))
       (if-let* ((headers (oref rs headers))
-                (lang (verb--get-src-block-lang headers)))
+                (lang (verb-util--get-src-block-lang headers)))
           (progn (insert "\n#+begin_src " lang "\n" body)
                  (when (not (looking-at-p "^$")) (insert "\n"))
                  (insert "#+end_src\n"))
