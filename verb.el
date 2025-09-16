@@ -1790,6 +1790,18 @@ non-nil, do not add the command to the kill ring."
       (buffer-enable-undo))
     (goto-char (point-min))))
 
+(defun verb--get-src-block-lang (headers)
+  "Return `org-mode''s source block lang from HEADERS."
+  (let* ((handler (car (verb--get-handler
+                        (verb--headers-content-type headers))))
+         (handler-mode (if (string= handler "verb-handler-json")
+                           verb-json-use-mode
+                         handler))
+         (org-lang-match (string-match (rx (group (0+ nonl)) "-mode")
+                                       (symbol-name handler-mode))))
+    (when org-lang-match
+        (match-string 1 (symbol-name handler-mode)))))
+
 (defun verb--headers-content-type (headers)
   "Return the value of the \"Content-Type\" header in HEADERS.
 The value returned has the form (TYPE . CHARSET).  If the charset is
@@ -2330,7 +2342,7 @@ This string should be able to be used with
       (insert (car key-value) ": " (cdr key-value) "\n"))
     (when-let ((body (oref rs body)))
       (if-let* ((headers (oref rs headers))
-                (lang (verb-util--get-src-block-lang headers)))
+                (lang (verb--get-src-block-lang headers)))
           (progn (insert "\n#+begin_src " lang "\n" body)
                  (when (not (looking-at-p "^$")) (insert "\n"))
                  (insert "#+end_src\n"))

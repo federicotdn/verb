@@ -3,6 +3,7 @@
 - Renamed `verb-send-request-on-point-other-window-stay` to `verb-send-request-on-point-display`. The older name is kept but has been marked as obsolete.
 - Fixed the Verb <kbd>C-c C-c</kbd> handler trying to send requests when context does not allow one to do so.
 - The `curl` export command now uses here documents when body contains a single quote.
+- Updated `verb` export format so that the request body is conditionally wrapped in Babel source blocks.
 
 ## **3.1.0** - 2025-03-18 (MELPA Stable)
 - Added support for `Verb-Map-Response` heading property. This allows for calling functions automatically with the HTTP response data, when it is received.
