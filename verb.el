@@ -42,6 +42,7 @@
 (require 'js)
 (require 'seq)
 (require 'verb-util)
+(require 'rx)
 
 (defgroup verb nil
   "An HTTP client for Emacs that extends Org mode."
@@ -2328,7 +2329,12 @@ This string should be able to be used with
     (dolist (key-value (oref rs headers))
       (insert (car key-value) ": " (cdr key-value) "\n"))
     (when-let ((body (oref rs body)))
-      (insert "\n" body))
+      (if-let* ((headers (oref rs headers))
+                (lang (verb-util--get-src-block-lang headers)))
+          (progn (insert "\n#+begin_src " lang "\n" body)
+                 (when (not (looking-at-p "^$")) (insert "\n"))
+                 (insert "#+end_src\n"))
+        (insert "\n" body)))
     (verb--buffer-string-no-properties)))
 
 (cl-defmethod verb-response-to-string ((resp verb-response) buf)

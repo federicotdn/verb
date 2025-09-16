@@ -170,6 +170,18 @@ All hyperlinks are replaced with the link they contain."
   (replace-regexp-in-string verb-util--org-hyperlink-regexp
                             "\\1" s t))
 
+(defun verb-util--get-src-block-lang (headers)
+  "Return `org-mode''s source block lang from HEADERS."
+  (let* ((handler (car (verb--get-handler
+                        (verb--headers-content-type headers))))
+         (handler-mode (if (string= handler "verb-handler-json")
+                           verb-json-use-mode
+                         handler))
+         (org-lang-match (string-match (rx (group (0+ nonl)) "-mode")
+                                       (symbol-name handler-mode))))
+    (when org-lang-match
+        (match-string 1 (symbol-name handler-mode)))))
+
 
 (defun verb-util-form-url-encode (values)
   "URL-encode VALUES for a form submission (x-www-form-urlencoded).

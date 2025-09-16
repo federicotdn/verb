@@ -2445,7 +2445,27 @@
                                                       "http://localhost:8000"))
                   "Content-Type: text/plain; charset=latin1"
                   ""
-                  "áéíóúñü")))))))
+				  "#+begin_src text"
+                  "áéíóúñü"
+				  "#+end_src")))))))
+
+(ert-deftest test-show-request-json ()
+  (let ((verb-auto-kill-response-buffers t))
+    (server-test "utf-8-request-with-accept"
+      (with-current-buffer (verb-show-request)
+        (should (string=
+                 (string-trim (buffer-string))
+                 (join-lines
+                  "* Corresponding HTTP request for response in *HTTP Response*"
+                  (format "POST %s/echo" (if (< emacs-major-version 26)
+                                             "http://127.0.0.1:8000"
+                                           "http://localhost:8000"))
+                  "Accept: application/json"
+                  "Content-Type: application/json; charset=utf-8"
+                  ""
+				  "#+begin_src js"
+                  "語"
+				  "#+end_src")))))))
 
 (ert-deftest test-auto-kill-buffers ()
   (let ((num-buffers (length (buffer-list)))
