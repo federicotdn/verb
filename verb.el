@@ -1415,6 +1415,7 @@ buffer used to show the request."
         (setq header-line-format (format "HTTP Response Headers | count: %s"
                                          (length headers)))
         (verb--insert-header-contents headers)
+        (goto-char (point-min))
         (fit-window-to-buffer)))))
 
 ;;;###autoload
