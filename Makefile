@@ -31,8 +31,8 @@ test-noserver:
 		 --eval "(ert-run-tests-batch-and-exit '$(SELECTOR))"; \
 
 server: ## Run a testing HTTP server on port 8000 (default).
-	go build test/server.go
-	SKIP_PIDFILE=1 PORT=$(PORT) ./server
+	cd test && go build server.go
+	SKIP_PIDFILE=1 PORT=$(PORT) ./test/server
 
 server-bg:
 	go build test/server.go
@@ -54,26 +54,31 @@ setup-check: ## Install packages required for linting.
 
 lint-file:
 	@printf "\n<<<------------ Lint file: $(filename) ------------>>>\n"
+
+	@printf "\n--> Step: Ensure maximum line length\n\n"
+	! grep -n '.\{$(MAX_LINE_LEN)\}' "$(filename)"
+
 	@printf "\n--> Step: Byte-compile file\n\n"
 	$(EMACS) --batch -L . \
 			 --eval "(setq byte-compile-error-on-warn t)" \
 			 -f batch-byte-compile "$(filename)"
+
 	@printf "\n--> Step: Run checkdoc\n\n"
 	yes n | $(EMACS) --batch \
              -l test/checkdoc-batch.el \
 			 -f checkdoc-batch-and-exit "$(filename)"
+
 	@printf "\n--> Step: Run package-lint\n\n"
 	$(EMACS) --batch --eval "(setq package-user-dir \"$$PWD/$(PACKAGES)\")" \
 			 --eval "(package-initialize)" \
 			 --eval "(require 'package-lint)" \
 			 -f package-lint-batch-and-exit "$(filename)"
+
 	@printf "\n--> Step: Run relint\n\n"
 	$(EMACS) --batch --eval "(setq package-user-dir \"$$PWD/$(PACKAGES)\")" \
 			 --eval "(package-initialize)" \
 			 --eval "(require 'relint)" \
 			 -f relint-batch "$(filename)"
-	@printf "\n--> Step: Ensure maximum line length\n\n"
-	! grep -n '.\{$(MAX_LINE_LEN)\}' "$(filename)"
 
 check: ## Lint all Emacs Lisp files in the package.
 check: clean

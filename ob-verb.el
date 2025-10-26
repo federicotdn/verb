@@ -68,7 +68,7 @@ The default value for OPERATION is \"send\"."
 
 (defun ob-verb-expand-body (body params)
   "Expand BODY according to PARAMS, return the expanded body.
-This simply exports the block as verb and returns it.
+This simply exports the block in Verb format and returns it.
 
 This function is called by `org-babel-expand-src-block'.
 
