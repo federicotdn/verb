@@ -43,7 +43,7 @@ server-kill:
 	sleep 1
 
 clean: ## Clean up all temporary files created during testing/runtime.
-	rm -f verb-autoloads.el test/server.pid server
+	rm -f verb-autoloads.el test/server.pid test/server
 	find . -name "*.elc" -type f -delete
 
 setup-check: ## Install packages required for linting.
