@@ -2774,7 +2774,7 @@ signal an error.
 Before returning the request specification, set its metadata to
 METADATA."
   (let ((context (current-buffer))
-        method url headers headers-start body)
+        method url headers headers-start body backslash)
     (with-temp-buffer
       (insert text)
       (goto-char (point-min))
@@ -2831,6 +2831,7 @@ METADATA."
                   (user-error
                    "Backslash in URL not followed by additional content"))
 
+                (setq backslash t)
                 (setq url (concat url (string-remove-suffix "\\" line)))))
 
           (when (string-match (concat "^\\s-*\\("
@@ -2880,10 +2881,12 @@ METADATA."
               (push (cons (string-trim (match-string 1 line))
                           (string-trim (match-string 2 line)))
                     headers)
-            (user-error (concat "Invalid HTTP header: \"%s\"\n"
-                                "Make sure there's a blank line between"
-                                " the headers and the request body")
-                        line)))
+            (let ((msg (concat "Invalid HTTP header: \"%s\"\n"
+                               "Make sure there's a blank line between"
+                               " the headers and the request body")))
+              (when (and backslash (string-match-p "^\\s-+" line))
+                (setq msg (concat msg " (did you forget a backslash '\\'?)")))
+              (user-error msg line))))
         (unless (eobp) (forward-char)))
       (setq headers (nreverse headers))
 
