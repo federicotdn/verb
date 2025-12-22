@@ -32,6 +32,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (cl-defstruct verb-restclient--request
   comments
   body)
