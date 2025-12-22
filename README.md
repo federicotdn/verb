@@ -811,6 +811,15 @@ You can export request specifications to other formats or tools by using the `ve
 > [!NOTE]
 > Code tags will be evaluated when exporting a request.
 
+### Import Requests
+
+> [!IMPORTANT]
+> This feature is in an experimental stage, and may not work 100% appropriately.
+
+It is also possible to import requests from other Emacs HTTP clients.
+
+Currently, only importing from [restclient.el](https://github.com/pashky/restclient.el) is supported. In order to import them, open a file containing restclient.el requests, and use the `verb-import-from-restclient.el` command. The imported results will be displayed in a different buffer.
+
 ### Long Lines
 
 Sometimes, lines containing URLs of your request specifications may become so long, that they may become difficult to read. You can break up these lines by using `\` followed by a newline character, like so:

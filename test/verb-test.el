@@ -3279,6 +3279,41 @@
 
   (should (string= (verb-shell "echo hello" t) "hello")))
 
+(ert-deftest test-restclient.el-import ()
+  (with-temp-buffer
+    (insert
+     (join-lines "# -*- mode: restclient; url-max-redirections: 0 -*-"
+                 "# This is an example restclient.el file"
+                 ""
+                 "# Request 1"
+                 "# marker1"
+                 "GET https://example.com/test"
+                 "# Request 2"
+                 "# marker2"
+                 "POST https://example.com/test2"
+                 "Foo: Bar"
+                 "Quuz: X"))
+    (let ((buf (verb-restclient--import (lambda (_) nil)))
+          req)
+      (should-not (zerop (buffer-size buf)))
+      (with-current-buffer buf
+        (re-search-forward "marker1")
+        (setq req (verb--request-spec-from-hierarchy))
+        (should (string= (oref req method) "GET"))
+        (should (string= (verb-request-spec-url-to-string req) "https://example.com/test"))
+
+        (re-search-forward "marker2")
+        (setq req (verb--request-spec-from-hierarchy))
+        (should (string= (oref req method) "POST"))
+        (should (string= (verb-request-spec-url-to-string req) "https://example.com/test2"))
+        (should (equal (oref req headers)
+		               '(("Foo" . "Bar")
+		                 ("Quuz" . "X"))))
+
+        (goto-char (point-min))
+        (search-forward "[Unsupported]" nil t) ;; Skip first one in toplevel comment
+        (should-not (search-forward "[Unsupported]" nil t))))))
+
 (ert-deftest test-emacs-defaults ()
   ;; Verb makes certain assumptions about default values of some Emacs
   ;; variables (in the documentation and in the code).  Assert them

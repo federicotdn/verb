@@ -41,8 +41,9 @@
 (require 'json)
 (require 'js)
 (require 'seq)
-(require 'verb-util)
 (require 'rx)
+(require 'verb-util)
+(require 'verb-restclient)
 
 (defgroup verb nil
   "An HTTP client for Emacs that extends Org mode."
@@ -1741,6 +1742,17 @@ non-nil, do not add the command to the kill ring."
         (message "Curl command copied to the kill ring"))
       ;; Return the generated command.
       result)))
+
+(defun verb-import-from-restclient.el ()
+  "Import requests from a restclient.el-formatted buffer to Verb format.
+Requests will be read from the current buffer.
+
+Note: This feature is experimental, and may not parse all restclient.el
+files correctly.  Manual user adjustments may be necessary after the import
+has finished."
+  (interactive)
+  (let ((buf (verb-restclient--import #'verb-request-spec-from-string)))
+    (display-buffer buf)))
 
 (cl-defmethod verb--response-header-line-string ((response verb-response))
   "Return a short description of an HTTP RESPONSE's properties."
