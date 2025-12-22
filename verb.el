@@ -2864,7 +2864,7 @@ METADATA."
       ;; these headers have been commented out.  Finally, go back to
       ;; where we started.
       (save-excursion
-        (while (re-search-forward "^\\(.+\\)$" (line-end-position) t)
+        (while (re-search-forward "^.+$" (line-end-position) t)
           (unless (eobp) (forward-char)))
         (delete-matching-lines "^[[:blank:]]*#" headers-start (point)))
 
