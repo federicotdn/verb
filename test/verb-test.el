@@ -676,6 +676,14 @@
                        :request req))
 		             "No Response | 1.123s | - | 0 bytes | /hello"))))
 
+(ert-deftest test-status-code-face ()
+  (should (eq (verb--status-code-face "HTTP/1.1 200 OK") 'verb-status-2xx))
+  (should (eq (verb--status-code-face "HTTP/1.1 301 Moved") 'verb-status-3xx))
+  (should (eq (verb--status-code-face "HTTP/1.1 404 Not Found") 'verb-status-4xx))
+  (should (eq (verb--status-code-face "HTTP/1.1 500 Error") 'verb-status-5xx))
+  (should (eq (verb--status-code-face "HTTP/1.1 100 Continue") nil))
+  (should (eq (verb--status-code-face "no status code here") nil)))
+
 (ert-deftest test-request-spec-from-text-error ()
   (should-error (text-as-spec "foobar example.com")))
 
