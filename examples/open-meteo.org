@@ -1,0 +1,37 @@
+* Open-Meteo Weather API                                               :verb:
+:properties:
+:Verb-Prelude: {"latitude": "52.52", "longitude": "13.41"}
+:end:
+# Free weather API, no authentication required.
+# https://open-meteo.com/en/docs
+
+template https://api.open-meteo.com/v1
+
+** Current Weather
+# Get the current temperature, weather code and wind speed for Berlin.
+
+#+begin_src verb :op send
+get /forecast?latitude={{(verb-var latitude)}}\
+              &longitude={{(verb-var longitude)}}\
+              &current=temperature_2m,weather_code,wind_speed_10m
+#+end_src
+
+** Daily Forecast
+# Get the daily high/low temperature and precipitation for the next 3 days.
+
+#+begin_src verb :op send get-body
+get /forecast?latitude={{(verb-var latitude)}}\
+              &longitude={{(verb-var longitude)}}\
+              &daily=temperature_2m_max,temperature_2m_min,precipitation_sum\
+              &forecast_days=3\
+              &timezone=Europe/Berlin
+#+end_src
+
+** Export to curl
+# Export the current weather request as a curl command.
+
+#+begin_src verb :op export curl
+get /forecast?latitude={{(verb-var latitude)}}\
+              &longitude={{(verb-var longitude)}}\
+              &current=temperature_2m
+#+end_src
