@@ -154,7 +154,7 @@ optional argument may follow `send'."
   (font-lock-add-keywords
    nil `(;; HTTP/1.1 200 OK
          ("^\\s-*HTTP/1\\.[01]\\s-+[[:digit:]]\\{3\\}.*$"
-          (0 'verb-http-keyword))
+          (0 (verb--status-code-face (match-string 0))))
          ;; Key: Value
          (,verb--http-header-regexp
           (1 'verb-header)))))
