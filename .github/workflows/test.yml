@@ -1,4 +1,7 @@
 name: CI
+permissions:
+  contents: read
+
 on:
   push:
     paths-ignore:
@@ -8,6 +11,7 @@ on:
   pull_request:
   schedule:
     - cron: '0 12 1 * *'
+
 jobs:
   test:
     name: Checks/Tests
@@ -30,6 +34,8 @@ jobs:
         with:
           version: ${{ matrix.emacs_version }}
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
