@@ -1,5 +1,5 @@
 # Verb Changelog
-## **main** (MELPA)
+## **3.2.0** - 2026-05-23 (MELPA & MELPA Stable)
 - Renamed `verb-send-request-on-point-other-window-stay` to `verb-send-request-on-point-display`. The older name is kept but has been marked as obsolete.
 - Fixed the Verb <kbd>C-c C-c</kbd> handler trying to send requests when context does not allow one to do so.
 - The `curl` export command now uses here documents when body contains a single quote.
