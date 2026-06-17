@@ -1158,6 +1158,29 @@
   (should-not (verb--http-headers-p (list (cons "" ""))))
   (should-not (verb--http-headers-p (list (cons "" "Hello")))))
 
+(ert-deftest test-query-method-no-content-type ()
+  (should-error
+     (with-temp-buffer
+       (org-mode)
+       (verb-mode)
+       (insert (join-lines "* test :verb:"
+                           "query http://example.com"
+                           ""
+                           "{}"))
+       (verb--request-spec-from-hierarchy))))
+
+(ert-deftest test-query-method-with-content-type ()
+  (with-temp-buffer
+    (org-mode)
+    (verb-mode)
+    (insert (join-lines "* test :verb:"
+                        "query http://example.com"
+                        "Content-Type: application/json"
+                        ""
+                        "{}"))
+    (let ((rs (verb--request-spec-from-hierarchy)))
+      (should (string= (oref rs method) "QUERY")))))
+
 (ert-deftest test-insert-header-contents ()
   (should (string= (with-temp-buffer
 		             (verb--insert-header-contents nil)

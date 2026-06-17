@@ -321,7 +321,7 @@ no warning will be shown when loading Emacs Lisp external files."
 
 (defconst verb--http-methods '("GET" "POST" "DELETE" "PUT"
                                "OPTIONS" "HEAD" "PATCH"
-                               "TRACE" "CONNECT")
+                               "TRACE" "CONNECT" "QUERY")
   "List of valid HTTP methods.")
 
 (defconst verb--bodyless-http-methods '("GET" "HEAD" "DELETE" "TRACE"
@@ -2242,6 +2242,9 @@ If a validation does not pass, signal `user-error'."
                                "Make sure you specify a scheme and host "
                                "(e.g. \"https://github.com\") in the "
                                "heading hierarchy"))))
+  (when (and (null (car (verb--headers-content-type (oref rs headers))))
+             (string= (oref rs method) "QUERY"))
+    (user-error "%s" "Missing \"Content-Type\" header for QUERY request"))
   rs)
 
 (defun verb--generate-response-buffer (num)

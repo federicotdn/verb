@@ -1,5 +1,8 @@
 # Verb Changelog
-## **3.2.0** - 2026-05-23 (MELPA & MELPA Stable)
+## **main** (MELPA)
+- Added initial, experimental support for the new [QUERY](https://datatracker.ietf.org/doc/rfc10008/) HTTP method. As of the time of writing (using Emacs 30.2), the underlying url.el library may not properly handle 3XX responses for QUERY requests.
+
+## **3.2.0** - 2026-05-23 (MELPA Stable)
 - Renamed `verb-send-request-on-point-other-window-stay` to `verb-send-request-on-point-display`. The older name is kept but has been marked as obsolete.
 - Fixed the Verb <kbd>C-c C-c</kbd> handler trying to send requests when context does not allow one to do so.
 - The `curl` export command now uses here documents when body contains a single quote.
