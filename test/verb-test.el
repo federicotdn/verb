@@ -268,6 +268,17 @@
 		             '(("Foo" . "Bar")
 		               ("Quuz" . "X")))))))
 
+(ert-deftest test-request-spec-from-hierarchy-base-url-not-duplicated ()
+  ;; https://github.com/federicotdn/verb/issues/95
+  (let ((verb-base-headers '(("Foo" . "Bar"))))
+    (with-temp-buffer
+      (org-mode)
+      (verb-mode)
+      (insert (join-lines "* Test :verb:"
+			              "get http://hello.com/users"))
+      (setq req-spec (verb--request-spec-from-hierarchy))
+      (should (equal (url-filename (oref req-spec url)) "/users")))))
+
 (ert-deftest test-request-spec-from-hierarchy ()
   (setq outline-test
 	    (join-lines "* Test :verb:"

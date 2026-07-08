@@ -1043,7 +1043,7 @@ After that, return RS."
   (when verb-base-headers
     (setq rs (verb-request-spec-override
               (verb-request-spec :headers verb-base-headers
-                                 :url (oref rs url))
+                                 :url (verb--request-spec-url-origin rs))
               rs)))
   ;; Apply the request mapping function, if present.
   (when-let ((form (verb--request-spec-metadata-get rs "map-request"))

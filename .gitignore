@@ -24,4 +24,4 @@ verb-autoloads.el
 /emacs
 
 # Testing server
-/test/server
+/server
