@@ -192,6 +192,11 @@ get /echo-args?value={{(verb-var json-inline-var)}}
 :Verb-Map-Response: (lambda (r) (oset r body "xyz") (setq some-global-var-mp 101010) r)
 :end:
 get /basic-json
+** map-response-empty-body
+:properties:
+:Verb-Map-Response: (lambda (r) (setq some-global-var-mp-2 101010) r)
+:end:
+get /zero-bytes-json
 ** map-response-upcase
 :properties:
 :Verb-Map-Response: map-response-upcase-fn

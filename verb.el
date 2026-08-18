@@ -2051,7 +2051,7 @@ NUM is this request's identification number."
     ;; Apply the response mapping function, if one was specified.
     (when-let ((map-response (verb--request-spec-metadata-get
                               rs "map-response"))
-               (original-body (oref verb-http-response body)))
+               (original-body (or (oref verb-http-response body) t)))
       (setq verb-http-response (funcall map-response verb-http-response))
       (unless (verb--object-of-class-p verb-http-response 'verb-response)
         (user-error (concat "Response mapping function `%s' must return a "
@@ -2063,7 +2063,7 @@ NUM is this request's identification number."
       ;; Note that we compare using `eq' instead of `string='.
       ;; Technically `string=' should be used since strings are
       ;; mutable, but this is cheaper and probably good enough.
-      (unless (eq original-body (oref verb-http-response body))
+      (unless (eq original-body (or (oref verb-http-response body) t))
         (erase-buffer)
         (insert (oref verb-http-response body))))
 

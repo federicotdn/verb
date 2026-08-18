@@ -3291,6 +3291,10 @@
     (should (string= "xyz" (oref verb-http-response body)))
     (should (= some-global-var-mp 101010))))
 
+(ert-deftest test-server-map-response-empty-body ()
+  (server-test "map-response-empty-body"
+    (should (= some-global-var-mp-2 101010))))
+
 (defun map-response-upcase-fn (resp)
   (oset resp body (upcase (oref resp body)))
   resp)
